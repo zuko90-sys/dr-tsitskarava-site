@@ -562,6 +562,9 @@
   /* портрет в герое: видно сразу при входе на страницу */
   .hero-photo{inline-size:100%;max-inline-size:380px;justify-self:end;margin:0}
 
+  /* орнамент-дубль: живёт только в мобильной раскладке, у самой шапки */
+  .vine--m{display:none}
+
   /* анатомическая схема в потоке страницы «С чем помогаю» */
   .anat--page{max-inline-size:520px;margin-block-start:var(--sp-l)}
 
@@ -733,20 +736,6 @@
   .way__hint{
     display:block;font-size:13.5px;line-height:1.4;color:var(--ink-2);
     transition:color .2s, opacity .2s;
-  }
-
-  /* основной способ записи — залит фирменным зелёным */
-  .way--primary{
-    background:var(--accent);
-    border-color:var(--accent);
-    color:var(--on-accent);
-
-    & .way__hint{color:var(--on-accent);opacity:.85}
-
-    &:hover{
-      background:color-mix(in oklab, var(--accent) 78%, black);
-      border-color:color-mix(in oklab, var(--accent) 78%, black);
-    }
   }
 
   .contact-list{border-block-start:1px solid var(--hairline)}
@@ -934,6 +923,8 @@
     .hero-grid{grid-template-columns:1fr;gap:56px}
     .anat{max-inline-size:520px}
     .hero-photo{order:-1;max-inline-size:300px;justify-self:start}
+    .vine--m{display:block;order:-2;margin-block:0 -24px}
+    .hero-copy .vine{display:none}
 
     .row-grid{grid-template-columns:1fr;gap:20px;padding-block-start:28px}
     .rubric{position:static}
@@ -1038,7 +1029,7 @@
     .wordmark span{display:none}
     .btn{padding:11px 18px;font-size:14px}
     .draft{display:none}
-    .top{block-size:58px}
+    .top{min-block-size:58px;block-size:auto}
   }
 
   @media (width <= 400px){
