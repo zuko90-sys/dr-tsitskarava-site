@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Вход — dr-tsitskarava.com</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<style>
+  .vhod{min-block-size:100svh;display:grid;place-items:center;padding:24px}
+  .vhod-card{inline-size:min(360px,100%)}
+  .vhod-card h1{font-size:26px;margin-block:14px 6px}
+  .vhod-card p{color:var(--ink-2);font-size:14.5px;margin-block-end:22px}
+  .vhod-card label{display:block;font-size:11px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-3);margin-block:14px 6px}
+  .vhod-card input{inline-size:100%;padding:12px 14px;font:inherit;font-size:16px;
+    border:1px solid var(--hair-2);background:var(--surface);color:var(--ink)}
+  .vhod-card input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .vhod-card .btn{inline-size:100%;margin-block-start:20px;text-align:center}
+  .vhod-err{color:#B42318;font-size:13.5px;margin-block-start:10px;display:none}
+  .vhod-logo{inline-size:44px;block-size:44px}
+</style>
+</head>
+<body>
+<main class="vhod">
+  <form class="vhod-card" id="f">
+    <img class="vhod-logo" src="favicon.svg" alt="">
+    <h1>Сайт готовится к&nbsp;открытию</h1>
+    <p>Доступ пока только для своих. Если вы пациент — совсем скоро здесь появится сайт врача Софико Цицкарава.</p>
+    <label for="l">Логин</label>
+    <input id="l" name="username" autocomplete="username" required>
+    <label for="p">Пароль</label>
+    <input id="p" name="password" type="password" autocomplete="current-password" required>
+    <button class="btn big" type="submit">Войти</button>
+    <p class="vhod-err" id="e">Неверный логин или пароль</p>
+  </form>
+</main>
+<script>
+document.getElementById('f').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var l = document.getElementById('l').value.trim();
+  var p = document.getElementById('p').value;
+  if (l === 'admin' && p === 'admin') {
+    try { localStorage.setItem('dr_ok', '1'); } catch (e) {}
+    location.replace('index.html');
+  } else {
+    document.getElementById('e').style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
