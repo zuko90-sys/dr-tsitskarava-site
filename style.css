@@ -243,6 +243,21 @@
     & .label{color:var(--accent)}
   }
 
+  /* Виноградная лоза — рисованный акцент над заголовком. Тот же почерк,
+     что у анатомической схемы: линия одной толщины, ничего лишнего. */
+  .vine{
+    display:block;
+    inline-size:170px;block-size:auto;
+    margin-block-end:var(--sp-m);
+    fill:none;
+    stroke:var(--accent);
+    stroke-width:1.6;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .vine-leaf{stroke-width:1.4}
+  .vine-curl{stroke-width:1.3}
+
   h1{
     font-size:clamp(38px,6.4vw,86px);
     line-height:1.02;
@@ -670,6 +685,38 @@
     }
   }
 
+  /* Два способа записи: карточки-ссылки вместо одной кнопки */
+  .ways{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:var(--sp-s);
+    margin-block-end:var(--sp-l);
+  }
+
+  .way{
+    display:block;
+    padding:18px 20px;
+    text-decoration:none;
+    border:1px solid var(--ink);
+    background:var(--paper);
+    transition:background .2s, color .2s, border-color .2s;
+
+    &:hover{background:var(--ink);color:var(--paper)}
+    &:hover .way__hint{color:var(--paper);opacity:.75}
+    &:active{translate:0 1px}
+  }
+
+  .way__name{
+    display:block;
+    font-family:var(--serif);font-size:19px;font-weight:500;
+    margin-block-end:2px;
+  }
+
+  .way__hint{
+    display:block;font-size:13.5px;line-height:1.4;color:var(--ink-2);
+    transition:color .2s, opacity .2s;
+  }
+
   .contact-list{border-block-start:1px solid var(--hairline)}
 
   .contact-row{
@@ -753,10 +800,7 @@
     & small{font-size:12.5px;color:var(--ink-3);max-inline-size:60ch;line-height:1.6}
   }
 
-  .warn{
-    margin-block-start:22px;font-size:11px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--ink-3);
-  }
+  .foot-year{white-space:nowrap}
 
   .draft{
     position:fixed;inset-block-end:18px;inset-inline-start:18px;z-index:60;
@@ -948,6 +992,9 @@
     .bio-grid{grid-template-columns:1fr}
     .plate-fig{grid-template-columns:1fr}
     .plate-fig svg{max-inline-size:300px}
+    .ways{grid-template-columns:1fr;gap:var(--sp-2xs)}
+    .way{padding:14px 16px}
+    .way__name{font-size:17px}
     .menu-line{flex-wrap:wrap;gap:var(--sp-2xs)}
     .menu-line .fill{display:none}
     .cv-row{grid-template-columns:1fr;gap:4px}
