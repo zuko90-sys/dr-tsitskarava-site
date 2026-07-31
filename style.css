@@ -551,6 +551,12 @@
      осознанный акцент: человек среди строгих линеек */
   .photo--arch{border-radius:999px 999px 6px 6px}
 
+  /* портрет в герое: видно сразу при входе на страницу */
+  .hero-photo{inline-size:100%;max-inline-size:380px;justify-self:end;margin:0}
+
+  /* анатомическая схема в потоке страницы «С чем помогаю» */
+  .anat--page{max-inline-size:520px;margin-block-start:var(--sp-l)}
+
   .bio p{
     max-inline-size:60ch;color:var(--ink-2);margin-block-end:var(--sp-s);
     & b{color:var(--ink);font-weight:600}
@@ -721,6 +727,20 @@
     transition:color .2s, opacity .2s;
   }
 
+  /* основной способ записи — залит фирменным зелёным */
+  .way--primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--on-accent);
+
+    & .way__hint{color:var(--on-accent);opacity:.85}
+
+    &:hover{
+      background:color-mix(in oklab, var(--accent) 78%, black);
+      border-color:color-mix(in oklab, var(--accent) 78%, black);
+    }
+  }
+
   .contact-list{border-block-start:1px solid var(--hairline)}
 
   .contact-row{
@@ -758,6 +778,8 @@
   }
 
   .teaser__photo{aspect-ratio:4/5}
+
+  .teaser.teaser--text{grid-template-columns:1fr}
 
   .teaser__links{
     display:flex;flex-wrap:wrap;gap:var(--sp-m) var(--sp-l);
@@ -903,6 +925,7 @@
   @media (width <= 1020px){
     .hero-grid{grid-template-columns:1fr;gap:56px}
     .anat{max-inline-size:520px}
+    .hero-photo{order:-1;max-inline-size:300px;justify-self:start}
 
     .row-grid{grid-template-columns:1fr;gap:20px;padding-block-start:28px}
     .rubric{position:static}
@@ -963,6 +986,7 @@
     /* Карточка врача: портрет рядом с текстом, а не над ним */
     .teaser{grid-template-columns:96px minmax(0,1fr);gap:var(--sp-s);align-items:start}
     .teaser__photo{max-inline-size:96px}
+    .teaser.teaser--text{grid-template-columns:1fr}
     .teaser h2{font-size:21px}
     .teaser .kicker{font-size:14.5px;line-height:1.5}
     .teaser__links{gap:var(--sp-2xs) var(--sp-m);margin-block-start:var(--sp-xs)}
@@ -982,6 +1006,7 @@
     /* Схема — иллюстрация, а не главный герой: на телефоне ей хватает
        трети экрана вместо половины */
     .anat{max-inline-size:264px;margin-inline:auto}
+    .hero-photo{max-inline-size:260px}
     .anat figcaption{margin-block-start:var(--sp-2xs);font-size:11.5px}
 
     /* Цены: название и сумма в одну строку, пояснение — мелкой строкой */
