@@ -193,6 +193,14 @@
     text-decoration:none;font-family:var(--serif);font-weight:600;
     font-size:17px;letter-spacing:.01em;white-space:nowrap;
 
+    /* гранат с короной — знак из орнамента героя */
+    & .mark{
+      block-size:26px;inline-size:auto;flex:none;
+      margin-inline-end:9px;
+      fill:none;stroke:var(--accent);
+      stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+    }
+
     & span{
       color:var(--ink-3);font-family:var(--sans);font-weight:400;
       font-size:12px;margin-inline-start:10px;letter-spacing:.08em;
