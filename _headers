@@ -1,0 +1,19 @@
+# Заголовки для Cloudflare Pages (файл читается автоматически при деплое).
+# На GitHub Pages не действует — там кеш настраивается платформой.
+
+/fonts/*
+  # Шрифты неизменны: имя файла меняется только при пересборке.
+  # Год в кеше — повторные визиты вообще не обращаются к сети.
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/*.html
+  # HTML всегда сверяем с сервером, чтобы правки появлялись сразу
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  # Базовая защита: запрет встраивания в чужие фреймы и подмены типа файла
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
