@@ -210,6 +210,16 @@
   nav.main{
     display:flex;gap:26px;margin-inline-start:auto;
 
+    /* переключатель языка — продолжение меню, отделён линейкой */
+    & .lang{
+      display:flex;gap:11px;align-items:center;
+      margin-inline-start:2px;padding-inline-start:20px;
+      border-inline-start:1px solid var(--hairline);
+
+      & a{font-size:12px;letter-spacing:.08em}
+      & a[aria-current]{color:var(--ink);font-weight:600;border-block-end-color:transparent}
+    }
+
     & a{
       text-decoration:none;font-size:14px;color:var(--ink-2);
       padding-block:4px;
@@ -1041,5 +1051,14 @@
      над крупными заголовками. Пока поддерживают не все браузеры. */
   @supports (text-box: trim-both cap alphabetic){
     h1,h2{text-box:trim-both cap alphabetic}
+  }
+}
+
+/* Грузинская версия: у Piazzolla и Golos нет мхедрули, поэтому для ka
+   отдаём системные шрифты — на всех платформах грузинский в них есть. */
+@layer adapt{
+  :lang(ka){
+    --serif:system-ui,-apple-system,'Segoe UI',Roboto,'Sylfaen',serif;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Sylfaen',sans-serif;
   }
 }
