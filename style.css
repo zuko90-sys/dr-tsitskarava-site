@@ -215,16 +215,19 @@
 
   .btn{
     display:inline-block;
-    background:var(--ink);color:var(--paper);
+    background:var(--accent);color:var(--on-accent);
     font-family:var(--sans);font-size:14.5px;font-weight:500;letter-spacing:.01em;
     text-decoration:none;
     padding:12px 24px;
-    border:1px solid var(--ink);
+    border:1px solid var(--accent);
     cursor:pointer;
     transition:background .2s, border-color .2s, color .2s;
 
-    &:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-    &:active{background:var(--accent);border-color:var(--accent);translate:0 1px}
+    &:hover{
+      background:color-mix(in oklab, var(--accent) 78%, black);
+      border-color:color-mix(in oklab, var(--accent) 78%, black);
+    }
+    &:active{translate:0 1px}
     &.big{padding:16px 34px;font-size:15.5px}
   }
 
@@ -698,12 +701,12 @@
     display:block;
     padding:18px 20px;
     text-decoration:none;
-    border:1px solid var(--ink);
+    border:1px solid var(--accent);
     background:var(--paper);
     transition:background .2s, color .2s, border-color .2s;
 
-    &:hover{background:var(--ink);color:var(--paper)}
-    &:hover .way__hint{color:var(--paper);opacity:.75}
+    &:hover{background:var(--accent);color:var(--on-accent)}
+    &:hover .way__hint{color:var(--on-accent);opacity:.8}
     &:active{translate:0 1px}
   }
 
