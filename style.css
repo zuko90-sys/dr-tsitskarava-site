@@ -716,7 +716,10 @@
     }
   }
 
-  /* Два способа записи: карточки-ссылки вместо одной кнопки */
+  /* Два способа записи: карточки-ссылки вместо одной кнопки.
+     Пока канал один — карточка на всю ширину. */
+  .ways:has(> .way:only-child){grid-template-columns:1fr}
+
   .ways{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
