@@ -287,7 +287,15 @@
 
     & em{font-style:italic;font-weight:400}
   }
-  .h1-line{display:block;overflow:hidden}
+  /* Контейнер-обрезка для анимации появления строк. Межстрочье в h1
+     плотное (1.02), поэтому даём хвостам букв ниже базовой линии
+     дополнительное окно — иначе «y», запятые и грузинские глифы
+     срезаются снизу; компенсируем отрицательным полем. */
+  .h1-line{
+    display:block;overflow:hidden;
+    padding-block:.06em .15em;
+    margin-block:-.06em -.15em;
+  }
 
   .lede{
     margin-block-start:30px;
