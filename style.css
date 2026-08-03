@@ -297,6 +297,14 @@
     margin-block:-.06em -.15em;
   }
 
+  /* Клиника — важный факт доверия: отдельной строкой у первого экрана */
+  .clinic-line{
+    margin-block-start:18px;
+    max-inline-size:52ch;
+    font-size:15px;line-height:1.6;color:var(--ink-2);
+
+    & b{color:var(--ink);font-weight:600}
+  }
   .lede{
     margin-block-start:30px;
     max-inline-size:52ch;
@@ -984,6 +992,7 @@
     h2{font-size:clamp(22px,5.5vw,28px);margin-block-end:var(--sp-2xs)}
     .hero{padding-block:var(--sp-s) var(--sp-xl)}
     .lede{margin-block-start:var(--sp-m);font-size:16px;line-height:1.6}
+    .clinic-line{margin-block-start:14px;font-size:14px}
     .cta-row{margin-block-start:var(--sp-m);gap:var(--sp-s)}
     .closing{padding-block:var(--sp-2xl)}
 
