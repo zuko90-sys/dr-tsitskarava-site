@@ -25,6 +25,21 @@
     font-weight:400 600; font-style:normal; font-display:swap;
   }
 
+  /* Грузинский — главный язык сайта, поэтому мхедрули тоже свой, не системный.
+     Noto Georgian (SIL OFL), обрезан до грузинского блока + латиница. */
+  @font-face{
+    font-family:'Georgian Serif';
+    src:url('fonts/georgian-serif.woff2') format('woff2');
+    font-weight:400 600; font-style:normal; font-display:swap;
+    unicode-range:U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F;
+  }
+  @font-face{
+    font-family:'Georgian Sans';
+    src:url('fonts/georgian-sans.woff2') format('woff2');
+    font-weight:400 600; font-style:normal; font-display:swap;
+    unicode-range:U+10A0-10FF, U+1C90-1CBF, U+2D00-2D2F;
+  }
+
   /* Системные запасные, подогнанные по метрикам: пока грузится основной
      шрифт, текст занимает ровно столько же места — вёрстка не прыгает. */
   @font-face{
@@ -767,6 +782,16 @@
     transition:color .2s, opacity .2s;
   }
 
+  /* Портал клиники — путь для местных: сноской под основными способами */
+  .ways-note{
+    margin-block:calc(-1 * var(--sp-s)) var(--sp-l);
+    font-size:13.5px;line-height:1.55;color:var(--ink-3);
+    max-inline-size:56ch;
+
+    & a{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px}
+    & a:hover{color:var(--ink)}
+  }
+
   .contact-list{border-block-start:1px solid var(--hairline)}
 
   .contact-row{
@@ -1077,8 +1102,10 @@
 /* Грузинская версия: у Piazzolla и Golos нет мхедрули, поэтому для ka
    отдаём системные шрифты — на всех платформах грузинский в них есть. */
 @layer adapt{
+  /* Грузинская версия: сначала свой мхедрули, дальше — латиница из основных
+     шрифтов (диапазоны не пересекаются, браузер берёт нужный сам). */
   :lang(ka){
-    --serif:system-ui,-apple-system,'Segoe UI',Roboto,'Sylfaen',serif;
-    --sans:system-ui,-apple-system,'Segoe UI',Roboto,'Sylfaen',sans-serif;
+    --serif:'Georgian Serif','Piazzolla','Piazzolla Fallback','Sylfaen',Georgia,serif;
+    --sans:'Georgian Sans','Golos Text','Golos Fallback','Sylfaen',system-ui,sans-serif;
   }
 }
