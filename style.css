@@ -759,34 +759,6 @@
     transition:color .2s, opacity .2s;
   }
 
-  /* Из блога: список тем, а не плитка картинок — в духе остального сайта */
-  .posts{
-    list-style:none;
-    border-block-start:1px solid var(--hairline);
-    margin-block-start:var(--sp-s);
-
-    & li{border-block-end:1px solid var(--hairline)}
-
-    & a{
-      display:flex;gap:var(--sp-s);align-items:baseline;
-      justify-content:space-between;flex-wrap:wrap;
-      padding-block:15px;text-decoration:none;
-      transition:opacity .2s;
-
-      &:hover .post__name{border-block-end-color:var(--ink)}
-      &:active{opacity:.7}
-    }
-  }
-
-  .post__name{
-    font-family:var(--serif);font-size:19px;font-weight:500;
-    max-inline-size:44ch;
-    border-block-end:1px solid transparent;
-    transition:border-color .2s;
-  }
-
-  .post__hint{font-size:13.5px;color:var(--ink-3);white-space:nowrap}
-
   .contact-list{border-block-start:1px solid var(--hairline)}
 
   .contact-row{
