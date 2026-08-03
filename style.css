@@ -227,11 +227,11 @@
 
     /* переключатель языка — продолжение меню, отделён линейкой */
     & .lang{
-      display:flex;gap:11px;align-items:center;
+      display:flex;gap:16px;align-items:baseline;
       margin-inline-start:2px;padding-inline-start:20px;
       border-inline-start:1px solid var(--hairline);
 
-      & a{font-size:12px;letter-spacing:.08em}
+      & a{font-size:13px;color:var(--ink-3);white-space:nowrap}
       & a[aria-current]{color:var(--ink);font-weight:600;border-block-end-color:transparent}
     }
 
@@ -999,7 +999,20 @@
       -webkit-overflow-scrolling:touch;
 
       & a{white-space:nowrap;padding-block:10px 12px;flex-shrink:0}
+
+      /* Языки на телефоне — своей строкой под меню: в прокручиваемом
+         ряду они уезжали за край и человек их не находил. */
+      & .lang{
+        order:4;inline-size:100%;
+        margin:0;padding:8px 0 0;
+        border-inline-start:none;
+        border-block-start:1px solid var(--hairline);
+        gap:18px;
+      }
     }
+
+    /* меню переносит языки на вторую строку, а не прокручивает */
+    nav.main{flex-wrap:wrap;overflow-x:visible}
 
     .top .btn{
       margin-inline-start:auto;
