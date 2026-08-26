@@ -1,0 +1,1221 @@
+<title>Своя полка</title>
+<meta name="description" content="Концепт мотивационного слоя для курьеров: интерактивный прототип экранов и обоснование механик.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* ─────────────────────────────  ТОКЕНЫ  ───────────────────────────── */
+:root{
+  --green:#2DBE64;
+  --green-deep:#178A48;
+  --green-soft:#DCF3E5;
+  --green-line:#B6E3C8;
+  --berry:#D7144B;
+  --berry-soft:#FBE3E9;
+  --amber:#C87A16;
+  --amber-soft:#FBEFD9;
+
+  --ink:#12251A;
+  --ink-2:#3D5147;
+  --ink-3:#71887B;
+  --paper:#F1F5F0;
+  --surface:#FFFFFF;
+  --surface-2:#F8FBF7;
+  --line:#DFE8DF;
+  --line-soft:#EDF2EC;
+
+  --shell:#0D1711;
+  --shell-edge:#2A3B31;
+  --shadow:0 1px 2px rgba(18,37,26,.05), 0 12px 32px -12px rgba(18,37,26,.16);
+  --shadow-lift:0 2px 4px rgba(18,37,26,.06), 0 28px 60px -20px rgba(18,37,26,.30);
+
+  --display:"Unbounded","Golos Text","Helvetica Neue",Arial,sans-serif;
+  --text:"Golos Text","Helvetica Neue",Arial,sans-serif;
+
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:30px;
+  --measure:64ch;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --green:#3FDA7C;
+    --green-deep:#8FEDB5;
+    --green-soft:#123222;
+    --green-line:#215C3B;
+    --berry:#FF6089;
+    --berry-soft:#3B1220;
+    --amber:#F0B45F;
+    --amber-soft:#33270F;
+
+    --ink:#E9F3EB;
+    --ink-2:#AAC2B2;
+    --ink-3:#7C9486;
+    --paper:#0A130E;
+    --surface:#121E17;
+    --surface-2:#17271D;
+    --line:#26382D;
+    --line-soft:#1D2E23;
+
+    --shell:#000000;
+    --shell-edge:#31463A;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px -12px rgba(0,0,0,.7);
+    --shadow-lift:0 2px 4px rgba(0,0,0,.5), 0 28px 60px -20px rgba(0,0,0,.85);
+  }
+}
+:root[data-theme="dark"]{
+  --green:#3FDA7C;
+  --green-deep:#8FEDB5;
+  --green-soft:#123222;
+  --green-line:#215C3B;
+  --berry:#FF6089;
+  --berry-soft:#3B1220;
+  --amber:#F0B45F;
+  --amber-soft:#33270F;
+
+  --ink:#E9F3EB;
+  --ink-2:#AAC2B2;
+  --ink-3:#7C9486;
+  --paper:#0A130E;
+  --surface:#121E17;
+  --surface-2:#17271D;
+  --line:#26382D;
+  --line-soft:#1D2E23;
+
+  --shell:#000000;
+  --shell-edge:#31463A;
+  --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px -12px rgba(0,0,0,.7);
+  --shadow-lift:0 2px 4px rgba(0,0,0,.5), 0 28px 60px -20px rgba(0,0,0,.85);
+}
+
+/* ─────────────────────────────  БАЗА  ───────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--text);
+  font-size:17px;
+  line-height:1.55;
+  font-feature-settings:"ss01";
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;text-wrap:balance;font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.12}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+a{color:var(--green-deep);text-underline-offset:3px}
+:focus-visible{outline:2.5px solid var(--green);outline-offset:3px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+.wrap{width:min(1240px,100% - 2.5rem);margin-inline:auto}
+.eyebrow{
+  font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);
+}
+
+/* ─────────────────────────────  ШАПКА  ───────────────────────────── */
+.top{padding:clamp(28px,5vw,54px) 0 0}
+.top__bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.mark{display:flex;align-items:center;gap:10px}
+.mark__leaf{
+  width:34px;height:34px;border-radius:11px;background:var(--green);
+  display:grid;place-items:center;flex:none;color:#fff;
+}
+:root[data-theme="dark"] .mark__leaf{color:#08160E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mark__leaf{color:#08160E}}
+.mark__leaf svg{width:19px;height:19px;display:block}
+.mark__name{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.03em}
+.mark__sub{font-size:12px;color:var(--ink-3);line-height:1.2}
+
+.disclaimer{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 13px 7px 10px;border-radius:100px;
+  background:var(--berry-soft);color:var(--berry);
+  font-size:12px;font-weight:600;line-height:1.3;
+}
+.disclaimer::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+
+.hero{padding:clamp(30px,5vw,58px) 0 clamp(24px,3vw,34px)}
+.hero h1{
+  font-size:clamp(34px,6.2vw,62px);font-weight:800;letter-spacing:-.045em;
+  max-width:15ch;
+}
+.hero h1 em{font-style:normal;color:var(--green-deep)}
+.hero__lead{
+  margin-top:20px;max-width:var(--measure);
+  font-size:clamp(17px,1.6vw,19px);color:var(--ink-2);
+}
+.hero__meta{
+  display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;
+}
+.tag{
+  font-size:12.5px;font-weight:500;color:var(--ink-2);
+  border:1px solid var(--line);background:var(--surface);
+  padding:6px 12px;border-radius:100px;
+}
+
+/* ─────────────────────────────  СЦЕНА  ───────────────────────────── */
+.stage{
+  display:grid;grid-template-columns:minmax(0,368px) minmax(0,1fr);
+  gap:clamp(30px,4.5vw,76px);align-items:start;
+  padding-bottom:clamp(50px,7vw,96px);
+}
+@media (max-width:940px){
+  .stage{grid-template-columns:minmax(0,1fr);justify-items:center}
+}
+
+/* ── Телефон ── */
+.phone-col{position:sticky;top:24px}
+@media (max-width:940px){.phone-col{position:static}}
+
+.phone{
+  width:368px;max-width:100%;
+  background:var(--shell);
+  border:1px solid var(--shell-edge);
+  border-radius:46px;padding:11px;
+  box-shadow:var(--shadow-lift);
+}
+.phone__screen{
+  position:relative;
+  height:744px;
+  background:var(--surface-2);
+  border-radius:36px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  isolation:isolate;
+}
+.status{
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 24px 6px;font-size:12.5px;font-weight:600;color:var(--ink);
+}
+.status__icons{display:flex;gap:5px;align-items:center;opacity:.85}
+.status__icons i{display:block;width:15px;height:10px;border:1.4px solid currentColor;border-radius:3px}
+.status__icons i:first-child{width:4px;border-radius:1px;border-width:0;background:currentColor;height:9px}
+.status__icons i:nth-child(2){width:10px;height:9px;border-width:0;background:currentColor;clip-path:polygon(0 100%,35% 100%,35% 55%,0 55%,0 100%,50% 100%,50% 25%,100% 25%,100% 100%)}
+
+.appbar{
+  flex:none;padding:6px 22px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.appbar__title{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.03em}
+.appbar__sub{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.avatar{
+  width:38px;height:38px;border-radius:13px;flex:none;
+  background:var(--green-soft);color:var(--green-deep);
+  display:grid;place-items:center;
+  font-family:var(--display);font-weight:600;font-size:15px;
+  border:1px solid var(--green-line);
+}
+
+.viewport{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 18px;scrollbar-width:thin}
+.viewport::-webkit-scrollbar{width:5px}
+.viewport::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+
+.screen{display:none;flex-direction:column;gap:12px}
+.screen.is-on{display:flex;animation:rise .34s cubic-bezier(.22,1,.36,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* ── Карточки внутри приложения ── */
+.card{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:16px;
+}
+.card--flat{background:var(--surface);border-color:var(--line-soft)}
+.card--green{background:var(--green-soft);border-color:var(--green-line)}
+.card__label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.card__title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.02em;margin-top:7px}
+.card__note{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
+
+.live{display:flex;align-items:center;gap:11px}
+.live__dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none;position:relative}
+.live__dot::after{
+  content:"";position:absolute;inset:-5px;border-radius:50%;
+  border:2px solid var(--green);opacity:.4;
+  animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{0%{transform:scale(.55);opacity:.55}100%{transform:scale(1.25);opacity:0}}
+.live__text{font-size:13.5px;font-weight:600}
+.live__meta{font-size:12.5px;color:var(--ink-3);margin-left:auto}
+
+/* Кольцо качества */
+.ring-row{display:flex;align-items:center;gap:18px}
+.ring{width:104px;height:104px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.ring__track{stroke:var(--line);stroke-width:9;fill:none}
+.ring__fill{
+  stroke:var(--green);stroke-width:9;fill:none;stroke-linecap:round;
+  stroke-dasharray:283;stroke-dashoffset:283;
+  transition:stroke-dashoffset 1.15s cubic-bezier(.22,1,.36,1) .15s;
+}
+.ring.is-drawn .ring__fill{stroke-dashoffset:var(--dash,60)}
+.ring__center{
+  position:absolute;inset:0;display:grid;place-content:center;text-align:center;
+}
+.ring__big{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.ring__small{font-size:10.5px;color:var(--ink-3);margin-top:4px}
+
+.stat-list{display:flex;flex-direction:column;gap:9px;flex:1;min-width:0}
+.stat{display:flex;align-items:baseline;gap:8px;font-size:13px}
+.stat__k{color:var(--ink-2);white-space:nowrap}
+.stat__line{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)}
+.stat__v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat__v--good{color:var(--green-deep)}
+
+/* Полоса прогресса */
+.bar{height:9px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px}
+.bar__fill{height:100%;border-radius:99px;background:var(--green);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .2s}
+.is-drawn .bar__fill{width:var(--pct,50%)}
+.bar--amber .bar__fill{background:var(--amber)}
+.bar-legend{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:8px}
+
+.reward{
+  display:flex;align-items:flex-start;gap:10px;margin-top:13px;
+  padding-top:13px;border-top:1px dashed var(--line);
+  font-size:12.5px;color:var(--ink-2);line-height:1.45;
+}
+.reward svg{width:16px;height:16px;flex:none;color:var(--green-deep);margin-top:1px}
+
+/* Уровни */
+.levels{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.level{
+  display:flex;align-items:center;gap:11px;padding:9px 2px;
+  font-size:13.5px;color:var(--ink-3);
+}
+.level__pip{
+  width:22px;height:22px;border-radius:50%;flex:none;
+  border:2px solid var(--line);background:var(--surface);
+  display:grid;place-items:center;position:relative;
+}
+.level__pip::after{
+  content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  width:2px;height:11px;background:var(--line);
+}
+.level:last-child .level__pip::after{display:none}
+.level.done{color:var(--ink-2)}
+.level.done .level__pip{background:var(--green);border-color:var(--green)}
+.level.done .level__pip::after{background:var(--green)}
+.level.done .level__pip svg{width:11px;height:11px;color:#fff}
+:root[data-theme="dark"] .level.done .level__pip svg{color:#08160E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .level.done .level__pip svg{color:#08160E}}
+.level.now{color:var(--ink);font-weight:600}
+.level.now .level__pip{border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.level.now .level__pip i{width:8px;height:8px;border-radius:50%;background:var(--green);display:block}
+.level__meta{margin-left:auto;font-size:12px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* Бейджи */
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.badge{
+  border:1px solid var(--line);border-radius:var(--r-md);
+  padding:11px 8px;text-align:center;background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  transition:transform .18s ease, border-color .18s ease;
+}
+.badge:hover{transform:translateY(-2px);border-color:var(--green-line)}
+.badge[aria-expanded="true"]{border-color:var(--green);background:var(--green-soft)}
+.badge__ic{
+  width:36px;height:36px;border-radius:12px;display:grid;place-items:center;
+  background:var(--green-soft);color:var(--green-deep);
+}
+.badge__ic svg{width:19px;height:19px}
+.badge__n{font-size:10.5px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.badge.locked{opacity:.55}
+.badge.locked .badge__ic{background:var(--line-soft);color:var(--ink-3)}
+.badge__how{
+  font-size:12.5px;color:var(--ink-2);line-height:1.45;
+  margin-top:10px;padding:11px 13px;border-radius:var(--r-md);
+  background:var(--surface-2);border:1px solid var(--line-soft);
+}
+.badge__how b{color:var(--ink);font-weight:600}
+
+/* Лига */
+.note-chip{
+  display:flex;gap:9px;align-items:flex-start;
+  font-size:12.5px;line-height:1.45;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--line-soft);
+  border-radius:var(--r-md);padding:11px 13px;
+}
+.note-chip svg{width:15px;height:15px;flex:none;color:var(--green-deep);margin-top:2px}
+
+.rank{
+  display:flex;align-items:center;gap:12px;padding:11px 13px;
+  border-radius:var(--r-md);font-size:13.5px;
+}
+.rank + .rank{margin-top:3px}
+.rank__pos{
+  width:24px;font-family:var(--display);font-size:13px;font-weight:600;
+  color:var(--ink-3);font-variant-numeric:tabular-nums;flex:none;
+}
+.rank__who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank__pts{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.rank.me{background:var(--green-soft);border:1px solid var(--green-line);font-weight:600}
+.rank.me .rank__pos,.rank.me .rank__pts{color:var(--green-deep)}
+.rank.promo{border-bottom:1px dashed var(--green-line);border-radius:var(--r-md) var(--r-md) 0 0}
+.promo-label{
+  font-size:11px;color:var(--green-deep);font-weight:600;
+  text-align:center;padding:7px 0 2px;letter-spacing:.02em;
+}
+
+/* Команда */
+.team-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:7px 0}
+.team-row + .team-row{border-top:1px solid var(--line-soft)}
+.team-row__av{
+  width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--line);
+  font-size:11px;font-weight:600;color:var(--ink-2);
+}
+.team-row__n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-row__v{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-2);font-size:12.5px}
+.team-row.me .team-row__av{background:var(--green-soft);border-color:var(--green-line);color:var(--green-deep)}
+.team-row.me .team-row__n{font-weight:600}
+
+/* Слоты */
+.unlock{
+  display:flex;gap:12px;align-items:center;
+  padding:14px 15px;border-radius:var(--r-lg);
+  background:var(--green-soft);border:1px solid var(--green-line);
+}
+.unlock__ic{
+  width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;
+  background:var(--green);color:#fff;
+}
+:root[data-theme="dark"] .unlock__ic{color:#08160E}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .unlock__ic{color:#08160E}}
+.unlock__ic svg{width:19px;height:19px}
+.unlock__t{font-size:13.5px;font-weight:600;color:var(--green-deep)}
+.unlock__s{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+
+.slot{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);
+}
+.slot + .slot{margin-top:7px}
+.slot__day{width:52px;flex:none}
+.slot__d1{font-size:12.5px;font-weight:600}
+.slot__d2{font-size:11px;color:var(--ink-3)}
+.slot__time{flex:1;font-size:13.5px;font-variant-numeric:tabular-nums}
+.slot__pill{
+  font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;white-space:nowrap;
+  background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line);
+}
+.slot__pill--muted{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.slot.taken{opacity:.5}
+
+/* ── Таб-бар ── */
+.tabbar{
+  flex:none;display:grid;grid-template-columns:repeat(5,1fr);
+  gap:2px;padding:9px 8px 15px;
+  background:var(--surface);border-top:1px solid var(--line);
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 2px;border-radius:13px;color:var(--ink-3);
+  transition:color .18s ease,background .18s ease;
+}
+.tab svg{width:21px;height:21px;stroke-width:1.7}
+.tab span{font-size:9.5px;font-weight:600;letter-spacing:-.01em}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--green-deep);background:var(--green-soft)}
+
+/* ── Панель обоснований ── */
+.notes{max-width:var(--measure);padding-top:6px}
+.notes__head{padding-bottom:22px;border-bottom:1px solid var(--line)}
+.notes__head h2{font-size:clamp(21px,2.4vw,26px);font-weight:600;letter-spacing:-.03em;margin-top:11px}
+.note{display:none}
+.note.is-on{display:block;animation:rise .34s cubic-bezier(.22,1,.36,1) both}
+.note__screen{padding:26px 0 0}
+.note__k{
+  font-family:var(--display);font-size:11px;font-weight:600;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--green-deep);
+}
+.note__h{font-size:clamp(20px,2.2vw,25px);font-weight:600;letter-spacing:-.03em;margin-top:12px}
+.note__p{margin-top:14px;color:var(--ink-2);font-size:16px}
+.note__list{margin-top:22px;display:flex;flex-direction:column;gap:16px}
+.note__item{display:flex;gap:14px}
+.note__bullet{
+  width:26px;height:26px;border-radius:9px;flex:none;margin-top:1px;
+  background:var(--green-soft);color:var(--green-deep);
+  display:grid;place-items:center;font-size:12px;font-weight:700;
+  font-variant-numeric:tabular-nums;border:1px solid var(--green-line);
+}
+.note__item b{display:block;font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+.note__item span{display:block;color:var(--ink-2);font-size:14.5px;line-height:1.5;margin-top:4px}
+
+.callout{
+  margin-top:26px;padding:16px 18px;border-radius:var(--r-lg);
+  background:var(--surface);border:1px solid var(--line);
+  border-left:3px solid var(--green);
+  font-size:14.5px;color:var(--ink-2);line-height:1.55;
+}
+.callout b{color:var(--ink);font-weight:600}
+
+/* ─────────────────────────────  СЕКЦИИ  ───────────────────────────── */
+.band{border-top:1px solid var(--line);padding:clamp(48px,6vw,86px) 0}
+.band__head{max-width:var(--measure)}
+.band__head h2{font-size:clamp(26px,3.4vw,40px);font-weight:800;letter-spacing:-.04em;margin-top:12px}
+.band__head p{margin-top:16px;color:var(--ink-2)}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:14px;margin-top:38px}
+.rule{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-xl);padding:24px;
+  display:flex;flex-direction:column;gap:11px;
+}
+.rule__ic{
+  width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+  background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line);
+}
+.rule__ic svg{width:21px;height:21px}
+.rule h3{font-size:17.5px;font-weight:600;letter-spacing:-.02em}
+.rule p{font-size:14.5px;color:var(--ink-2);line-height:1.55}
+.rule__tail{
+  margin-top:auto;padding-top:13px;border-top:1px solid var(--line-soft);
+  font-size:12.5px;color:var(--ink-3);
+}
+
+/* Чего нет */
+.band--absent{background:var(--surface)}
+.absent{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:14px;margin-top:38px}
+.gone{
+  border:1px solid var(--line);border-radius:var(--r-xl);padding:24px;
+  background:var(--surface-2);position:relative;
+}
+.gone__x{
+  width:30px;height:30px;border-radius:10px;display:grid;place-items:center;
+  background:var(--berry-soft);color:var(--berry);margin-bottom:14px;
+}
+.gone__x svg{width:15px;height:15px}
+.gone h3{
+  font-size:16.5px;font-weight:600;letter-spacing:-.02em;
+  text-decoration:line-through;text-decoration-color:var(--berry);
+  text-decoration-thickness:2px;text-underline-offset:2px;
+  color:var(--ink-3);
+}
+.gone p{font-size:14.5px;color:var(--ink-2);line-height:1.55;margin-top:11px}
+.gone cite{
+  display:block;margin-top:13px;font-size:12.5px;font-style:normal;color:var(--ink-3);
+  padding-top:11px;border-top:1px solid var(--line);
+}
+
+/* Дальше */
+.steps{margin-top:38px;display:flex;flex-direction:column}
+.step{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:20px;align-items:start;
+  padding:24px 0;border-top:1px solid var(--line);
+}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step__n{
+  font-family:var(--display);font-size:13px;font-weight:600;color:var(--green-deep);
+  font-variant-numeric:tabular-nums;padding-top:3px;
+}
+.step h3{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.step p{margin-top:8px;color:var(--ink-2);font-size:15px;max-width:58ch}
+.step__when{
+  font-size:12.5px;color:var(--ink-3);white-space:nowrap;padding-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+@media (max-width:640px){
+  .step{grid-template-columns:auto minmax(0,1fr);gap:14px}
+  .step__when{grid-column:2;white-space:normal;padding-top:10px}
+}
+
+/* Подвал */
+.foot{border-top:1px solid var(--line);padding:38px 0 60px;font-size:13.5px;color:var(--ink-3)}
+.foot p{max-width:var(--measure);line-height:1.6}
+.foot p + p{margin-top:12px}
+.foot b{color:var(--ink-2);font-weight:600}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+
+<header class="top">
+  <div class="wrap top__bar">
+    <div class="mark">
+      <div class="mark__leaf" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 4c0 9-6 14-13 14"/><path d="M7 18c0-7 5-11 13-14"/><path d="M4 21c1-2 2-3 3-3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="mark__name">Своя&nbsp;полка</div>
+        <div class="mark__sub">мотивационный слой в приложении курьера</div>
+      </div>
+    </div>
+    <p class="disclaimer">Независимый концепт. Не официальный продукт ВкусВилл</p>
+  </div>
+</header>
+
+<section class="wrap hero">
+  <p class="eyebrow">Концепт-прототип · август 2026</p>
+  <h1>Соревнование за&nbsp;<em>бережность</em>, а не за скорость</h1>
+  <p class="hero__lead">
+    Пять экранов внутри существующего приложения «ВкусВилл: Курьер» — не отдельное приложение,
+    а слой поверх событий, которые система уже собирает: выход на слот, оценка клиента,
+    возврат термосумки, смена без замечаний. Нажимайте вкладки внизу телефона — рядом появится
+    разбор: почему этот экран устроен именно так.
+  </p>
+  <div class="hero__meta">
+    <span class="tag">5 экранов, рабочая навигация</span>
+    <span class="tag">Фирменный зелёный #2DBE64</span>
+    <span class="tag">Данные и имена — вымышленные</span>
+  </div>
+</section>
+
+<main class="wrap stage">
+
+  <!-- ══════════════ ТЕЛЕФОН ══════════════ -->
+  <div class="phone-col">
+    <div class="phone">
+      <div class="phone__screen">
+
+        <div class="status" aria-hidden="true">
+          <span class="num">9:41</span>
+          <span class="status__icons"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="appbar">
+          <div>
+            <div class="appbar__title" id="barTitle">Привет, Ислам</div>
+            <div class="appbar__sub" id="barSub">Профсоюзная, 43 · велосипед</div>
+          </div>
+          <div class="avatar" aria-hidden="true">И</div>
+        </div>
+
+        <div class="viewport" id="viewport">
+
+          <!-- ── Экран 1: Смена ── -->
+          <section class="screen is-on" id="s-shift" role="tabpanel" aria-labelledby="t-shift">
+
+            <div class="card card--green">
+              <div class="live">
+                <span class="live__dot" aria-hidden="true"></span>
+                <span class="live__text">Смена идёт</span>
+                <span class="live__meta num">до 18:00</span>
+              </div>
+              <p class="card__note">9 заказов из 14 по плану смены. Идёшь ровно — торопиться не нужно.</p>
+            </div>
+
+            <div class="card">
+              <p class="card__label">Неделя</p>
+              <div class="ring-row" style="margin-top:14px">
+                <div class="ring" id="ring1" style="--dash:31">
+                  <svg viewBox="0 0 100 100" aria-hidden="true">
+                    <circle class="ring__track" cx="50" cy="50" r="45"></circle>
+                    <circle class="ring__fill" cx="50" cy="50" r="45"></circle>
+                  </svg>
+                  <div class="ring__center">
+                    <div class="ring__big num">89</div>
+                    <div class="ring__small">баллов<br>качества</div>
+                  </div>
+                </div>
+                <ul class="stat-list">
+                  <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v stat__v--good num">4,97</span></li>
+                  <li class="stat"><span class="stat__k">Вышел на слот</span><span class="stat__line"></span><span class="stat__v num">5 / 5</span></li>
+                  <li class="stat"><span class="stat__k">Тара вернулась</span><span class="stat__line"></span><span class="stat__v stat__v--good num">100 %</span></li>
+                  <li class="stat"><span class="stat__k">Без замечаний</span><span class="stat__line"></span><span class="stat__v num">62 / 64</span></li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="card" id="goalCard">
+              <p class="card__label">Цель недели</p>
+              <p class="card__title">Все термосумки вернулись на точку</p>
+              <div class="bar" style="--pct:90%"><span class="bar__fill"></span></div>
+              <div class="bar-legend"><span class="num">18 из 20</span><span>осталось 2 дня</span></div>
+              <p class="reward">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+                <span>Выполнишь — слоты на следующую неделю откроются тебе в четверг, а не в пятницу</span>
+              </p>
+            </div>
+
+            <div class="card card--flat">
+              <p class="card__label">Твоя лига</p>
+              <div class="rank me" style="margin-top:10px">
+                <span class="rank__pos num">7</span>
+                <span class="rank__who">Ты · Лига Юго-Запада</span>
+                <span class="rank__pts num">412</span>
+              </div>
+              <p class="card__note">До шестого места — 9 баллов. Это одна смена без замечаний.</p>
+            </div>
+
+          </section>
+
+          <!-- ── Экран 2: Прогресс ── -->
+          <section class="screen" id="s-progress" role="tabpanel" aria-labelledby="t-progress" hidden>
+
+            <div class="card card--green">
+              <p class="card__label" style="color:var(--green-deep)">Сейчас</p>
+              <p class="card__title" style="font-size:20px">Знаток района</p>
+              <div class="bar" style="--pct:76%"><span class="bar__fill"></span></div>
+              <div class="bar-legend"><span class="num">68 из 90 зачётных смен</span><span>≈ 5 недель</span></div>
+            </div>
+
+            <div class="card">
+              <p class="card__label">Путь</p>
+              <ul class="levels">
+                <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Новичок<span class="level__meta num">10 смен</span></li>
+                <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Свой человек<span class="level__meta num">30 смен</span></li>
+                <li class="level now"><span class="level__pip"><i></i></span>Знаток района<span class="level__meta num">90 смен</span></li>
+                <li class="level"><span class="level__pip"></span>Наставник<span class="level__meta num">180 смен</span></li>
+                <li class="level"><span class="level__pip"></span>Опора точки<span class="level__meta num">360 смен</span></li>
+              </ul>
+              <p class="card__note">
+                Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь,
+                просто не добавляет шаг.
+              </p>
+            </div>
+
+            <div class="card">
+              <p class="card__label">Знаки</p>
+              <div class="badges">
+                <button class="badge" type="button" aria-expanded="false" data-how="<b>Бережная доставка.</b> 100 заказов подряд без повреждений и жалоб на состояние продуктов.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                  <span class="badge__n">Бережная<br>доставка</span>
+                </button>
+                <button class="badge" type="button" aria-expanded="false" data-how="<b>Ноль инцидентов.</b> 30 смен подряд без ДТП, падений и обращений в травмпункт. Обновляется каждый месяц.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+                  <span class="badge__n">Ноль<br>инцидентов</span>
+                </button>
+                <button class="badge" type="button" aria-expanded="false" data-how="<b>Тара на месте.</b> Все термосумки и пакеты вернулись на точку три недели подряд.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg></span>
+                  <span class="badge__n">Тара<br>на месте</span>
+                </button>
+                <button class="badge" type="button" aria-expanded="false" data-how="<b>Знаток района.</b> 200 доставок в одном районе. Ты знаешь домофоны, дворы и где не проехать.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                  <span class="badge__n">Знаток<br>района</span>
+                </button>
+                <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Наставник.</b> Провести трёх новичков через первую неделю. Пока — один из трёх.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13A4 4 0 0119 7"/></svg></span>
+                  <span class="badge__n">Наставник<br>1 из 3</span>
+                </button>
+                <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Зимний курьер.</b> 40 смен при температуре ниже −10 °C. Открывается с декабря.">
+                  <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5L4.9 17.5"/></svg></span>
+                  <span class="badge__n">Зимний<br>курьер</span>
+                </button>
+              </div>
+              <div class="badge__how" id="badgeHow" hidden></div>
+            </div>
+
+          </section>
+
+          <!-- ── Экран 3: Лига ── -->
+          <section class="screen" id="s-league" role="tabpanel" aria-labelledby="t-league" hidden>
+
+            <div class="card card--flat">
+              <div class="live">
+                <span class="live__text">Лига Юго-Запада</span>
+                <span class="live__meta">2 дня до итогов</span>
+              </div>
+              <p class="card__note">24 курьера · велосипед · стаж от полугода</p>
+            </div>
+
+            <p class="note-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span>Ты сравниваешься с курьерами похожего профиля. Общего топа по компании нет — и не будет.</span>
+            </p>
+
+            <div class="card" style="padding:12px">
+              <div class="rank"><span class="rank__pos num">4</span><span class="rank__who">Марина К.</span><span class="rank__pts num">468</span></div>
+              <div class="rank"><span class="rank__pos num">5</span><span class="rank__who">Тимур А.</span><span class="rank__pts num">441</span></div>
+              <div class="rank promo"><span class="rank__pos num">6</span><span class="rank__who">Женя Л.</span><span class="rank__pts num">421</span></div>
+              <p class="promo-label">↑ шестёрка переходит в следующую лигу</p>
+              <div class="rank me"><span class="rank__pos num">7</span><span class="rank__who">Ты</span><span class="rank__pts num">412</span></div>
+              <div class="rank"><span class="rank__pos num">8</span><span class="rank__who">Артём В.</span><span class="rank__pts num">400</span></div>
+              <div class="rank"><span class="rank__pos num">9</span><span class="rank__who">Настя Ш.</span><span class="rank__pts num">387</span></div>
+              <div class="rank"><span class="rank__pos num">10</span><span class="rank__who">Данила Р.</span><span class="rank__pts num">371</span></div>
+            </div>
+
+            <div class="card">
+              <p class="card__label">Из чего баллы</p>
+              <ul class="stat-list" style="margin-top:12px">
+                <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v num">168</span></li>
+                <li class="stat"><span class="stat__k">Выходы на слот</span><span class="stat__line"></span><span class="stat__v num">125</span></li>
+                <li class="stat"><span class="stat__k">Возврат тары</span><span class="stat__line"></span><span class="stat__v num">64</span></li>
+                <li class="stat"><span class="stat__k">Помощь коллегам</span><span class="stat__line"></span><span class="stat__v num">55</span></li>
+              </ul>
+              <p class="card__note">
+                Время в пути и скорость доставки в баллы не входят. Совсем.
+              </p>
+            </div>
+
+            <p class="note-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Низкое место в лиге не уменьшает количество заказов и не снижает оплату. Лига — только про призы и ранний выбор слотов.</span>
+            </p>
+
+          </section>
+
+          <!-- ── Экран 4: Команда ── -->
+          <section class="screen" id="s-team" role="tabpanel" aria-labelledby="t-team" hidden>
+
+            <div class="card card--green">
+              <p class="card__label" style="color:var(--green-deep)">Челлендж недели</p>
+              <p class="card__title" style="font-size:19px">Неделя бережной доставки</p>
+              <p class="card__note">Профсоюзная, 43 — вся точка целиком, 19 курьеров</p>
+              <div class="bar" style="--pct:82%"><span class="bar__fill"></span></div>
+              <div class="bar-legend"><span class="num">156 из 190 заказов без замечаний</span><span class="num">82 %</span></div>
+            </div>
+
+            <div class="card">
+              <p class="card__label">Кто как вложился</p>
+              <div style="margin-top:8px">
+                <div class="team-row"><span class="team-row__av">М</span><span class="team-row__n">Марина К.</span><span class="team-row__v num">14</span></div>
+                <div class="team-row"><span class="team-row__av">Т</span><span class="team-row__n">Тимур А.</span><span class="team-row__v num">13</span></div>
+                <div class="team-row me"><span class="team-row__av">И</span><span class="team-row__n">Ты</span><span class="team-row__v num">12</span></div>
+                <div class="team-row"><span class="team-row__av">Ж</span><span class="team-row__n">Женя Л.</span><span class="team-row__v num">12</span></div>
+                <div class="team-row"><span class="team-row__av">+15</span><span class="team-row__n">остальные курьеры точки</span><span class="team-row__v num">105</span></div>
+              </div>
+              <p class="card__note">Внутри точки места не показываются — важен только общий результат.</p>
+            </div>
+
+            <div class="card card--flat">
+              <p class="card__label">Если возьмём</p>
+              <p class="card__title" style="font-size:16px">Завтрак на точке в понедельник</p>
+              <p class="card__note">
+                И вся смена получает ранний выбор слотов на неделю вперёд — не только те,
+                кто вложился больше всех.
+              </p>
+            </div>
+
+            <p class="note-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              <span>Новичок в первые две недели считается за двоих. Так команде выгодно его подтянуть, а не обойти.</span>
+            </p>
+
+          </section>
+
+          <!-- ── Экран 5: Слоты ── -->
+          <section class="screen" id="s-slots" role="tabpanel" aria-labelledby="t-slots" hidden>
+
+            <div class="unlock">
+              <span class="unlock__ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+              </span>
+              <div>
+                <p class="unlock__t">Ранний выбор открыт</p>
+                <p class="unlock__s">Ты выбираешь слоты с четверга 18:00. Остальные — с пятницы 12:00.</p>
+              </div>
+            </div>
+
+            <div class="card card--flat">
+              <p class="card__label">Следующая неделя</p>
+              <div style="margin-top:12px">
+                <div class="slot">
+                  <span class="slot__day"><span class="slot__d1">Пн</span><br><span class="slot__d2">1 сент</span></span>
+                  <span class="slot__time num">09:00 — 15:00</span>
+                  <span class="slot__pill">Взять</span>
+                </div>
+                <div class="slot">
+                  <span class="slot__day"><span class="slot__d1">Вт</span><br><span class="slot__d2">2 сент</span></span>
+                  <span class="slot__time num">14:00 — 20:00</span>
+                  <span class="slot__pill">Взять</span>
+                </div>
+                <div class="slot">
+                  <span class="slot__day"><span class="slot__d1">Ср</span><br><span class="slot__d2">3 сент</span></span>
+                  <span class="slot__time num">09:00 — 15:00</span>
+                  <span class="slot__pill">Взять</span>
+                </div>
+                <div class="slot taken">
+                  <span class="slot__day"><span class="slot__d1">Чт</span><br><span class="slot__d2">4 сент</span></span>
+                  <span class="slot__time num">14:00 — 20:00</span>
+                  <span class="slot__pill slot__pill--muted">Занят</span>
+                </div>
+                <div class="slot">
+                  <span class="slot__day"><span class="slot__d1">Пт</span><br><span class="slot__d2">5 сент</span></span>
+                  <span class="slot__time num">09:00 — 15:00</span>
+                  <span class="slot__pill">Взять</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="note-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span>Ранний доступ — награда, которая ничего не стоит компании и никого не заставляет ехать быстрее.</span>
+            </p>
+
+            <div class="card">
+              <p class="card__label">Как это работает</p>
+              <p class="card__note" style="margin-top:8px">
+                Доступ открывается на неделю вперёд и пересматривается каждый понедельник.
+                Потерять его нельзя внезапно: за неделю до закрытия придёт уведомление
+                с точным списком того, что нужно подтянуть.
+              </p>
+            </div>
+
+          </section>
+
+        </div>
+
+        <nav class="tabbar" role="tablist" aria-label="Разделы приложения">
+          <button class="tab" type="button" role="tab" id="t-shift" aria-selected="true" aria-controls="s-shift" data-screen="shift">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            <span>Смена</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="t-progress" aria-selected="false" aria-controls="s-progress" data-screen="progress" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
+            <span>Прогресс</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="t-league" aria-selected="false" aria-controls="s-league" data-screen="league" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            <span>Лига</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="t-team" aria-selected="false" aria-controls="s-team" data-screen="team" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg>
+            <span>Команда</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="t-slots" aria-selected="false" aria-controls="s-slots" data-screen="slots" tabindex="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span>Слоты</span>
+          </button>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ ПАНЕЛЬ ОБОСНОВАНИЙ ══════════════ -->
+  <div class="notes">
+    <div class="notes__head">
+      <p class="eyebrow">Разбор экрана</p>
+      <h2>Каждое решение здесь — ответ на чужую ошибку</h2>
+    </div>
+
+    <div class="note is-on" data-note="shift">
+      <div class="note__screen">
+        <p class="note__k">Экран 1 · Смена</p>
+        <h3 class="note__h">Главный показатель — качество, а не количество</h3>
+        <p class="note__p">
+          В центре экрана кольцо «баллы качества», а не счётчик заказов и не заработок за день.
+          Заказы упомянуты одной строкой и с оговоркой «торопиться не нужно».
+        </p>
+        <ul class="note__list">
+          <li class="note__item"><span class="note__bullet">1</span><span><b>Неделя, а не серия</b><span>Вместо «12 смен подряд» — «5 из 5 по плану недели». Серия без выходных — это ровно та механика Uber, из-за которой водители перерабатывают: обрыв серии ощущается как потеря, и человек выходит больным.</span></span></li>
+          <li class="note__item"><span class="note__bullet">2</span><span><b>Цель недели одна</b><span>Не пять параллельных заданий, а одно понятное: «все термосумки вернулись». Возврат тары — реальная боль ВкусВилла и абсолютно безопасная для соревнования метрика.</span></span></li>
+          <li class="note__item"><span class="note__bullet">3</span><span><b>Разрыв показан в смысле, а не в цифрах</b><span>«До шестого места — 9 баллов. Это одна смена без замечаний». Человек видит не абстрактный отрыв, а конкретное действие.</span></span></li>
+        </ul>
+        <p class="callout">
+          <b>Чего вы здесь не увидите:</b> заработка за смену. Деньги живут в основном приложении.
+          Как только мотивационный слой начинает показывать рубли, он превращается в вторую платёжку —
+          и все споры про справедливость переезжают сюда.
+        </p>
+      </div>
+    </div>
+
+    <div class="note" data-note="progress">
+      <div class="note__screen">
+        <p class="note__k">Экран 2 · Прогресс</p>
+        <h3 class="note__h">Путь измеряется сменами, а не очками</h3>
+        <p class="note__p">
+          «68 из 90 зачётных смен» честнее, чем «4 200 XP». Курьер сразу понимает, сколько это
+          в его собственной жизни — примерно пять недель.
+        </p>
+        <ul class="note__list">
+          <li class="note__item"><span class="note__bullet">1</span><span><b>Пропуск не обнуляет прогресс</b><span>Механики со сгоранием прогресса дают краткосрочный всплеск и долгосрочную обиду. Человек, заболевший на неделю, не должен возвращаться в начало.</span></span></li>
+          <li class="note__item"><span class="note__bullet">2</span><span><b>Знаки — за то, что не измеряется деньгами</b><span>Наставничество, возврат тары, работа зимой, ноль инцидентов. Именно за это компания хочет сказать спасибо, но не может доплатить за каждый случай отдельно.</span></span></li>
+          <li class="note__item"><span class="note__bullet">3</span><span><b>Закрытые знаки видны и объяснены</b><span>Нажмите на «Наставника» — прототип покажет условие. Скрытые ачивки хороши в играх и вредны в работе: непрозрачное правило читается как обман.</span></span></li>
+        </ul>
+        <p class="callout">
+          <b>Названия уровней</b> взяты из живой речи, а не из фэнтези: «Свой человек», «Знаток района»,
+          «Опора точки». «Легенда» и «Мастер» звучат как корпоративная игра в игру — а это и есть
+          та фальшь, которую линейный персонал считывает мгновенно.
+        </p>
+      </div>
+    </div>
+
+    <div class="note" data-note="league">
+      <div class="note__screen">
+        <p class="note__k">Экран 3 · Лига</p>
+        <h3 class="note__h">24 человека вместо пяти тысяч</h3>
+        <p class="note__p">
+          Общий рейтинг по компании демотивирует всех, кроме верхних двадцати. Лига собирается
+          из курьеров похожего профиля: один район, один тип транспорта, сопоставимый стаж.
+        </p>
+        <ul class="note__list">
+          <li class="note__item"><span class="note__bullet">1</span><span><b>Видно только своё окружение</b><span>Экран показывает позиции с четвёртой по десятую — соседей, а не недосягаемый топ. Цель всегда в одной смене езды.</span></span></li>
+          <li class="note__item"><span class="note__bullet">2</span><span><b>Вверх — можно, вниз — нет</b><span>Шестёрка переходит в следующую лигу, но никто не «вылетает» с потерей дохода. Понижающая механика превращает игру в систему санкций со всеми юридическими последствиями.</span></span></li>
+          <li class="note__item"><span class="note__bullet">3</span><span><b>Состав баллов открыт</b><span>Четыре строки, из которых складывается результат, и прямая надпись, что скорости среди них нет. С 1 октября 2026 года прозрачность алгоритмов — это ещё и требование 289-ФЗ.</span></span></li>
+        </ul>
+        <p class="callout">
+          <b>Почему это важнее остального:</b> исследования доставки фиксируют, что давление сроков
+          толкает курьеров превышать скорость и пользоваться телефоном за рулём. При этом
+          геймификация, построенная вокруг безопасного вождения, наоборот, снижает превышения.
+          Один и тот же инструмент, разный выбор метрики.
+        </p>
+      </div>
+    </div>
+
+    <div class="note" data-note="team">
+      <div class="note__screen">
+        <p class="note__k">Экран 4 · Команда</p>
+        <h3 class="note__h">Соревнуются точки, а не люди внутри точки</h3>
+        <p class="note__p">
+          Личная конкуренция между курьерами одной смены разрушает то немногое, что держит точку:
+          готовность подменить, подсказать адрес, помочь с тяжёлым заказом.
+        </p>
+        <ul class="note__list">
+          <li class="note__item"><span class="note__bullet">1</span><span><b>Внутри точки мест нет</b><span>Вклад показан, порядковые места — нет. Достаточно видеть, что ты не отстаёшь, без публичного ранжирования коллег, с которыми завтра работать бок о бок.</span></span></li>
+          <li class="note__item"><span class="note__bullet">2</span><span><b>Награда общая</b><span>Завтрак получают все, включая тех, кто вложился меньше. Иначе командный челлендж мгновенно превращается в личный, только с обидой на слабых.</span></span></li>
+          <li class="note__item"><span class="note__bullet">3</span><span><b>Новичок считается за двоих</b><span>Прямой экономический стимул подтягивать нового человека, а не радоваться его отставанию. Отток в первые две недели — главная боль курьерской доставки, и лечится он наставничеством.</span></span></li>
+        </ul>
+        <p class="callout">
+          <b>Кейс на сравнение:</b> Walmart дал сотрудникам распределительных центров по три-пять минут
+          игровых вопросов о безопасности в начале смены. На пилоте в восьми центрах регистрируемые
+          инциденты упали на 54% при добровольном участии 91%. Соревнование за безопасность работает.
+        </p>
+      </div>
+    </div>
+
+    <div class="note" data-note="slots">
+      <div class="note__screen">
+        <p class="note__k">Экран 5 · Слоты</p>
+        <h3 class="note__h">Настоящая награда — время, а не значок</h3>
+        <p class="note__p">
+          Ранний выбор слотов — единственное, что курьеры называют ценным во всех интервью
+          и что при этом почти ничего не стоит компании и никого не толкает ехать быстрее.
+        </p>
+        <ul class="note__list">
+          <li class="note__item"><span class="note__bullet">1</span><span><b>Разрыв в 18 часов, а не в деньгах</b><span>Четверг 18:00 против пятницы 12:00. Достаточно, чтобы собрать удобную неделю, недостаточно, чтобы оставить остальных без слотов.</span></span></li>
+          <li class="note__item"><span class="note__bullet">2</span><span><b>Потеря доступа предупреждается заранее</b><span>За неделю приходит уведомление с точным списком того, что нужно подтянуть. Внезапное понижение — это то, из-за чего курьеры Uber Pro называли программу манипуляцией.</span></span></li>
+          <li class="note__item"><span class="note__bullet">3</span><span><b>Приоритет заказов не трогаем</b><span>Уровень влияет на выбор времени, но не на то, сколько заказов придёт в смену. Как только уровень начинает влиять на доход — это уже система оплаты труда, и её согласовывают юристы, а не продуктовая команда.</span></span></li>
+        </ul>
+        <p class="callout">
+          <b>Ровно здесь проходит граница риска.</b> DoorDash и Яндекс связали статус с приоритетом
+          заказов — и получили сначала оптимизацию под метрику, а потом претензии к прозрачности.
+          В концепте эта связь разорвана сознательно.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════ ПРАВИЛА ══════════════ -->
+<section class="band">
+  <div class="wrap">
+    <div class="band__head">
+      <p class="eyebrow">Механика</p>
+      <h2>Четыре правила, из которых всё собрано</h2>
+      <p>
+        Сознательно мало. Каждая добавленная механика — это ещё одна поверхность,
+        которую будут оптимизировать в обход смысла.
+      </p>
+    </div>
+    <div class="rules">
+      <article class="rule">
+        <span class="rule__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg></span>
+        <h3>Личный путь</h3>
+        <p>Пять уровней по зачётным сменам. Сравнение только с собой вчерашним. Прогресс не сгорает.</p>
+        <p class="rule__tail">Событие: смена закрыта без замечаний</p>
+      </article>
+      <article class="rule">
+        <span class="rule__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.6.8-4.9 4.5 1.3 6.4L12 16.8 6.1 20l1.3-6.4L2.5 9.1l6.6-.8z"/></svg></span>
+        <h3>Знаки</h3>
+        <p>За бережность, наставничество, возврат тары и смены без инцидентов. Условия открыты до получения.</p>
+        <p class="rule__tail">Событие: оценка клиента, приёмка тары, обучение новичка</p>
+      </article>
+      <article class="rule">
+        <span class="rule__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <h3>Лига на 24 человека</h3>
+        <p>Когорта по району, транспорту и стажу. Шестёрка идёт вверх, вниз не падает никто.</p>
+        <p class="rule__tail">Событие: баллы качества за неделю</p>
+      </article>
+      <article class="rule">
+        <span class="rule__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg></span>
+        <h3>Челлендж точки</h3>
+        <p>Соревнуются точки между собой. Награда общая на смену, новичок считается за двоих.</p>
+        <p class="rule__tail">Событие: агрегат по точке за неделю</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ЧЕГО НЕТ ══════════════ -->
+<section class="band band--absent">
+  <div class="wrap">
+    <div class="band__head">
+      <p class="eyebrow">Отрицательное пространство</p>
+      <h2>Чего здесь намеренно нет</h2>
+      <p>
+        Это самая важная часть концепта. Всё перечисленное ниже присутствует у конкурентов,
+        технически тривиально и выглядит логично на совещании — и именно поэтому вычеркнуто явно,
+        а не «просто не сделано».
+      </p>
+    </div>
+    <div class="absent">
+      <article class="gone">
+        <span class="gone__x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <h3>Скорость доставки</h3>
+        <p>
+          Ни минут в пути, ни «доставил быстрее среднего», ни таймера у заказа.
+          Соревнование за скорость на велосипеде и самокате оплачивается травмами.
+        </p>
+        <cite>Исследования gig-доставки: давление сроков → превышение скорости и телефон за рулём</cite>
+      </article>
+      <article class="gone">
+        <span class="gone__x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <h3>Общий топ по компании</h3>
+        <p>
+          Если в топе двадцать человек из пяти тысяч, остальные выносят из механики
+          ровно одно: они не в топе. Только лиги по 20–30 человек.
+        </p>
+        <cite>Классическая ошибка корпоративных лидербордов</cite>
+      </article>
+      <article class="gone">
+        <span class="gone__x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <h3>Серии без выходных</h3>
+        <p>
+          Streak с обнулением заставляет выходить больным и уставшим. Вместо серии —
+          недельный план, который спокойно закрывается пятью сменами.
+        </p>
+        <cite>Механика streaks у Uber — самый критикуемый элемент</cite>
+      </article>
+      <article class="gone">
+        <span class="gone__x" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+        <h3>Уровень, влияющий на доход</h3>
+        <p>
+          Как только статус начинает управлять потоком заказов, это перестаёт быть игрой
+          и становится системой оплаты — с обязанностью раскрывать алгоритм и правом обжалования.
+        </p>
+        <cite>289-ФЗ о платформенной экономике, в силе с 1 октября 2026</cite>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ДАЛЬШЕ ══════════════ -->
+<section class="band">
+  <div class="wrap">
+    <div class="band__head">
+      <p class="eyebrow">Что дальше</p>
+      <h2>От картинки до пилота</h2>
+      <p>Прототип нужен не чтобы утвердить дизайн, а чтобы получить возражения от курьеров раньше, чем будет написан код.</p>
+    </div>
+    <div class="steps">
+      <article class="step">
+        <span class="step__n num">01</span>
+        <div>
+          <h3>Показать двадцати курьерам</h3>
+          <p>Две точки, разный стаж, разный транспорт. Один вопрос вместо презентации: «что здесь бесит?». Опыт Uber Pro, который больше 75% водителей на форуме назвали бесполезным, — это ровно та обратная связь, которую не собрали заранее.</p>
+        </div>
+        <span class="step__when">1–2 недели</span>
+      </article>
+      <article class="step">
+        <span class="step__n num">02</span>
+        <div>
+          <h3>Собрать движок правил, а не экраны</h3>
+          <p>События смены уже есть в системе. Нужен сервис, который читает их и применяет правила из конфига, а не из кода: иначе каждая правка механики — релиз в сторах и две недели раскатки. Референс — открытый Oasis на Apache 2.0; фронт можно взять из открытого Trophy UI Kit.</p>
+        </div>
+        <span class="step__when">2–3 месяца, 3–4 человека</span>
+      </article>
+      <article class="step">
+        <span class="step__n num">03</span>
+        <div>
+          <h3>Пилот с контрольной группой</h3>
+          <p>Два-три города, 8–12 недель. Главная метрика — отток в первые 14 дней. Обязательная метрика-стоп — травмы и ДТП: если выработка выросла вместе с аварийностью, пилот провален, а не успешен.</p>
+        </div>
+        <span class="step__when">до конца квартала</span>
+      </article>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>
+      <b>Независимый концепт-прототип.</b> Не является продуктом, макетом или официальной коммуникацией
+      компании «ВкусВилл». Имена курьеров, точки, цифры и достижения вымышлены. Фирменный зелёный
+      #2DBE64 и ягодный #D7144B взяты из публичного раздела о бренде для достоверности визуального
+      контекста; логотип компании не воспроизводится.
+    </p>
+    <p>
+      Фактические опоры: программы Dasher Rewards, Uber Pro, цели и приоритет в Яндекс Про,
+      кейс Walmart × Axonify, исследования безопасности gig-доставки, 289-ФЗ «Об отдельных вопросах
+      регулирования платформенной экономики» (в силе с 1 октября 2026).
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var tabs    = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var screens = {
+    shift:    document.getElementById("s-shift"),
+    progress: document.getElementById("s-progress"),
+    league:   document.getElementById("s-league"),
+    team:     document.getElementById("s-team"),
+    slots:    document.getElementById("s-slots")
+  };
+  var notes    = Array.prototype.slice.call(document.querySelectorAll(".note"));
+  var viewport = document.getElementById("viewport");
+  var barTitle = document.getElementById("barTitle");
+  var barSub   = document.getElementById("barSub");
+
+  var HEAD = {
+    shift:    ["Привет, Ислам", "Профсоюзная, 43 · велосипед"],
+    progress: ["Твой прогресс", "Знаток района · 68 из 90 смен"],
+    league:   ["Лига", "Юго-Запад · 24 курьера"],
+    team:     ["Команда точки", "Профсоюзная, 43 · 19 курьеров"],
+    slots:    ["Слоты", "Ранний доступ открыт"]
+  };
+
+  function show(key){
+    tabs.forEach(function(t){
+      var on = t.dataset.screen === key;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+    });
+    Object.keys(screens).forEach(function(k){
+      var el = screens[k];
+      if(!el) return;
+      var on = k === key;
+      el.classList.toggle("is-on", on);
+      el.hidden = !on;
+    });
+    notes.forEach(function(n){ n.classList.toggle("is-on", n.dataset.note === key); });
+    if(HEAD[key]){ barTitle.textContent = HEAD[key][0]; barSub.textContent = HEAD[key][1]; }
+    if(viewport) viewport.scrollTop = 0;
+    closeBadge();
+  }
+
+  tabs.forEach(function(tab, i){
+    tab.addEventListener("click", function(){ show(tab.dataset.screen); });
+    tab.addEventListener("keydown", function(e){
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if(!d) return;
+      e.preventDefault();
+      var next = tabs[(i + d + tabs.length) % tabs.length];
+      next.focus();
+      show(next.dataset.screen);
+    });
+  });
+
+  /* Знаки: раскрытие условия */
+  var howBox = document.getElementById("badgeHow");
+  var openBadge = null;
+
+  function closeBadge(){
+    if(openBadge){ openBadge.setAttribute("aria-expanded","false"); openBadge = null; }
+    if(howBox){ howBox.hidden = true; howBox.innerHTML = ""; }
+  }
+
+  document.querySelectorAll(".badge").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(openBadge === b){ closeBadge(); return; }
+      closeBadge();
+      b.setAttribute("aria-expanded","true");
+      openBadge = b;
+      if(howBox){ howBox.innerHTML = b.dataset.how; howBox.hidden = false; }
+    });
+  });
+
+  /* Отрисовка колец и полос при появлении */
+  function draw(){
+    document.querySelectorAll(".ring").forEach(function(r){ r.classList.add("is-drawn"); });
+    document.querySelectorAll(".bar").forEach(function(b){ b.classList.add("is-drawn"); });
+  }
+  if(window.requestAnimationFrame){ requestAnimationFrame(function(){ requestAnimationFrame(draw); }); }
+  else { draw(); }
+})();
+</script>
