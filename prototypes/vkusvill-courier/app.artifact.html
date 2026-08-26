@@ -1,0 +1,693 @@
+<title>Экран курьера</title>
+<meta name="description" content="Концепт мотивационного слоя в приложении курьера: пять рабочих экранов.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Golos+Text:wght@400;500;600;700&display=swap">
+<style>
+/* ─────────────────────────────  ТОКЕНЫ  ───────────────────────────── */
+:root{
+  --green:#2DBE64;
+  --green-deep:#178A48;
+  --green-soft:#DCF3E5;
+  --green-line:#B6E3C8;
+  --berry:#D7144B;
+  --berry-soft:#FBE3E9;
+
+  --ink:#12251A;
+  --ink-2:#3D5147;
+  --ink-3:#71887B;
+  --paper:#E7EEE6;
+  --surface:#FFFFFF;
+  --surface-2:#F8FBF7;
+  --line:#DFE8DF;
+  --line-soft:#EDF2EC;
+
+  --shell:#0D1711;
+  --shell-edge:#2A3B31;
+  --on-green:#FFFFFF;
+
+  --display:"Unbounded","Golos Text","Helvetica Neue",Arial,sans-serif;
+  --text:"Golos Text","Helvetica Neue",Arial,sans-serif;
+
+  --r-md:16px; --r-lg:22px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+    --berry:#FF6089; --berry-soft:#3B1220;
+    --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#7C9486;
+    --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
+    --line:#26382D; --line-soft:#1D2E23;
+    --shell:#000000; --shell-edge:#31463A;
+    --on-green:#08160E;
+  }
+}
+:root[data-theme="dark"]{
+  --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+  --berry:#FF6089; --berry-soft:#3B1220;
+  --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#7C9486;
+  --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
+  --line:#26382D; --line-soft:#1D2E23;
+  --shell:#000000; --shell-edge:#31463A;
+  --on-green:#08160E;
+}
+
+/* ─────────────────────────────  СЦЕНА  ───────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;min-height:100dvh;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--text);
+  font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;padding:26px 16px 30px;
+}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.15}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--green);outline-offset:2px;border-radius:8px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Плашка «это концепт» */
+.stamp{
+  display:inline-flex;align-items:center;gap:8px;flex:none;
+  padding:6px 13px 6px 10px;border-radius:100px;
+  background:var(--berry-soft);color:var(--berry);
+  font-size:11.5px;font-weight:600;line-height:1.3;text-align:center;
+}
+.stamp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+
+.hint{
+  font-size:12.5px;color:var(--ink-3);text-align:center;max-width:42ch;flex:none;
+}
+.hint kbd{
+  font:inherit;font-size:11.5px;border:1px solid var(--line);background:var(--surface);
+  border-radius:5px;padding:1px 6px;color:var(--ink-2);
+}
+
+/* ─────────────────────────────  ТЕЛЕФОН  ───────────────────────────── */
+.phone{
+  flex:none;
+  width:384px;
+  background:var(--shell);
+  border:1px solid var(--shell-edge);
+  border-radius:48px;padding:11px;
+  box-shadow:0 2px 4px rgba(18,37,26,.06), 0 34px 70px -24px rgba(18,37,26,.38);
+}
+.app{
+  position:relative;
+  height:788px;
+  background:var(--surface-2);
+  border-radius:38px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  isolation:isolate;
+}
+
+/* Полноэкранный режим на телефоне */
+@media (max-width:719px){
+  body{padding:0;gap:0;justify-content:flex-start;height:100dvh;overflow:hidden}
+  .phone{width:100%;border:0;border-radius:0;padding:0;box-shadow:none;flex:1;min-height:0;display:flex}
+  .app{height:auto;flex:1;min-height:0;border-radius:0;width:100%}
+  .stamp{
+    order:-1;width:100%;justify-content:center;border-radius:0;
+    padding:7px 12px;font-size:11px;
+  }
+  .stamp__more{display:none}
+  .hint{display:none}
+  .status{padding-top:max(12px, env(safe-area-inset-top))}
+  .tabbar{padding-bottom:max(15px, env(safe-area-inset-bottom))}
+}
+@media (min-width:720px) and (max-height:900px){
+  .app{height:min(788px, calc(100dvh - 150px))}
+}
+
+/* Статус-бар */
+.status{
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 24px 6px;font-size:12.5px;font-weight:600;
+}
+.status__icons{display:flex;gap:5px;align-items:center;opacity:.85}
+.status__icons i{display:block;width:15px;height:10px;border:1.4px solid currentColor;border-radius:3px}
+.status__icons i:first-child{width:4px;height:9px;border-width:0;border-radius:1px;background:currentColor}
+.status__icons i:nth-child(2){
+  width:10px;height:9px;border-width:0;background:currentColor;
+  clip-path:polygon(0 100%,35% 100%,35% 55%,0 55%,0 100%,50% 100%,50% 25%,100% 25%,100% 100%);
+}
+
+/* Шапка приложения */
+.appbar{flex:none;padding:6px 22px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.appbar__title{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.03em}
+.appbar__sub{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.avatar{
+  width:38px;height:38px;border-radius:13px;flex:none;
+  background:var(--green-soft);color:var(--green-deep);
+  display:grid;place-items:center;border:1px solid var(--green-line);
+  font-family:var(--display);font-weight:600;font-size:15px;
+}
+
+/* Область экранов */
+.viewport{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 20px;scrollbar-width:thin}
+.viewport::-webkit-scrollbar{width:5px}
+.viewport::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
+
+.screen{display:none;flex-direction:column;gap:12px}
+.screen.is-on{display:flex;animation:slide .32s cubic-bezier(.22,1,.36,1) both}
+@keyframes slide{from{opacity:0;transform:translateX(var(--from,10px))}to{opacity:1;transform:none}}
+
+/* ── Карточки ── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px}
+.card--flat{border-color:var(--line-soft)}
+.card--green{background:var(--green-soft);border-color:var(--green-line)}
+.card__label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.card--green .card__label{color:var(--green-deep)}
+.card__title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.02em;margin-top:7px}
+.card__note{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
+
+.live{display:flex;align-items:center;gap:11px}
+.live__dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none;position:relative}
+.live__dot::after{
+  content:"";position:absolute;inset:-5px;border-radius:50%;
+  border:2px solid var(--green);opacity:.4;animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{0%{transform:scale(.55);opacity:.55}100%{transform:scale(1.25);opacity:0}}
+.live__text{font-size:13.5px;font-weight:600}
+.live__meta{font-size:12.5px;color:var(--ink-3);margin-left:auto}
+
+/* Кольцо */
+.ring-row{display:flex;align-items:center;gap:18px;margin-top:14px}
+.ring{width:106px;height:106px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.ring__track{stroke:var(--line);stroke-width:9;fill:none}
+.ring__fill{
+  stroke:var(--green);stroke-width:9;fill:none;stroke-linecap:round;
+  stroke-dasharray:283;stroke-dashoffset:283;
+  transition:stroke-dashoffset 1.15s cubic-bezier(.22,1,.36,1) .15s;
+}
+.ring.is-drawn .ring__fill{stroke-dashoffset:var(--dash,60)}
+.ring__center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring__big{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.ring__small{font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.25}
+
+.stat-list{display:flex;flex-direction:column;gap:9px;flex:1;min-width:0}
+.stat{display:flex;align-items:baseline;gap:8px;font-size:13px}
+.stat__k{color:var(--ink-2);white-space:nowrap}
+.stat__line{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)}
+.stat__v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat__v--good{color:var(--green-deep)}
+
+/* Полоса */
+.bar{height:9px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px}
+.bar__fill{display:block;height:100%;border-radius:99px;background:var(--green);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .2s}
+.bar.is-drawn .bar__fill{width:var(--pct,50%)}
+.card--green .bar{background:var(--green-line)}
+.bar-legend{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-3);margin-top:8px}
+
+.reward{
+  display:flex;align-items:flex-start;gap:10px;margin-top:13px;
+  padding-top:13px;border-top:1px dashed var(--green-line);
+  font-size:12.5px;color:var(--ink-2);line-height:1.45;
+}
+.reward svg{width:16px;height:16px;flex:none;color:var(--green-deep);margin-top:1px}
+
+/* Уровни */
+.levels{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.level{display:flex;align-items:center;gap:11px;padding:9px 2px;font-size:13.5px;color:var(--ink-3)}
+.level__pip{
+  width:22px;height:22px;border-radius:50%;flex:none;position:relative;
+  border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;
+}
+.level__pip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:2px;height:11px;background:var(--line)}
+.level:last-child .level__pip::after{display:none}
+.level.done{color:var(--ink-2)}
+.level.done .level__pip{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.level.done .level__pip::after{background:var(--green)}
+.level.done .level__pip svg{width:11px;height:11px}
+.level.now{color:var(--ink);font-weight:600}
+.level.now .level__pip{border-color:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.level.now .level__pip i{width:8px;height:8px;border-radius:50%;background:var(--green);display:block}
+.level__meta{margin-left:auto;font-size:12px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* Знаки */
+.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.badge{
+  border:1px solid var(--line);border-radius:var(--r-md);padding:11px 8px;
+  background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:7px;
+  text-align:center;transition:transform .18s ease,border-color .18s ease;
+}
+.badge:hover{transform:translateY(-2px);border-color:var(--green-line)}
+.badge[aria-expanded="true"]{border-color:var(--green);background:var(--green-soft)}
+.badge__ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--green-soft);color:var(--green-deep)}
+.badge__ic svg{width:19px;height:19px}
+.badge__n{font-size:10.5px;font-weight:600;line-height:1.25}
+.badge.locked{opacity:.55}
+.badge.locked .badge__ic{background:var(--line-soft);color:var(--ink-3)}
+.badge__how{
+  font-size:12.5px;color:var(--ink-2);line-height:1.45;margin-top:10px;
+  padding:11px 13px;border-radius:var(--r-md);
+  background:var(--surface-2);border:1px solid var(--line-soft);
+}
+.badge__how b{color:var(--ink);font-weight:600}
+
+/* Подсказка-плашка */
+.note-chip{
+  display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:var(--r-md);padding:11px 13px;
+}
+.note-chip svg{width:15px;height:15px;flex:none;color:var(--green-deep);margin-top:2px}
+
+/* Лига */
+.rank{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:var(--r-md);font-size:13.5px}
+.rank + .rank{margin-top:3px}
+.rank__pos{width:24px;flex:none;font-family:var(--display);font-size:13px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rank__who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank__pts{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.rank.me{background:var(--green-soft);border:1px solid var(--green-line);font-weight:600}
+.rank.me .rank__pos,.rank.me .rank__pts{color:var(--green-deep)}
+.rank.promo{border-bottom:1px dashed var(--green-line);border-radius:var(--r-md) var(--r-md) 0 0}
+.promo-label{font-size:11px;color:var(--green-deep);font-weight:600;text-align:center;padding:7px 0 2px}
+
+/* Команда */
+.team-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:7px 0}
+.team-row + .team-row{border-top:1px solid var(--line-soft)}
+.team-row__av{
+  width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--line);
+  font-size:11px;font-weight:600;color:var(--ink-2);
+}
+.team-row__n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team-row__v{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.team-row.me .team-row__av{background:var(--green-soft);border-color:var(--green-line);color:var(--green-deep)}
+.team-row.me .team-row__n{font-weight:600}
+
+/* Слоты */
+.unlock{display:flex;gap:12px;align-items:center;padding:14px 15px;border-radius:var(--r-lg);background:var(--green-soft);border:1px solid var(--green-line)}
+.unlock__ic{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--green);color:var(--on-green)}
+.unlock__ic svg{width:19px;height:19px}
+.unlock__t{font-size:13.5px;font-weight:600;color:var(--green-deep)}
+.unlock__s{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+
+.slot{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
+.slot + .slot{margin-top:7px}
+.slot__day{width:52px;flex:none}
+.slot__d1{font-size:12.5px;font-weight:600}
+.slot__d2{font-size:11px;color:var(--ink-3)}
+.slot__time{flex:1;font-size:13.5px;font-variant-numeric:tabular-nums}
+.slot__pill{
+  font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;white-space:nowrap;
+  background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line);
+}
+.slot__pill--muted{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
+.slot.taken{opacity:.5}
+
+/* Таб-бар */
+.tabbar{
+  flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
+  padding:9px 8px 15px;background:var(--surface);border-top:1px solid var(--line);
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:6px 2px;border-radius:13px;color:var(--ink-3);
+  transition:color .18s ease,background .18s ease;
+}
+.tab svg{width:21px;height:21px;stroke-width:1.7}
+.tab span{font-size:9.5px;font-weight:600}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-selected="true"]{color:var(--green-deep);background:var(--green-soft)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+
+<p class="stamp">Концепт · не официальный продукт ВкусВилл<span class="stamp__more"> · данные вымышлены</span></p>
+
+<div class="phone">
+  <div class="app">
+
+    <div class="status" aria-hidden="true">
+      <span class="num">9:41</span>
+      <span class="status__icons"><i></i><i></i><i></i></span>
+    </div>
+
+    <div class="appbar">
+      <div>
+        <div class="appbar__title" id="barTitle">Привет, Ислам</div>
+        <div class="appbar__sub" id="barSub">Профсоюзная, 43 · велосипед</div>
+      </div>
+      <div class="avatar" aria-hidden="true">И</div>
+    </div>
+
+    <div class="viewport" id="viewport">
+
+      <!-- ── Смена ── -->
+      <section class="screen is-on" id="s-shift" role="tabpanel" aria-labelledby="t-shift">
+        <div class="card card--green">
+          <div class="live">
+            <span class="live__dot" aria-hidden="true"></span>
+            <span class="live__text">Смена идёт</span>
+            <span class="live__meta num">до 18:00</span>
+          </div>
+          <p class="card__note">9 заказов из 14 по плану смены. Идёшь ровно — торопиться не нужно.</p>
+        </div>
+
+        <div class="card">
+          <p class="card__label">Неделя</p>
+          <div class="ring-row">
+            <div class="ring" style="--dash:31">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="ring__track" cx="50" cy="50" r="45"></circle>
+                <circle class="ring__fill" cx="50" cy="50" r="45"></circle>
+              </svg>
+              <div class="ring__center">
+                <div class="ring__big num">89</div>
+                <div class="ring__small">баллов<br>качества</div>
+              </div>
+            </div>
+            <ul class="stat-list">
+              <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v stat__v--good num">4,97</span></li>
+              <li class="stat"><span class="stat__k">Вышел на слот</span><span class="stat__line"></span><span class="stat__v num">5 / 5</span></li>
+              <li class="stat"><span class="stat__k">Тара вернулась</span><span class="stat__line"></span><span class="stat__v stat__v--good num">100 %</span></li>
+              <li class="stat"><span class="stat__k">Без замечаний</span><span class="stat__line"></span><span class="stat__v num">62 / 64</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card card--green">
+          <p class="card__label">Цель недели</p>
+          <p class="card__title">Все термосумки вернулись на точку</p>
+          <div class="bar" style="--pct:90%"><span class="bar__fill"></span></div>
+          <div class="bar-legend"><span class="num">18 из 20</span><span>осталось 2 дня</span></div>
+          <p class="reward">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+            <span>Выполнишь — слоты на следующую неделю откроются тебе в четверг, а не в пятницу</span>
+          </p>
+        </div>
+
+        <div class="card card--flat">
+          <p class="card__label">Твоя лига</p>
+          <div class="rank me" style="margin-top:10px">
+            <span class="rank__pos num">7</span>
+            <span class="rank__who">Ты · Лига Юго-Запада</span>
+            <span class="rank__pts num">412</span>
+          </div>
+          <p class="card__note">До шестого места — 9 баллов. Это одна смена без замечаний.</p>
+        </div>
+      </section>
+
+      <!-- ── Прогресс ── -->
+      <section class="screen" id="s-progress" role="tabpanel" aria-labelledby="t-progress" hidden>
+        <div class="card card--green">
+          <p class="card__label">Сейчас</p>
+          <p class="card__title" style="font-size:20px">Знаток района</p>
+          <div class="bar" style="--pct:76%"><span class="bar__fill"></span></div>
+          <div class="bar-legend"><span class="num">68 из 90 зачётных смен</span><span>≈ 5 недель</span></div>
+        </div>
+
+        <div class="card">
+          <p class="card__label">Путь</p>
+          <ul class="levels">
+            <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Новичок<span class="level__meta num">10 смен</span></li>
+            <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Свой человек<span class="level__meta num">30 смен</span></li>
+            <li class="level now"><span class="level__pip"><i></i></span>Знаток района<span class="level__meta num">90 смен</span></li>
+            <li class="level"><span class="level__pip"></span>Наставник<span class="level__meta num">180 смен</span></li>
+            <li class="level"><span class="level__pip"></span>Опора точки<span class="level__meta num">360 смен</span></li>
+          </ul>
+          <p class="card__note">Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь, просто не добавляет шаг.</p>
+        </div>
+
+        <div class="card">
+          <p class="card__label">Знаки</p>
+          <div class="badges">
+            <button class="badge" type="button" aria-expanded="false" data-how="<b>Бережная доставка.</b> 100 заказов подряд без повреждений и жалоб на состояние продуктов.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+              <span class="badge__n">Бережная<br>доставка</span>
+            </button>
+            <button class="badge" type="button" aria-expanded="false" data-how="<b>Ноль инцидентов.</b> 30 смен подряд без ДТП, падений и обращений в травмпункт. Обновляется каждый месяц.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+              <span class="badge__n">Ноль<br>инцидентов</span>
+            </button>
+            <button class="badge" type="button" aria-expanded="false" data-how="<b>Тара на месте.</b> Все термосумки и пакеты вернулись на точку три недели подряд.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg></span>
+              <span class="badge__n">Тара<br>на месте</span>
+            </button>
+            <button class="badge" type="button" aria-expanded="false" data-how="<b>Знаток района.</b> 200 доставок в одном районе. Ты знаешь домофоны, дворы и где не проехать.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+              <span class="badge__n">Знаток<br>района</span>
+            </button>
+            <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Наставник.</b> Провести трёх новичков через первую неделю. Пока — один из трёх.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13A4 4 0 0119 7"/></svg></span>
+              <span class="badge__n">Наставник<br>1 из 3</span>
+            </button>
+            <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Зимний курьер.</b> 40 смен при температуре ниже −10 °C. Открывается с декабря.">
+              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5L4.9 17.5"/></svg></span>
+              <span class="badge__n">Зимний<br>курьер</span>
+            </button>
+          </div>
+          <div class="badge__how" id="badgeHow" hidden></div>
+        </div>
+      </section>
+
+      <!-- ── Лига ── -->
+      <section class="screen" id="s-league" role="tabpanel" aria-labelledby="t-league" hidden>
+        <div class="card card--flat">
+          <div class="live">
+            <span class="live__text">Лига Юго-Запада</span>
+            <span class="live__meta">2 дня до итогов</span>
+          </div>
+          <p class="card__note">24 курьера · велосипед · стаж от полугода</p>
+        </div>
+
+        <p class="note-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>Ты сравниваешься с курьерами похожего профиля. Общего топа по компании нет — и не будет.</span>
+        </p>
+
+        <div class="card" style="padding:12px">
+          <div class="rank"><span class="rank__pos num">4</span><span class="rank__who">Марина К.</span><span class="rank__pts num">468</span></div>
+          <div class="rank"><span class="rank__pos num">5</span><span class="rank__who">Тимур А.</span><span class="rank__pts num">441</span></div>
+          <div class="rank promo"><span class="rank__pos num">6</span><span class="rank__who">Женя Л.</span><span class="rank__pts num">421</span></div>
+          <p class="promo-label">↑ шестёрка переходит в следующую лигу</p>
+          <div class="rank me"><span class="rank__pos num">7</span><span class="rank__who">Ты</span><span class="rank__pts num">412</span></div>
+          <div class="rank"><span class="rank__pos num">8</span><span class="rank__who">Артём В.</span><span class="rank__pts num">400</span></div>
+          <div class="rank"><span class="rank__pos num">9</span><span class="rank__who">Настя Ш.</span><span class="rank__pts num">387</span></div>
+          <div class="rank"><span class="rank__pos num">10</span><span class="rank__who">Данила Р.</span><span class="rank__pts num">371</span></div>
+        </div>
+
+        <div class="card">
+          <p class="card__label">Из чего баллы</p>
+          <ul class="stat-list" style="margin-top:12px">
+            <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v num">168</span></li>
+            <li class="stat"><span class="stat__k">Выходы на слот</span><span class="stat__line"></span><span class="stat__v num">125</span></li>
+            <li class="stat"><span class="stat__k">Возврат тары</span><span class="stat__line"></span><span class="stat__v num">64</span></li>
+            <li class="stat"><span class="stat__k">Помощь коллегам</span><span class="stat__line"></span><span class="stat__v num">55</span></li>
+          </ul>
+          <p class="card__note">Время в пути и скорость доставки в баллы не входят. Совсем.</p>
+        </div>
+
+        <p class="note-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Низкое место в лиге не уменьшает количество заказов и не снижает оплату. Лига — только про призы и ранний выбор слотов.</span>
+        </p>
+      </section>
+
+      <!-- ── Команда ── -->
+      <section class="screen" id="s-team" role="tabpanel" aria-labelledby="t-team" hidden>
+        <div class="card card--green">
+          <p class="card__label">Челлендж недели</p>
+          <p class="card__title" style="font-size:19px">Неделя бережной доставки</p>
+          <p class="card__note">Профсоюзная, 43 — вся точка целиком, 19 курьеров</p>
+          <div class="bar" style="--pct:82%"><span class="bar__fill"></span></div>
+          <div class="bar-legend"><span class="num">156 из 190 заказов без замечаний</span><span class="num">82 %</span></div>
+        </div>
+
+        <div class="card">
+          <p class="card__label">Кто как вложился</p>
+          <div style="margin-top:8px">
+            <div class="team-row"><span class="team-row__av">М</span><span class="team-row__n">Марина К.</span><span class="team-row__v num">14</span></div>
+            <div class="team-row"><span class="team-row__av">Т</span><span class="team-row__n">Тимур А.</span><span class="team-row__v num">13</span></div>
+            <div class="team-row me"><span class="team-row__av">И</span><span class="team-row__n">Ты</span><span class="team-row__v num">12</span></div>
+            <div class="team-row"><span class="team-row__av">Ж</span><span class="team-row__n">Женя Л.</span><span class="team-row__v num">12</span></div>
+            <div class="team-row"><span class="team-row__av">+15</span><span class="team-row__n">остальные курьеры точки</span><span class="team-row__v num">105</span></div>
+          </div>
+          <p class="card__note">Внутри точки места не показываются — важен только общий результат.</p>
+        </div>
+
+        <div class="card card--flat">
+          <p class="card__label">Если возьмём</p>
+          <p class="card__title" style="font-size:16px">Завтрак на точке в понедельник</p>
+          <p class="card__note">И вся смена получает ранний выбор слотов на неделю вперёд — не только те, кто вложился больше всех.</p>
+        </div>
+
+        <p class="note-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>Новичок в первые две недели считается за двоих. Так команде выгодно его подтянуть, а не обойти.</span>
+        </p>
+      </section>
+
+      <!-- ── Слоты ── -->
+      <section class="screen" id="s-slots" role="tabpanel" aria-labelledby="t-slots" hidden>
+        <div class="unlock">
+          <span class="unlock__ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+          </span>
+          <div>
+            <p class="unlock__t">Ранний выбор открыт</p>
+            <p class="unlock__s">Ты выбираешь слоты с четверга 18:00. Остальные — с пятницы 12:00.</p>
+          </div>
+        </div>
+
+        <div class="card card--flat">
+          <p class="card__label">Следующая неделя</p>
+          <div style="margin-top:12px">
+            <div class="slot"><span class="slot__day"><span class="slot__d1">Пн</span><br><span class="slot__d2">1 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
+            <div class="slot"><span class="slot__day"><span class="slot__d1">Вт</span><br><span class="slot__d2">2 сент</span></span><span class="slot__time num">14:00 — 20:00</span><span class="slot__pill">Взять</span></div>
+            <div class="slot"><span class="slot__day"><span class="slot__d1">Ср</span><br><span class="slot__d2">3 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
+            <div class="slot taken"><span class="slot__day"><span class="slot__d1">Чт</span><br><span class="slot__d2">4 сент</span></span><span class="slot__time num">14:00 — 20:00</span><span class="slot__pill slot__pill--muted">Занят</span></div>
+            <div class="slot"><span class="slot__day"><span class="slot__d1">Пт</span><br><span class="slot__d2">5 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
+          </div>
+        </div>
+
+        <p class="note-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Ранний доступ — награда, которая ничего не стоит компании и никого не заставляет ехать быстрее.</span>
+        </p>
+
+        <div class="card">
+          <p class="card__label">Как это работает</p>
+          <p class="card__note" style="margin-top:8px">Доступ открывается на неделю вперёд и пересматривается каждый понедельник. Потерять его нельзя внезапно: за неделю до закрытия придёт уведомление с точным списком того, что нужно подтянуть.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <nav class="tabbar" role="tablist" aria-label="Разделы приложения">
+      <button class="tab" type="button" role="tab" id="t-shift" aria-selected="true" aria-controls="s-shift" data-screen="shift">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+        <span>Смена</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="t-progress" aria-selected="false" aria-controls="s-progress" data-screen="progress" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
+        <span>Прогресс</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="t-league" aria-selected="false" aria-controls="s-league" data-screen="league" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>Лига</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="t-team" aria-selected="false" aria-controls="s-team" data-screen="team" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg>
+        <span>Команда</span>
+      </button>
+      <button class="tab" type="button" role="tab" id="t-slots" aria-selected="false" aria-controls="s-slots" data-screen="slots" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>Слоты</span>
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+<p class="hint">Переключайте вкладки внизу, листайте свайпом или стрелками <kbd>←</kbd> <kbd>→</kbd>. Знаки в разделе «Прогресс» нажимаются.</p>
+
+<script>
+(function(){
+  "use strict";
+
+  var ORDER = ["shift","progress","league","team","slots"];
+  var tabs  = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var viewport = document.getElementById("viewport");
+  var barTitle = document.getElementById("barTitle");
+  var barSub   = document.getElementById("barSub");
+  var howBox   = document.getElementById("badgeHow");
+  var openBadge = null;
+  var current = "shift";
+
+  var HEAD = {
+    shift:    ["Привет, Ислам", "Профсоюзная, 43 · велосипед"],
+    progress: ["Твой прогресс", "Знаток района · 68 из 90 смен"],
+    league:   ["Лига", "Юго-Запад · 24 курьера"],
+    team:     ["Команда точки", "Профсоюзная, 43 · 19 курьеров"],
+    slots:    ["Слоты", "Ранний доступ открыт"]
+  };
+
+  function closeBadge(){
+    if(openBadge){ openBadge.setAttribute("aria-expanded","false"); openBadge = null; }
+    if(howBox){ howBox.hidden = true; howBox.innerHTML = ""; }
+  }
+
+  function show(key){
+    if(!HEAD[key] || key === current) return;
+    var dir = ORDER.indexOf(key) > ORDER.indexOf(current) ? "18px" : "-18px";
+    current = key;
+
+    tabs.forEach(function(t){
+      var on = t.dataset.screen === key;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+    });
+    ORDER.forEach(function(k){
+      var el = document.getElementById("s-" + k);
+      if(!el) return;
+      var on = k === key;
+      el.style.setProperty("--from", dir);
+      el.classList.toggle("is-on", on);
+      el.hidden = !on;
+    });
+    barTitle.textContent = HEAD[key][0];
+    barSub.textContent   = HEAD[key][1];
+    if(viewport) viewport.scrollTop = 0;
+    closeBadge();
+  }
+
+  function step(delta){
+    var i = ORDER.indexOf(current) + delta;
+    if(i < 0 || i >= ORDER.length) return;
+    show(ORDER[i]);
+  }
+
+  tabs.forEach(function(tab){
+    tab.addEventListener("click", function(){ show(tab.dataset.screen); });
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(e.key === "ArrowRight"){ e.preventDefault(); step(1); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); step(-1); }
+  });
+
+  /* Свайп по области экрана */
+  var x0 = null, y0 = null;
+  viewport.addEventListener("touchstart", function(e){
+    if(e.touches.length !== 1) { x0 = null; return; }
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, {passive:true});
+  viewport.addEventListener("touchend", function(e){
+    if(x0 === null) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - x0, dy = t.clientY - y0;
+    x0 = null;
+    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1);
+  }, {passive:true});
+
+  /* Знаки */
+  document.querySelectorAll(".badge").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(openBadge === b){ closeBadge(); return; }
+      closeBadge();
+      b.setAttribute("aria-expanded","true");
+      openBadge = b;
+      if(howBox){ howBox.innerHTML = b.dataset.how; howBox.hidden = false; }
+    });
+  });
+
+  /* Отрисовка колец и полос */
+  function draw(){
+    document.querySelectorAll(".ring, .bar").forEach(function(el){ el.classList.add("is-drawn"); });
+  }
+  if(window.requestAnimationFrame){ requestAnimationFrame(function(){ requestAnimationFrame(draw); }); }
+  else { draw(); }
+})();
+</script>

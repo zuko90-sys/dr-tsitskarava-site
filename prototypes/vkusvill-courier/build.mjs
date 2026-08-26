@@ -1,12 +1,17 @@
-// Собирает artifact.html из index.html.
-// index.html — источник правды (открывается локально двойным кликом).
-// artifact.html — та же страница без обёртки html/head/body: Claude Artifacts
+// Собирает артефактные версии страниц.
+// *.html — источники правды, открываются локально двойным кликом.
+// *.artifact.html — та же страница без обёртки html/head/body: Claude Artifacts
 // добавляет скелет и meta charset сами. Запуск: node build.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const dir = dirname(fileURLToPath(import.meta.url));
+
+const PAGES = [
+  ["index.html", "artifact.html"], // разбор концепта: телефон + обоснования
+  ["app.html", "app.artifact.html"], // только экран приложения
+];
 
 const STRIP = [
   /^<!doctype html>\n/i,
@@ -21,12 +26,18 @@ const STRIP = [
   /^<meta name="robots"[^>]*>\n/im,
 ];
 
-let html = readFileSync(join(dir, "index.html"), "utf8");
-for (const re of STRIP) html = html.replace(re, "");
+for (const [src, out] of PAGES) {
+  let html = readFileSync(join(dir, src), "utf8");
+  for (const re of STRIP) html = html.replace(re, "");
+  html = html.trimStart();
 
-if (!/^<title>/m.test(html)) {
-  throw new Error("В artifact.html не осталось <title> — проверьте index.html");
+  if (!html.startsWith("<title>")) {
+    throw new Error(`${out}: <title> должен остаться первой строкой — проверьте ${src}`);
+  }
+  if (/<!doctype|<html|<head>|<body>/i.test(html)) {
+    throw new Error(`${out}: обёртка снята не полностью`);
+  }
+
+  writeFileSync(join(dir, out), html, "utf8");
+  console.log(`${out} собран, ${html.length} байт`);
 }
-
-writeFileSync(join(dir, "artifact.html"), html.trimStart(), "utf8");
-console.log("artifact.html собран,", html.trim().length, "байт");
