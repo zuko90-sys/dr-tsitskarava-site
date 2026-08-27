@@ -2,7 +2,7 @@ import { disputable } from '../state/appeals';
 import { SCENARIOS } from '../state/scenarios';
 import {
   closeSheet, fileAppeal, getState, openSheet, resolveAppeal,
-  setScenario, setScreen, subscribe, type AppState,
+  setScenario, setScreen, subscribe, toggleCheck, toggleSlot, type AppState,
 } from '../state/store';
 import { appealSheet } from './components';
 import { icon } from './icons';
@@ -75,6 +75,18 @@ function paint(state: AppState): void {
   if (announce) announce.textContent = TABS.find((t) => t.id === screen)?.label ?? '';
 }
 
+/** Короткое сообщение поверх телефона — для действий, которых в демо нет. */
+function toast(msg: string): void {
+  const app = mount.querySelector('.app');
+  if (!app) return;
+  app.querySelector('.toast')?.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  app.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
 function step(delta: number): void {
   const i = SCREENS.indexOf(getState().screen as ScreenId) + delta;
   if (i < 0 || i >= SCREENS.length) return;
@@ -96,6 +108,15 @@ export function start(root: HTMLElement): void {
     if (file) { fileAppeal(Number(file.dataset.appealFile)); return; }
     const resolve = target.closest<HTMLElement>('[data-appeal-resolve]');
     if (resolve) { resolveAppeal(Number(resolve.dataset.appealResolve)); return; }
+
+    const slot = target.closest<HTMLElement>('[data-slot]');
+    if (slot?.dataset.slot) { toggleSlot(slot.dataset.slot); return; }
+    const check = target.closest<HTMLElement>('[data-check]');
+    if (check) { toggleCheck(Number(check.dataset.check)); return; }
+    if (target.closest('[data-call]')) {
+      toast('В демо звонки отключены. В настоящем приложении здесь набирается наставник.');
+      return;
+    }
 
     const tab = target.closest<HTMLElement>('.tab');
     if (tab?.dataset.screen) { setScreen(tab.dataset.screen); return; }

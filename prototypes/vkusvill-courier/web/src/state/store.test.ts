@@ -3,6 +3,7 @@ import { disputable, shiftAppeals } from './appeals';
 import { scenarioById } from './scenarios';
 import {
   fileAppeal, getState, pushEvent, resetScenario, resolveAppeal, setScenario,
+  toggleCheck, toggleSlot,
 } from './store';
 
 /* В node нет localStorage — store переживает это через try/catch,
@@ -97,5 +98,37 @@ describe('хранилище: обжалование', () => {
     fileAppeal(disputable(getState().events)[0].index);
     resetScenario();
     expect(getState().appeals).toEqual([]);
+  });
+});
+
+describe('хранилище: слоты и чек-лист', () => {
+  beforeEach(() => {
+    setScenario('steady');
+    resetScenario();
+  });
+
+  it('слот берётся и отпускается повторным нажатием', () => {
+    toggleSlot('Пн');
+    expect(getState().mySlots).toEqual(['Пн']);
+    toggleSlot('Ср');
+    expect(getState().mySlots).toEqual(['Пн', 'Ср']);
+    toggleSlot('Пн');
+    expect(getState().mySlots).toEqual(['Ср']);
+  });
+
+  it('пункт чек-листа отмечается и снимается', () => {
+    expect(getState().checklist).toEqual([0, 1, 2, 3]);
+    toggleCheck(4);
+    expect(getState().checklist).toContain(4);
+    toggleCheck(0);
+    expect(getState().checklist).not.toContain(0);
+  });
+
+  it('сброс сценария возвращает слоты и чек-лист к исходным', () => {
+    toggleSlot('Пт');
+    toggleCheck(7);
+    resetScenario();
+    expect(getState().mySlots).toEqual([]);
+    expect(getState().checklist).toEqual([0, 1, 2, 3]);
   });
 });

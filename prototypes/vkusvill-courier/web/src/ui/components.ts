@@ -150,13 +150,26 @@ export function unlock(state: 'open' | 'warn' | 'off', title: string, sub: strin
     + `<div><p class="unlock__t">${esc(title)}</p><p class="unlock__s">${esc(sub)}</p></div></div>`;
 }
 
-export function slots(label: string, rows: { d1: string; d2: string; time: string; taken?: boolean }[]): string {
+export type SlotState = 'free' | 'mine' | 'other';
+
+/**
+ * Слоты следующей недели. «Взять» и «Отпустить» — настоящие кнопки:
+ * выбор хранится и переживает перезагрузку. «Занят» — слот другого
+ * курьера, на него нажать нельзя.
+ */
+export function slots(label: string, rows: { d1: string; d2: string; time: string; state: SlotState }[]): string {
   return `<div class="card card--flat"><p class="card__label">${esc(label)}</p><div style="margin-top:12px">`
-    + rows.map((s) => `<div class="slot${s.taken ? ' taken' : ''}">`
-      + `<span class="slot__day"><span class="slot__d1">${esc(s.d1)}</span><br>`
-      + `<span class="slot__d2">${esc(s.d2)}</span></span>`
-      + `<span class="slot__time num">${esc(s.time)}</span>`
-      + `<span class="slot__pill${s.taken ? ' slot__pill--muted' : ''}">${s.taken ? 'Занят' : 'Взять'}</span></div>`).join('')
+    + rows.map((r) => {
+      const control = r.state === 'other'
+        ? '<span class="slot__pill slot__pill--muted">Занят</span>'
+        : r.state === 'mine'
+          ? `<button class="slot__pill slot__pill--mine" type="button" data-slot="${esc(r.d1)}">${icon('check', 3)}Твой</button>`
+          : `<button class="slot__pill" type="button" data-slot="${esc(r.d1)}">Взять</button>`;
+      return `<div class="slot${r.state === 'other' ? ' taken' : ''}">`
+        + `<span class="slot__day"><span class="slot__d1">${esc(r.d1)}</span><br>`
+        + `<span class="slot__d2">${esc(r.d2)}</span></span>`
+        + `<span class="slot__time num">${esc(r.time)}</span>` + control + '</div>';
+    }).join('')
     + '</div></div>';
 }
 
@@ -275,7 +288,7 @@ export function mentor(opts: { name: string; role: string; initial: string; note
   return '<div class="card"><p class="card__label">Твой наставник</p>'
     + `<div class="mentor"><span class="mentor__av">${esc(opts.initial)}</span>`
     + `<div><p class="mentor__n">${esc(opts.name)}</p><p class="mentor__r">${esc(opts.role)}</p></div>`
-    + `<span class="mentor__btn">${icon('phone', 2)}</span></div>`
+    + `<button class="mentor__btn" type="button" data-call aria-label="Позвонить наставнику">${icon('phone', 2)}</button></div>`
     + `<p class="card__note">${esc(opts.note)}</p></div>`;
 }
 
@@ -288,9 +301,9 @@ export function checklist(opts: {
     + bar(Math.round((done / opts.items.length) * 100))
     + `<div class="bar-legend"><span class="num">${done} из ${opts.items.length}</span>`
     + `<span>${esc(opts.right)}</span></div><div class="check">`
-    + opts.items.map((i) => `<div class="check__i${i.done ? ' done' : ''}">`
+    + opts.items.map((i, idx) => `<button class="check__i${i.done ? ' done' : ''}" type="button" data-check="${idx}">`
       + `<span class="check__box">${i.done ? icon('check', 3.5) : ''}</span>`
-      + `<span>${esc(i.text)}</span></div>`).join('')
+      + `<span>${esc(i.text)}</span></button>`).join('')
     + '</div></div>';
 }
 

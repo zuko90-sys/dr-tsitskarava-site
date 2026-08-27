@@ -17,24 +17,32 @@ export const TABS: { id: ScreenId; label: string; icon: string }[] = [
   { id: 'slots', label: 'Слоты', icon: 'calendar' },
 ];
 
+// Чт занят другим курьером — единственный неинтерактивный слот
 const WEEK_SLOTS = [
   { d1: 'Пн', d2: '1 сент', time: '09:00 — 15:00' },
   { d1: 'Вт', d2: '2 сент', time: '14:00 — 20:00' },
   { d1: 'Ср', d2: '3 сент', time: '09:00 — 15:00' },
-  { d1: 'Чт', d2: '4 сент', time: '14:00 — 20:00', taken: true },
+  { d1: 'Чт', d2: '4 сент', time: '14:00 — 20:00', other: true },
   { d1: 'Пт', d2: '5 сент', time: '09:00 — 15:00' },
 ];
 
+function weekSlots(mySlots: string[]) {
+  return WEEK_SLOTS.map((r) => ({
+    d1: r.d1, d2: r.d2, time: r.time,
+    state: (r.other ? 'other' : mySlots.includes(r.d1) ? 'mine' : 'free') as C.SlotState,
+  }));
+}
+
 const ROOKIE_CHECKLIST = [
-  { done: true, text: 'Собрать заказ по списку и сверить состав' },
-  { done: true, text: 'Проверить сроки годности при сборке' },
-  { done: true, text: 'Оформить возврат прямо у двери' },
-  { done: true, text: 'Найти подъезд по коду домофона' },
-  { done: false, text: 'Что делать, если клиента нет дома' },
-  { done: false, text: 'Как сдать тару в конце смены' },
-  { done: false, text: 'Холодовая цепь в жару: что нельзя везти дольше 20 минут' },
-  { done: false, text: 'Если сломался велосипед посреди маршрута' },
-  { done: false, text: 'Если заказ повредился в дороге' },
+  'Собрать заказ по списку и сверить состав',
+  'Проверить сроки годности при сборке',
+  'Оформить возврат прямо у двери',
+  'Найти подъезд по коду домофона',
+  'Что делать, если клиента нет дома',
+  'Как сдать тару в конце смены',
+  'Холодовая цепь в жару: что нельзя везти дольше 20 минут',
+  'Если сломался велосипед посреди маршрута',
+  'Если заказ повредился в дороге',
 ];
 
 /** Просевшая ли неделя. Решает движок, а не сценарий. */
@@ -74,7 +82,8 @@ function shift(s: Snapshot, rookie: boolean, state: AppState): string {
     }));
     parts.push(C.checklist({
       label: 'Первые две недели', title: 'Освоиться без спешки',
-      right: 'до 10 сентября', items: ROOKIE_CHECKLIST,
+      right: 'до 10 сентября',
+      items: ROOKIE_CHECKLIST.map((text, i) => ({ text, done: state.checklist.includes(i) })),
     }));
     parts.push(C.note(
       `Лиги и рейтинги включатся на ${RULES.rookieDays + 1}-й день. Первые две недели тебя ни с кем не сравнивают.`,
@@ -257,7 +266,7 @@ function team(s: Snapshot, rookie: boolean): string {
 
 /* ─────────────────────────── СЛОТЫ ─────────────────────────── */
 
-function slots(s: Snapshot): string {
+function slots(s: Snapshot, state: AppState): string {
   const parts: string[] = [C.unlock(s.access.state, s.access.title, s.access.sub)];
 
   if (s.access.reasons.length > 0) {
@@ -270,7 +279,7 @@ function slots(s: Snapshot): string {
     ));
   }
 
-  parts.push(C.slots('Следующая неделя', WEEK_SLOTS));
+  parts.push(C.slots('Следующая неделя', weekSlots(state.mySlots)));
 
   if (s.isRookie) {
     parts.push(C.card({
@@ -324,7 +333,7 @@ export function renderScreen(state: AppState, screen: ScreenId): string {
     case 'progress': return progress(s, rookie);
     case 'league': return league(s);
     case 'team': return team(s, rookie);
-    case 'slots': return slots(s);
+    case 'slots': return slots(s, state);
     default: return shift(s, rookie, state);
   }
 }

@@ -13,6 +13,39 @@
 </head>
 <body>
 <div id="root"></div>
+<script data-cfasync="false">
+// Сторож: если основной скрипт не запустился или упал, страница говорит об
+// этом текстом — вместо молчаливо мёртвых кнопок. Написан на ES5 и без
+// модулей, чтобы выполниться даже там, где модульный скрипт не выжил.
+(function () {
+  var box = null;
+  function show(msg) {
+    if (!box) {
+      box = document.createElement('div');
+      box.setAttribute('style',
+        'position:fixed;top:0;left:0;right:0;z-index:99;background:#B00F3E;color:#fff;'
+        + 'font:13px/1.45 system-ui,sans-serif;padding:10px 14px;text-align:center');
+      document.body.appendChild(box);
+    }
+    box.textContent = msg;
+  }
+  var firstError = null;
+  window.addEventListener('error', function (e) {
+    if (!firstError) {
+      firstError = e.message || 'неизвестная ошибка';
+      show('Ошибка на странице: ' + firstError + ' — обновите страницу (Ctrl+Shift+R) и, если повторится, пришлите этот текст.');
+    }
+  });
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      var root = document.getElementById('root');
+      if (root && root.childElementCount === 0 && !firstError) {
+        show('Приложение не запустилось: браузер не выполнил скрипт страницы. Обновите страницу; если не поможет — откройте в Chrome или Safari.');
+      }
+    }, 2500);
+  });
+})();
+</script>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

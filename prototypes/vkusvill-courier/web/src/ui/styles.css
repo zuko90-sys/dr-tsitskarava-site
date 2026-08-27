@@ -535,3 +535,37 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 }
 .dispute__state svg{width:13px;height:13px}
 .sheet__close{align-self:center;padding:9px 22px}
+
+/* ═══════════════════ Интерактивные мелочи ═══════════════════ */
+button.slot__pill{cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .1s ease}
+button.slot__pill:hover{background:var(--green-line)}
+button.slot__pill:active{transform:translateY(1px)}
+.slot__pill--mine{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--green);color:var(--on-green);border-color:var(--green);
+}
+.slot__pill--mine svg{width:11px;height:11px}
+button.slot__pill--mine:hover{background:var(--green-deep);border-color:var(--green-deep);color:var(--surface)}
+
+button.check__i{
+  width:100%;text-align:left;cursor:pointer;border-radius:10px;
+  transition:background .13s ease;
+}
+button.check__i:hover{background:var(--surface-2)}
+button.check__i:active .check__box{transform:scale(.92)}
+.check__box{transition:transform .1s ease,background .15s ease,border-color .15s ease}
+
+.mentor__btn{cursor:pointer;transition:transform .12s ease,background .15s ease}
+.mentor__btn:hover{background:var(--green-deep)}
+.mentor__btn:active{transform:scale(.95)}
+
+.toast{
+  position:absolute;left:50%;bottom:86px;transform:translateX(-50%);
+  z-index:12;max-width:82%;
+  background:var(--ink);color:var(--paper);
+  font-size:12.5px;line-height:1.4;text-align:center;
+  padding:10px 15px;border-radius:14px;
+  box-shadow:0 8px 24px -8px rgba(18,37,26,.5);
+  animation:toast-in .25s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
