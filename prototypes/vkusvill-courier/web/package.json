@@ -1,0 +1,21 @@
+{
+  "name": "vkusvill-courier-prototype",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Концепт мотивационного слоя в приложении курьера. Не официальный продукт ВкусВилл.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bundle": "npm run build && node scripts/inline.mjs",
+    "check": "npm run test && npm run bundle"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
+  }
+}
