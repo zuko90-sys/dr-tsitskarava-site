@@ -1,5 +1,6 @@
 import { icon } from './icons';
 import type { BadgeState, FeedEntry, LeagueRow, Nudge } from '../engine/types';
+import type { Disputable } from '../state/appeals';
 
 /* Экранирование: в данные попадают имена и тексты правил, а не разметка.
    Исключение — поля how/name знаков, где <br> и <b> заданы намеренно. */
@@ -159,7 +160,10 @@ export function slots(label: string, rows: { d1: string; d2: string; time: strin
     + '</div></div>';
 }
 
-export function fixes(items: { title: string; text: string }[], noteText: string, appeal?: string): string {
+export function fixes(
+  items: { title: string; text: string }[], noteText: string,
+  appeal?: string, filed?: Disputable[],
+): string {
   return '<div class="card card--warn"><p class="card__label">Что подтянуть</p>'
     + `<p class="card__title">${items.length} ${plural(items.length, 'вещь', 'вещи', 'вещей')}, ${plural(items.length, 'поправимая', 'все поправимые', 'все поправимые')}</p>`
     + '<div class="fix">'
@@ -167,8 +171,46 @@ export function fixes(items: { title: string; text: string }[], noteText: string
       + `<span><b>${esc(f.title)}.</b> ${esc(f.text)}</span></div>`).join('')
     + '</div>'
     + `<p class="card__note">${esc(noteText)}</p>`
-    + (appeal ? `<button class="appeal" type="button">${icon('alert', 2)}${esc(appeal)}</button>` : '')
+    + (filed && filed.length > 0
+      ? filed.map((f) => `<p class="appeal-status">${icon('clock', 2)}`
+        + `<span>«${esc(f.label)}» (${esc(f.at)}) — обжалование на рассмотрении, ответ до 48 часов</span></p>`).join('')
+      : '')
+    + (appeal ? `<button class="appeal" type="button" data-sheet-open="appeal">${icon('alert', 2)}${esc(appeal)}</button>` : '')
     + '</div>';
+}
+
+/**
+ * Шторка обжалования. Заявка не меняет баллы — меняет их решение, и оно
+ * приходит как правка журнала. Демо-кнопка «жалобу сняли» показывает ровно
+ * это: событие исчезает, и всё пересчитывается само.
+ */
+export function appealSheet(items: Disputable[], appeals: number[]): string {
+  const rows = items.length === 0
+    ? '<p class="card__note">За эту неделю нет ни жалоб, ни низких оценок, ни пропусков — оспаривать нечего.</p>'
+    : items.map((d) => {
+      const isFiled = appeals.includes(d.index);
+      return `<div class="dispute${isFiled ? ' dispute--filed' : ''}">`
+        + `<span class="dispute__body"><span class="dispute__t">${esc(d.label)}</span>`
+        + `<span class="dispute__m">${esc(d.at)}${d.delta !== 0 ? ` · ${d.delta > 0 ? '+' : ''}${d.delta} к баллу` : ''}</span></span>`
+        + (isFiled
+          ? `<span class="dispute__state">${icon('clock', 2)}На рассмотрении</span>`
+            + `<button class="ev" type="button" data-appeal-resolve="${d.index}">Жалобу сняли (демо)</button>`
+          : `<button class="ev" type="button" data-appeal-file="${d.index}">Обжаловать</button>`)
+        + '</div>';
+    }).join('');
+
+  return '<div class="sheet-back" data-sheet-close></div>'
+    + '<section class="sheet" role="dialog" aria-modal="true" aria-label="Обжалование">'
+    + '<div class="sheet__grip" aria-hidden="true"></div>'
+    + '<h2 class="sheet__title">Обжалование</h2>'
+    + '<p class="sheet__lead">Выбери, с чем не согласен, — заявка уйдёт управляющему точкой. '
+    + 'Пока идёт разбор, ничего не меняется: баллы не снимаются повторно и не возвращаются авансом.</p>'
+    + `<div class="sheet__list">${rows}</div>`
+    + '<p class="note-chip">' + icon('info', 2)
+    + '<span>Если жалобу снимут, запись удалится из журнала — и балл, знаки, место в лиге пересчитаются сами. '
+    + 'Вручную никто ничего не правит, поэтому «забыли поправить рейтинг» здесь невозможно.</span></p>'
+    + '<button class="ev sheet__close" type="button" data-sheet-close>Закрыть</button>'
+    + '</section>';
 }
 
 /** Ближайшие пороги: ради чего имеет смысл следующая смена. */

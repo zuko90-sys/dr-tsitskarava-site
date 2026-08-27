@@ -1,5 +1,10 @@
+import { disputable } from '../state/appeals';
 import { SCENARIOS } from '../state/scenarios';
-import { getState, setScenario, setScreen, subscribe, type AppState } from '../state/store';
+import {
+  closeSheet, fileAppeal, getState, openSheet, resolveAppeal,
+  setScenario, setScreen, subscribe, type AppState,
+} from '../state/store';
+import { appealSheet } from './components';
 import { icon } from './icons';
 import { headOf, renderScreen, SCREENS, TABS, type ScreenId } from './screens';
 import { bindSimulator, renderSimulator } from './simulator';
@@ -40,7 +45,9 @@ function shell(state: AppState): string {
         + `${t.id === screen ? '' : ' tabindex="-1"'}>${icon(t.icon, 1.7)}`
         + `<span>${t.label}</span>${dot}</button>`;
     }).join('')
-    + '</nav></div></div>'
+    + '</nav>'
+    + (state.sheet === 'appeal' ? appealSheet(disputable(state.events), state.appeals) : '')
+    + '</div></div>'
 
     + renderSimulator()
     + '</div>'
@@ -82,6 +89,14 @@ export function start(root: HTMLElement): void {
     const target = e.target as HTMLElement | null;
     if (!target?.closest) return;
 
+    const sheetOpen = target.closest<HTMLElement>('[data-sheet-open]');
+    if (sheetOpen) { openSheet('appeal'); return; }
+    if (target.closest('[data-sheet-close]')) { closeSheet(); return; }
+    const file = target.closest<HTMLElement>('[data-appeal-file]');
+    if (file) { fileAppeal(Number(file.dataset.appealFile)); return; }
+    const resolve = target.closest<HTMLElement>('[data-appeal-resolve]');
+    if (resolve) { resolveAppeal(Number(resolve.dataset.appealResolve)); return; }
+
     const tab = target.closest<HTMLElement>('.tab');
     if (tab?.dataset.screen) { setScreen(tab.dataset.screen); return; }
 
@@ -104,6 +119,9 @@ export function start(root: HTMLElement): void {
   bindSimulator(root);
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeSheet(); return; }
+    // Пока открыта шторка, стрелки не листают экраны под ней
+    if (getState().sheet !== null) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
   });

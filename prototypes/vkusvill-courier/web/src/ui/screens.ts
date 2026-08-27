@@ -3,6 +3,7 @@ import type { Snapshot } from '../engine/types';
 import type { AppState } from '../state/store';
 import * as C from './components';
 import { plural } from './components';
+import { disputable } from '../state/appeals';
 
 export const SCREENS = ['shift', 'feed', 'progress', 'league', 'team', 'slots'] as const;
 export type ScreenId = (typeof SCREENS)[number];
@@ -53,7 +54,7 @@ export function headOf(state: AppState, screen: ScreenId): [string, string] {
 
 /* ─────────────────────────── СМЕНА ─────────────────────────── */
 
-function shift(s: Snapshot, rookie: boolean): string {
+function shift(s: Snapshot, rookie: boolean, state: AppState): string {
   const warn = isDip(s);
   const parts: string[] = [];
 
@@ -96,10 +97,12 @@ function shift(s: Snapshot, rookie: boolean): string {
   }));
 
   if (warn) {
+    const filed = disputable(state.events).filter((d) => state.appeals.includes(d.index));
     parts.push(C.fixes(
       s.fixes,
       'Уровень и ранний доступ к слотам на этой неделе сохраняются. Пересмотр — в понедельник, не сегодня.',
       'Не согласен с оценкой',
+      filed,
     ));
   } else {
     parts.push(C.goal({
@@ -322,6 +325,6 @@ export function renderScreen(state: AppState, screen: ScreenId): string {
     case 'league': return league(s);
     case 'team': return team(s, rookie);
     case 'slots': return slots(s);
-    default: return shift(s, rookie);
+    default: return shift(s, rookie, state);
   }
 }
