@@ -31,9 +31,15 @@ function shell(state: AppState): string {
     + `aria-labelledby="t-${screen}">${renderScreen(state, screen)}</section></div>`
     + '<p class="sr" role="status" aria-live="polite" id="announce"></p>'
     + '<nav class="tabbar" role="tablist" aria-label="Разделы приложения">'
-    + TABS.map((t) => `<button class="tab" type="button" role="tab" id="t-${t.id}" `
-      + `aria-selected="${t.id === screen}" aria-controls="panel" data-screen="${t.id}"`
-      + `${t.id === screen ? '' : ' tabindex="-1"'}>${icon(t.icon, 1.7)}<span>${t.label}</span></button>`).join('')
+    + TABS.map((t) => {
+      const dot = t.id === 'feed' && state.unreadFeed > 0
+        ? `<span class="tab__dot num" aria-label="новых событий: ${state.unreadFeed}">${Math.min(99, state.unreadFeed)}</span>`
+        : '';
+      return `<button class="tab" type="button" role="tab" id="t-${t.id}" `
+        + `aria-selected="${t.id === screen}" aria-controls="panel" data-screen="${t.id}"`
+        + `${t.id === screen ? '' : ' tabindex="-1"'}>${icon(t.icon, 1.7)}`
+        + `<span>${t.label}</span>${dot}</button>`;
+    }).join('')
     + '</nav></div></div>'
 
     + renderSimulator()

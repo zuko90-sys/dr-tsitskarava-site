@@ -1,6 +1,6 @@
 import type {
   AccessState, BadgeRule, BadgeState, BucketId, CounterId, CourierEvent,
-  EvaluateContext, FeedItem, LeagueRow, LevelState, Match, RulesConfig, Snapshot,
+  EvaluateContext, FeedEntry, LeagueRow, LevelState, Match, Nudge, RulesConfig, Snapshot,
 } from './types';
 
 /* ─────────────────────────── ХЕЛПЕРЫ ─────────────────────────── */
@@ -45,13 +45,11 @@ function countAll(events: CourierEvent[], ctx: EvaluateContext): Record<CounterI
 
 function scorePoints(events: CourierEvent[], rules: RulesConfig) {
   const buckets: Record<BucketId, number> = { ratings: 0, slots: 0, tare: 0, help: 0 };
-  const feed: FeedItem[] = [];
 
   for (const e of events) {
     const rule = rules.points.find((r) => matches(e, r.on, r.match));
     if (!rule) continue;
     buckets[rule.bucket] += rule.add;
-    feed.push({ at: e.at, text: rule.label, delta: rule.add, bucket: rule.bucket });
   }
 
   // Строка баллов не может уйти в минус: отрицательная «оценка клиентов»
@@ -61,7 +59,7 @@ function scorePoints(events: CourierEvent[], rules: RulesConfig) {
   (Object.keys(buckets) as BucketId[]).forEach((k) => { buckets[k] = Math.max(0, buckets[k]); });
   const total = (Object.keys(buckets) as BucketId[]).reduce((s, k) => s + buckets[k], 0);
 
-  return { total, buckets, feed: feed.reverse() };
+  return { total, buckets };
 }
 
 /* ─────────────────────────── УРОВЕНЬ ─────────────────────────── */
@@ -185,13 +183,12 @@ function access(
 
 /* ─────────────────────────── ГЛАВНОЕ ─────────────────────────── */
 
-/**
- * Пересчитывает состояние курьера из журнала событий.
- * Чистая функция: одинаковый вход всегда даёт одинаковый выход.
- */
-export function evaluate(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Snapshot {
+/** Всё состояние курьера, кроме ленты. Лента строится поверх, отдельным проходом. */
+type Core = Omit<Snapshot, 'feed' | 'nudges'>;
+
+function evaluateCore(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Core {
   const counters = countAll(events, ctx);
-  const { total, buckets, feed } = scorePoints(events, rules);
+  const { total, buckets } = scorePoints(events, rules);
   const level = levelOf(counters.qualifyingShifts, rules);
   const isRookie = ctx.dayNumber <= rules.rookieDays;
 
@@ -230,7 +227,171 @@ export function evaluate(events: CourierEvent[], rules: RulesConfig, ctx: Evalua
     league: league(total, rules, ctx.courierName),
     access: access(total, counters, level, rules, ctx),
     fixes,
-    feed,
     rating,
   };
+}
+
+/* ─────────────────────────── ЛЕНТА ─────────────────────────── */
+
+const BUCKET_ICON: Record<BucketId, string> = {
+  ratings: 'star', slots: 'clock', tare: 'bag', help: 'hand',
+};
+
+/** Название знака без разметки переноса. */
+const plainName = (s: string): string => s.replace(/<br>/g, ' ');
+
+/**
+ * Строит ленту, сравнивая состояние до и после каждого события.
+ *
+ * Вехи не выписываются руками: «знак получен» здесь — это буквально то же
+ * условие, по которому знак показан полученным на экране «Прогресс».
+ * Разойтись они не могут.
+ *
+ * Цена — пересчёт на каждом префиксе журнала, O(n²). При недельном журнале
+ * это сотня-другая событий и доли миллисекунды. Если журнал станет длиннее
+ * месяца, здесь понадобится инкрементальный проход.
+ */
+function buildFeed(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): FeedEntry[] {
+  const out: FeedEntry[] = [];
+  let prev = evaluateCore([], rules, ctx);
+
+  for (let i = 0; i < events.length; i++) {
+    const e = events[i];
+    const next = evaluateCore(events.slice(0, i + 1), rules, ctx);
+
+    const rule = rules.points.find((r) => matches(e, r.on, r.match));
+    if (rule) {
+      out.push({
+        at: e.at, kind: 'points', text: rule.label, delta: rule.add,
+        count: 1, icon: BUCKET_ICON[rule.bucket],
+      });
+    }
+
+    for (const badge of next.badges) {
+      const was = prev.badges.find((b) => b.id === badge.id);
+      if (!was) continue;
+      if (!was.earned && badge.earned) {
+        out.push({
+          at: e.at, kind: 'badge', text: `Знак «${plainName(badge.name)}»`,
+          detail: 'Получен', delta: 0, count: 1, icon: badge.icon,
+        });
+      } else if (was.done > 0 && badge.done === 0) {
+        out.push({
+          at: e.at, kind: 'badge_reset', text: `Знак «${plainName(badge.name)}»`,
+          detail: `Счётчик пошёл заново, было ${was.done} из ${badge.need}`,
+          delta: 0, count: 1, icon: badge.icon,
+        });
+      }
+    }
+
+    if (prev.level.current.id !== next.level.current.id) {
+      out.push({
+        at: e.at, kind: 'level', text: `Уровень «${next.level.current.name}»`,
+        detail: `${next.level.done} зачётных смен`, delta: 0, count: 1, icon: 'trophy',
+      });
+    }
+
+    if (prev.goal.done < next.goal.target && next.goal.done >= next.goal.target) {
+      out.push({
+        at: e.at, kind: 'goal', text: 'Цель недели закрыта',
+        detail: next.goal.title, delta: 0, count: 1, icon: 'check',
+      });
+    }
+
+    if (prev.access.state !== next.access.state) {
+      out.push({
+        at: e.at, kind: 'access', text: next.access.title,
+        detail: next.access.sub, delta: 0, count: 1, icon: 'lock',
+      });
+    }
+
+    // Место в лиге меняется почти от каждой оценки — в ленту попадает только
+    // пересечение линии перехода, всё остальное было бы шумом.
+    const wasIn = prev.league.rank <= rules.league.promote;
+    const isIn = next.league.rank <= rules.league.promote;
+    if (wasIn !== isIn && !next.isRookie) {
+      out.push({
+        at: e.at, kind: 'rank',
+        text: isIn ? `Ты в шестёрке — ${next.league.rank}-е место` : `Вышел из шестёрки — ${next.league.rank}-е место`,
+        detail: `Первые ${rules.league.promote} переходят в следующую лигу`,
+        delta: 0, count: 1, icon: 'chart',
+      });
+    }
+
+    prev = next;
+  }
+
+  return collapse(out).reverse();
+}
+
+/** Тридцать две подряд «Оценка 5» — это одна строка, а не тридцать две. */
+function collapse(entries: FeedEntry[]): FeedEntry[] {
+  const out: FeedEntry[] = [];
+  for (const e of entries) {
+    const last = out[out.length - 1];
+    if (last && last.kind === 'points' && e.kind === 'points' && last.at === e.at && last.text === e.text) {
+      last.count += 1;
+      last.delta += e.delta;
+      continue;
+    }
+    out.push({ ...e });
+  }
+  return out;
+}
+
+/* ─────────────────────────── БЛИЖАЙШИЕ ПОРОГИ ─────────────────────────── */
+
+function buildNudges(core: Core, rules: RulesConfig): Nudge[] {
+  const out: Nudge[] = [];
+
+  if (core.goal.done < core.goal.target) {
+    const left = core.goal.target - core.goal.done;
+    out.push({
+      text: core.goal.title,
+      detail: `Осталось ${left} ${left === 1 ? 'смена' : left < 5 ? 'смены' : 'смен'} из ${core.goal.target}`,
+      icon: 'bag', pct: core.goal.pct,
+    });
+  }
+
+  const left = core.level.need - core.level.done;
+  if (left > 0) {
+    out.push({
+      text: `Уровень «${core.level.current.name}»`,
+      detail: `Осталось ${left} ${left === 1 ? 'зачётная смена' : left < 5 ? 'зачётные смены' : 'зачётных смен'}`,
+      icon: 'trophy', pct: core.level.pct,
+    });
+  }
+
+  // Ближайший неполученный знак — тот, до которого меньше всего осталось
+  const closest = core.badges
+    .filter((b) => !b.earned && b.done > 0)
+    .sort((a, b) => (b.done / b.need) - (a.done / a.need))[0];
+  if (closest) {
+    const rest = closest.need - closest.done;
+    out.push({
+      text: `Знак «${plainName(closest.name)}»`,
+      detail: `Осталось ${rest} из ${closest.need}`,
+      icon: closest.icon, pct: Math.round((closest.done / closest.need) * 100),
+    });
+  }
+
+  if (core.access.state !== 'open' && core.access.reasons.length > 0) {
+    out.push({
+      text: 'Ранний выбор слотов',
+      detail: core.access.reasons.join(' · '),
+      icon: 'lock',
+      pct: Math.min(100, Math.round((core.weekPoints / rules.access.minWeekPoints) * 100)),
+    });
+  }
+
+  return out.slice(0, 3);
+}
+
+/**
+ * Пересчитывает состояние курьера из журнала событий.
+ * Чистая функция: одинаковый вход всегда даёт одинаковый выход.
+ */
+export function evaluate(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Snapshot {
+  const core = evaluateCore(events, rules, ctx);
+  return { ...core, feed: buildFeed(events, rules, ctx), nudges: buildNudges(core, rules) };
 }

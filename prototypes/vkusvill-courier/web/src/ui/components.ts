@@ -1,5 +1,5 @@
 import { icon } from './icons';
-import type { BadgeState, FeedItem, LeagueRow } from '../engine/types';
+import type { BadgeState, FeedEntry, LeagueRow, Nudge } from '../engine/types';
 
 /* Экранирование: в данные попадают имена и тексты правил, а не разметка.
    Исключение — поля how/name знаков, где <br> и <b> заданы намеренно. */
@@ -171,18 +171,63 @@ export function fixes(items: { title: string; text: string }[], noteText: string
     + '</div>';
 }
 
-export function feed(label: string, items: FeedItem[], noteText?: string): string {
-  if (items.length === 0) return card({ label, note: 'Пока пусто. Подайте событие в симуляторе слева.' });
-  return `<div class="card"><p class="card__label">${esc(label)}</p><div class="feed">`
-    + items.map((f) => {
-      const cls = f.delta > 0 ? '' : f.delta < 0 ? ' feed__d--minus' : ' feed__d--zero';
-      const val = f.delta === 0 ? '—' : `${f.delta > 0 ? '+' : ''}${f.delta}`;
-      return `<div class="feed__i"><span class="feed__at">${esc(f.at)}</span>`
-        + `<span class="feed__t">${esc(f.text)}</span>`
-        + `<span class="feed__d${cls}">${val}</span></div>`;
-    }).join('')
-    + '</div>' + (noteText ? `<p class="card__note">${esc(noteText)}</p>` : '') + '</div>';
+/** Ближайшие пороги: ради чего имеет смысл следующая смена. */
+export function nudges(items: Nudge[]): string {
+  if (items.length === 0) return '';
+  return '<div class="card"><p class="card__label">Скоро</p><div class="nudges">'
+    + items.map((n) => '<div class="nudge">'
+      + `<span class="nudge__ic">${icon(n.icon)}</span>`
+      + `<div class="nudge__body"><p class="nudge__t">${esc(n.text)}</p>`
+      + `<p class="nudge__d">${esc(n.detail)}</p>${bar(n.pct)}</div></div>`).join('')
+    + '</div></div>';
 }
+
+const KIND_CLASS: Record<FeedEntry['kind'], string> = {
+  points: '', badge: ' feed__i--win', badge_reset: ' feed__i--warn',
+  level: ' feed__i--win', goal: ' feed__i--win', access: ' feed__i--warn', rank: ' feed__i--win',
+};
+
+/**
+ * Лента, сгруппированная по дням. Вехи — знак, уровень, доступ — выделены:
+ * ради них лента и нужна, иначе всё меняется молча и курьер узнаёт об этом
+ * случайно, открыв нужный экран.
+ */
+export function feed(items: FeedEntry[], unread: number): string {
+  if (items.length === 0) {
+    return card({ label: 'Лента', note: 'Пока пусто. Подайте событие в симуляторе — оно появится здесь.' });
+  }
+
+  const days: { at: string; rows: FeedEntry[] }[] = [];
+  items.forEach((e, i) => {
+    const last = days[days.length - 1];
+    if (last && last.at === e.at) last.rows.push(e);
+    else days.push({ at: e.at, rows: [e] });
+    void i;
+  });
+
+  return days.map((d) => '<div class="card"><p class="card__label">'
+    + `${esc(dayName(d.at))}</p><div class="feed">`
+    + d.rows.map((e, i) => {
+      const isNew = unread > 0 && days[0] === d && i < unread;
+      const val = e.kind !== 'points' ? '' : e.delta === 0 ? '—' : `${e.delta > 0 ? '+' : ''}${e.delta}`;
+      const cls = e.delta > 0 ? '' : e.delta < 0 ? ' feed__d--minus' : ' feed__d--zero';
+      return `<div class="feed__i${KIND_CLASS[e.kind]}${isNew ? ' feed__i--new' : ''}">`
+        + `<span class="feed__ic">${icon(e.icon)}</span>`
+        + '<span class="feed__body">'
+        + `<span class="feed__t">${esc(e.text)}${e.count > 1 ? ` <em>× ${e.count}</em>` : ''}</span>`
+        + (e.detail ? `<span class="feed__sub">${esc(e.detail)}</span>` : '')
+        + '</span>'
+        + (val ? `<span class="feed__d${cls}">${val}</span>` : '')
+        + '</div>';
+    }).join('')
+    + '</div></div>').join('');
+}
+
+const DAY_NAMES: Record<string, string> = {
+  'Пн': 'Понедельник', 'Вт': 'Вторник', 'Ср': 'Среда',
+  'Чт': 'Четверг', 'Пт': 'Пятница', 'Сб': 'Суббота', 'Вс': 'Воскресенье',
+};
+const dayName = (at: string): string => DAY_NAMES[at] ?? at;
 
 export function mentor(opts: { name: string; role: string; initial: string; note: string }): string {
   return '<div class="card"><p class="card__label">Твой наставник</p>'

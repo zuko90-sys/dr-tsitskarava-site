@@ -7,70 +7,86 @@ export interface Scenario {
   events: CourierEvent[];
 }
 
-/** Генератор повторяющихся событий — журналы получаются длинные. */
-function rep<T extends CourierEvent>(n: number, make: (i: number) => T): T[] {
-  return Array.from({ length: n }, (_, i) => make(i));
+interface Day {
+  /** Инцидент идёт первым: знак «Ноль инцидентов» должен обнулиться до закрытия смены. */
+  incident?: boolean;
+  slot?: 'ok' | 'missed' | 'warned';
+  deliveries?: number;
+  /** Жалоба и повреждённая доставка идут после чистых — так знак и обнуляется. */
+  damaged?: number;
+  fives?: number;
+  fours?: number;
+  threes?: number;
+  tare?: 'all' | 'partial';
+  helped?: number;
+  mentored?: number;
+  shift?: 'clean' | 'noted';
 }
 
-const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const day = (i: number) => DAYS[i % 7];
+/**
+ * Один день журнала. Порядок внутри дня не случайный: он определяет,
+ * где именно обнулятся счётчики знаков, а значит и то, что попадёт в ленту.
+ */
+function day(at: string, d: Day): CourierEvent[] {
+  const out: CourierEvent[] = [];
+  const rep = (n: number, make: () => CourierEvent) => {
+    for (let i = 0; i < n; i++) out.push(make());
+  };
+
+  if (d.incident) out.push({ type: 'incident', at });
+  if (d.slot === 'ok') out.push({ type: 'slot_attended', at });
+  if (d.slot === 'missed') out.push({ type: 'slot_missed', at, warnedAhead: false });
+  if (d.slot === 'warned') out.push({ type: 'slot_missed', at, warnedAhead: true });
+
+  rep(d.deliveries ?? 0, () => ({ type: 'delivery', at, clean: true }));
+  for (let i = 0; i < (d.damaged ?? 0); i++) {
+    out.push({ type: 'complaint', at, kind: 'damage' });
+    out.push({ type: 'delivery', at, clean: false });
+  }
+
+  rep(d.fives ?? 0, () => ({ type: 'rating', at, stars: 5 }));
+  rep(d.fours ?? 0, () => ({ type: 'rating', at, stars: 4 }));
+  rep(d.threes ?? 0, () => ({ type: 'rating', at, stars: 3 }));
+
+  rep(d.helped ?? 0, () => ({ type: 'helped', at }));
+  rep(d.mentored ?? 0, () => ({ type: 'mentored', at }));
+
+  if (d.tare) out.push({ type: 'tare_returned', at, all: d.tare === 'all' });
+  if (d.shift) out.push({ type: 'shift_closed', at, clean: d.shift === 'clean' });
+
+  return out;
+}
+
+const week = (days: [string, Day][]): CourierEvent[] => days.flatMap(([at, d]) => day(at, d));
 
 /* ─────────────────── Первая неделя ─────────────────── */
 /* Айгуль, четвёртый день. Смен мало, лига ещё закрыта. */
-const rookie: CourierEvent[] = [
-  ...rep(4, (i) => ({ type: 'shift_closed', at: day(i), clean: true } as CourierEvent)),
-  ...rep(4, (i) => ({ type: 'slot_attended', at: day(i) } as CourierEvent)),
-  ...rep(27, (i) => ({ type: 'delivery', at: day(i % 3), clean: true } as CourierEvent)),
-  ...rep(9, (i) => ({ type: 'rating', at: day(i % 3), stars: 5 } as CourierEvent)),
-  ...rep(2, (i) => ({ type: 'rating', at: day(i % 3), stars: 4 } as CourierEvent)),
-  ...rep(4, (i) => ({ type: 'tare_returned', at: day(i), all: true } as CourierEvent)),
-];
+const rookie = week([
+  ['Пн', { slot: 'ok', deliveries: 7, fives: 3, tare: 'all', shift: 'clean' }],
+  ['Вт', { slot: 'ok', deliveries: 7, fives: 2, fours: 1, tare: 'all', shift: 'clean' }],
+  ['Ср', { slot: 'ok', deliveries: 7, fives: 2, tare: 'all', shift: 'clean' }],
+  ['Чт', { slot: 'ok', deliveries: 6, fives: 2, fours: 1, tare: 'all', shift: 'clean' }],
+]);
 
 /* ─────────────────── Ровная неделя ─────────────────── */
 /* Ислам, пять смен из пяти, ни одного пропуска. */
-const steady: CourierEvent[] = [
-  ...rep(5, (i) => ({ type: 'shift_closed', at: day(i), clean: true } as CourierEvent)),
-  ...rep(5, (i) => ({ type: 'slot_attended', at: day(i) } as CourierEvent)),
-  ...rep(64, (i) => ({ type: 'delivery', at: day(i % 5), clean: true } as CourierEvent)),
-  ...rep(32, (i) => ({ type: 'rating', at: day(i % 5), stars: 5 } as CourierEvent)),
-  ...rep(1, (i) => ({ type: 'rating', at: day(i % 5), stars: 4 } as CourierEvent)),
-  ...rep(5, (i) => ({ type: 'tare_returned', at: day(i), all: true } as CourierEvent)),
-  ...rep(2, (i) => ({ type: 'helped', at: day(i + 2) } as CourierEvent)),
-];
+const steady = week([
+  ['Пн', { slot: 'ok', deliveries: 13, fives: 7, tare: 'all', shift: 'clean' }],
+  ['Вт', { slot: 'ok', deliveries: 13, fives: 6, tare: 'all', helped: 1, shift: 'clean' }],
+  ['Ср', { slot: 'ok', deliveries: 13, fives: 7, tare: 'all', shift: 'clean' }],
+  ['Чт', { slot: 'ok', deliveries: 12, fives: 6, fours: 1, tare: 'all', helped: 1, shift: 'clean' }],
+  ['Пт', { slot: 'ok', deliveries: 13, fives: 6, tare: 'all', shift: 'clean' }],
+]);
 
 /* ─────────────────── Просевшая неделя ─────────────────── */
 /* Тот же Ислам: три смены из пяти, падение, три жалобы на упаковку. */
-const dip: CourierEvent[] = [
-  { type: 'shift_closed', at: 'Пн', clean: true },
-  { type: 'slot_attended', at: 'Пн' },
-  ...rep(18, () => ({ type: 'delivery', at: 'Пн', clean: true } as CourierEvent)),
-  ...rep(12, () => ({ type: 'rating', at: 'Пн', stars: 5 } as CourierEvent)),
-  { type: 'tare_returned', at: 'Пн', all: true },
-
-  { type: 'slot_missed', at: 'Вт', warnedAhead: false },
-
-  { type: 'shift_closed', at: 'Ср', clean: false },
-  { type: 'slot_attended', at: 'Ср' },
-  ...rep(16, () => ({ type: 'delivery', at: 'Ср', clean: true } as CourierEvent)),
-  { type: 'complaint', at: 'Ср', kind: 'damage' },
-  { type: 'delivery', at: 'Ср', clean: false },
-  ...rep(6, () => ({ type: 'rating', at: 'Ср', stars: 5 } as CourierEvent)),
-  ...rep(2, () => ({ type: 'rating', at: 'Ср', stars: 3 } as CourierEvent)),
-  { type: 'tare_returned', at: 'Ср', all: false },
-
-  { type: 'slot_missed', at: 'Чт', warnedAhead: false },
-
-  { type: 'incident', at: 'Пт' },
-  { type: 'shift_closed', at: 'Пт', clean: false },
-  { type: 'slot_attended', at: 'Пт' },
-  ...rep(14, () => ({ type: 'delivery', at: 'Пт', clean: true } as CourierEvent)),
-  { type: 'complaint', at: 'Пт', kind: 'damage' },
-  { type: 'delivery', at: 'Пт', clean: false },
-  { type: 'complaint', at: 'Пт', kind: 'damage' },
-  ...rep(5, () => ({ type: 'rating', at: 'Пт', stars: 5 } as CourierEvent)),
-  ...rep(3, () => ({ type: 'rating', at: 'Пт', stars: 3 } as CourierEvent)),
-  { type: 'tare_returned', at: 'Пт', all: true },
-];
+const dip = week([
+  ['Пн', { slot: 'ok', deliveries: 18, fives: 12, tare: 'all', shift: 'clean' }],
+  ['Вт', { slot: 'missed' }],
+  ['Ср', { slot: 'ok', deliveries: 16, damaged: 1, fives: 6, threes: 2, tare: 'partial', shift: 'noted' }],
+  ['Чт', { slot: 'missed' }],
+  ['Пт', { incident: true, slot: 'ok', deliveries: 14, damaged: 2, fives: 5, threes: 3, tare: 'all', shift: 'noted' }],
+]);
 
 export const SCENARIOS: Scenario[] = [
   {

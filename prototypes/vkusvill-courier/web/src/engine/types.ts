@@ -163,11 +163,40 @@ export interface AccessState {
   reasons: string[];
 }
 
-export interface FeedItem {
+/**
+ * Лента: что произошло и во что это превратилось.
+ *
+ * Вехи (знак, уровень, доступ к слотам) вычисляются сравнением состояния
+ * до и после каждого события, а не выписываются руками. Поэтому лента не
+ * может разойтись с тем, что показано на экранах: и то и другое считает
+ * один движок.
+ */
+export type FeedKind =
+  | 'points'        // обычное начисление, повторы сворачиваются
+  | 'badge'         // знак получен
+  | 'badge_reset'   // счётчик знака пошёл заново
+  | 'level'         // поднялся уровень
+  | 'goal'          // закрыта цель недели
+  | 'access'        // изменился доступ к слотам
+  | 'rank';         // пересёк линию перехода в лиге
+
+export interface FeedEntry {
   at: string;
+  kind: FeedKind;
   text: string;
+  detail?: string;
   delta: number;
-  bucket: BucketId | null;
+  /** Сколько одинаковых начислений свёрнуто в эту строку. */
+  count: number;
+  icon: string;
+}
+
+/** Ближайший достижимый порог — чтобы курьер знал, ради чего следующая смена. */
+export interface Nudge {
+  text: string;
+  detail: string;
+  icon: string;
+  pct: number;
 }
 
 export interface Snapshot {
@@ -182,7 +211,8 @@ export interface Snapshot {
   league: { name: string; size: number; rank: number; rows: LeagueRow[]; promote: number };
   access: AccessState;
   fixes: { title: string; text: string }[];
-  feed: FeedItem[];
+  feed: FeedEntry[];
+  nudges: Nudge[];
   /** Средняя оценка за неделю, null — если оценок ещё не было. */
   rating: number | null;
 }

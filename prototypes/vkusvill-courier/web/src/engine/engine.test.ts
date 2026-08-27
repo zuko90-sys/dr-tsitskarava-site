@@ -275,7 +275,9 @@ describe('сценарии сходятся на заявленных цифра
     // Главное: уровень остался тот же, знаки ушли на перезапуск, а не пропали
     expect(s.level.current.name).toBe('Знаток района');
     expect(s.badges.filter((b) => b.wasReset).map((b) => b.id)).toEqual(['care', 'zero', 'tare']);
-    expect(s.badges.find((b) => b.id === 'local')!.done).toBe(186);
+    // 136 накоплено раньше + 51 доставка за неделю (каждая жалоба идёт парой
+    // с повреждённой доставкой — иначе жаловаться было бы не на что)
+    expect(s.badges.find((b) => b.id === 'local')!.done).toBe(187);
   });
 
   it('первая неделя — режим новичка, лига ещё не в счёт', () => {
@@ -287,5 +289,98 @@ describe('сценарии сходятся на заявленных цифра
     expect(s.badges.find((b) => b.id === 'first_delivery')!.earned).toBe(true);
     // Достижимая цель: четыре смены из пяти, а не 4 из 20
     expect(s.goal.target).toBe(5);
+  });
+});
+
+describe('лента', () => {
+  it('складывает повторы в одну строку, а не показывает тридцать две', () => {
+    const s = run(Array.from({ length: 32 }, () => ({ type: 'rating', at: 'Пн', stars: 5 }) as CourierEvent));
+    const fives = s.feed.filter((f) => f.text === 'Оценка 5');
+    expect(fives).toHaveLength(1);
+    expect(fives[0].count).toBe(32);
+    expect(fives[0].delta).toBe(96);
+  });
+
+  it('не сворачивает события разных дней', () => {
+    const s = run([
+      { type: 'rating', at: 'Пн', stars: 5 },
+      { type: 'rating', at: 'Вт', stars: 5 },
+    ]);
+    expect(s.feed.filter((f) => f.text === 'Оценка 5')).toHaveLength(2);
+  });
+
+  it('новое сверху', () => {
+    const s = run([
+      { type: 'shift_closed', at: 'Пн', clean: true },
+      { type: 'helped', at: 'Вт' },
+    ]);
+    expect(s.feed[0].text).toBe('Помог коллеге');
+  });
+
+  it('отмечает получение знака', () => {
+    const s = run(Array.from({ length: 3 }, () => ({ type: 'mentored', at: 'Пн' }) as CourierEvent));
+    const win = s.feed.find((f) => f.kind === 'badge');
+    expect(win?.text).toContain('Наставник');
+    expect(win?.detail).toBe('Получен');
+  });
+
+  it('отмечает обнуление знака и говорит, сколько было', () => {
+    const s = run(
+      [{ type: 'delivery', at: 'Пн', clean: true }, { type: 'complaint', at: 'Пн', kind: 'damage' }],
+      { badgesBefore: { care: 40 } },
+    );
+    const reset = s.feed.find((f) => f.kind === 'badge_reset');
+    expect(reset?.detail).toContain('41');
+  });
+
+  it('отмечает подъём уровня', () => {
+    // Девятая смена + десятая: порог «Новичка» пройден, дальше «Свой человек»
+    const s = run([{ type: 'shift_closed', at: 'Пн', clean: true }], { shiftsBefore: 9 });
+    const up = s.feed.find((f) => f.kind === 'level');
+    expect(up?.text).toContain('Свой человек');
+    expect(up?.detail).toBe('10 зачётных смен');
+  });
+
+  it('отмечает изменение доступа к слотам', () => {
+    const s = run([
+      ...Array.from({ length: 5 }, (_, i) => ({ type: 'shift_closed', at: String(i), clean: true }) as CourierEvent),
+      ...Array.from({ length: 5 }, (_, i) => ({ type: 'slot_attended', at: String(i) }) as CourierEvent),
+      ...Array.from({ length: 5 }, (_, i) => ({ type: 'tare_returned', at: String(i), all: true }) as CourierEvent),
+    ], { shiftsBefore: 67 });
+    expect(s.feed.some((f) => f.kind === 'access')).toBe(true);
+  });
+
+  it('не может разойтись с экранами: веха «знак получен» есть ровно тогда, когда знак получен', () => {
+    for (const sc of SCENARIOS) {
+      const s = evaluate(sc.events, RULES, sc.ctx);
+      const inFeed = new Set(s.feed.filter((f) => f.kind === 'badge')
+        .map((f) => f.text.replace(/^Знак «|»$/g, '')));
+      for (const name of inFeed) {
+        const badge = s.badges.find((b) => b.name.replace(/<br>/g, ' ') === name);
+        expect(badge?.earned, `${sc.label}: ${name}`).toBe(true);
+      }
+    }
+  });
+
+  it('место в лиге попадает в ленту только при пересечении линии перехода', () => {
+    // Иначе каждая пятёрка двигала бы место и лента превратилась бы в шум
+    const s = evaluate(scenarioById('steady').events, RULES, scenarioById('steady').ctx);
+    expect(s.feed.filter((f) => f.kind === 'rank').length).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('ближайшие пороги', () => {
+  it('их не больше трёх и они про недостигнутое', () => {
+    for (const sc of SCENARIOS) {
+      const s = evaluate(sc.events, RULES, sc.ctx);
+      expect(s.nudges.length, sc.label).toBeLessThanOrEqual(3);
+      s.nudges.forEach((n) => expect(n.pct).toBeLessThan(100));
+    }
+  });
+
+  it('закрытая цель недели в подсказки не попадает', () => {
+    const s = evaluate(scenarioById('steady').events, RULES, scenarioById('steady').ctx);
+    expect(s.goal.done).toBe(s.goal.target);
+    expect(s.nudges.some((n) => n.text === s.goal.title)).toBe(false);
   });
 });

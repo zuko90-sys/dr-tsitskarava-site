@@ -4,11 +4,12 @@ import type { AppState } from '../state/store';
 import * as C from './components';
 import { plural } from './components';
 
-export const SCREENS = ['shift', 'progress', 'league', 'team', 'slots'] as const;
+export const SCREENS = ['shift', 'feed', 'progress', 'league', 'team', 'slots'] as const;
 export type ScreenId = (typeof SCREENS)[number];
 
 export const TABS: { id: ScreenId; label: string; icon: string }[] = [
   { id: 'shift', label: 'Смена', icon: 'home' },
+  { id: 'feed', label: 'Лента', icon: 'bell' },
   { id: 'progress', label: 'Прогресс', icon: 'trophy' },
   { id: 'league', label: 'Лига', icon: 'chart' },
   { id: 'team', label: 'Команда', icon: 'team' },
@@ -41,6 +42,7 @@ const isDip = (s: Snapshot): boolean => s.fixes.length > 0;
 export function headOf(state: AppState, screen: ScreenId): [string, string] {
   const { snapshot: s, profile } = state;
   switch (screen) {
+    case 'feed': return ['Лента', s.feed.length === 0 ? 'Пока пусто' : `${s.feed.length} ${plural(s.feed.length, 'запись', 'записи', 'записей')} за неделю`];
     case 'progress': return ['Твой прогресс', `${s.level.current.name} · ${s.level.done} из ${s.level.need} смен`];
     case 'league': return ['Лига', s.isRookie ? `Откроется на ${RULES.rookieDays + 1}-й день` : `Юго-Запад · ${s.league.size} курьера`];
     case 'team': return ['Команда точки', 'Профсоюзная, 43 · 19 курьеров'];
@@ -282,10 +284,31 @@ function slots(s: Snapshot): string {
     'Ранний доступ — единственное, чем управляет результат недели. Поток заказов и ставка от уровня не зависят никогда.',
     'Порог виден целиком и заранее. Внезапных понижений в системе нет: сначала неделя предупреждения, только потом изменение.'));
 
-  parts.push(C.feed('Что произошло за неделю', s.feed.slice(0, 12),
-    'Каждая строка — событие смены и то, во что оно превратилось. Спор «почему у меня такой балл» разрешается предъявлением этого списка.'));
-
   return parts.join('');
+}
+
+/* ─────────────────────────── ЛЕНТА ─────────────────────────── */
+
+function feedScreen(s: Snapshot, unread: number): string {
+  const wins = s.feed.filter((f) => f.kind !== 'points').length;
+
+  return [
+    C.card({
+      tone: unread > 0 ? 'green' : 'flat',
+      label: 'За неделю',
+      title: unread > 0
+        ? `${unread} ${plural(unread, 'новое событие', 'новых события', 'новых событий')}`
+        : 'Всё просмотрено',
+      note: wins > 0
+        ? `Среди них ${wins} ${plural(wins, 'веха', 'вехи', 'вех')}: знаки, уровень и доступ к слотам отмечены отдельно.`
+        : 'Вех пока нет — они появятся, когда закроется знак, поднимется уровень или изменится доступ к слотам.',
+    }),
+    C.nudges(s.nudges),
+    C.feed(s.feed, unread),
+    C.note(
+      'Лента — единственное место, где видно, что вообще произошло. Без неё геймификация невидима между открытиями приложения: знак закрылся, а человек об этом не узнал.',
+    ),
+  ].join('');
 }
 
 /* ─────────────────────────── СБОРКА ─────────────────────────── */
@@ -294,6 +317,7 @@ export function renderScreen(state: AppState, screen: ScreenId): string {
   const s = state.snapshot;
   const rookie = s.isRookie;
   switch (screen) {
+    case 'feed': return feedScreen(s, state.unreadFeed);
     case 'progress': return progress(s, rookie);
     case 'league': return league(s);
     case 'team': return team(s, rookie);

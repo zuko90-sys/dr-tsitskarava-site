@@ -8,41 +8,45 @@ interface Button {
   minus?: boolean;
 }
 
-/** День недели для нового события — просто следующий по кругу. */
-function nextDay(): string {
-  const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-  return days[getState().events.length % 7];
+/**
+ * День для нового события — тот же, что у последнего в журнале.
+ * Журнал хронологический, и лента группируется по дням: если раскладывать
+ * новые события по кругу, один и тот же день появится в ленте дважды.
+ */
+function today(): string {
+  const events = getState().events;
+  return events.length > 0 ? events[events.length - 1].at : 'Пн';
 }
 
 const GROUPS: { label: string; items: Button[] }[] = [
   {
     label: 'Смена',
     items: [
-      { label: 'Закрыл смену', hint: '+12', make: () => ({ type: 'shift_closed', at: nextDay(), clean: true }) },
-      { label: 'Смена с замечанием', hint: '+6', make: () => ({ type: 'shift_closed', at: nextDay(), clean: false }) },
-      { label: 'Вышел на слот', hint: '+5', make: () => ({ type: 'slot_attended', at: nextDay() }) },
-      { label: 'Предупредил и не вышел', hint: '0', make: () => ({ type: 'slot_missed', at: nextDay(), warnedAhead: true }) },
-      { label: 'Пропустил слот', hint: '−8', minus: true, make: () => ({ type: 'slot_missed', at: nextDay(), warnedAhead: false }) },
+      { label: 'Закрыл смену', hint: '+12', make: () => ({ type: 'shift_closed', at: today(), clean: true }) },
+      { label: 'Смена с замечанием', hint: '+6', make: () => ({ type: 'shift_closed', at: today(), clean: false }) },
+      { label: 'Вышел на слот', hint: '+5', make: () => ({ type: 'slot_attended', at: today() }) },
+      { label: 'Предупредил и не вышел', hint: '0', make: () => ({ type: 'slot_missed', at: today(), warnedAhead: true }) },
+      { label: 'Пропустил слот', hint: '−8', minus: true, make: () => ({ type: 'slot_missed', at: today(), warnedAhead: false }) },
     ],
   },
   {
     label: 'Доставки',
     items: [
-      { label: 'Доставка без жалоб', hint: '', make: () => ({ type: 'delivery', at: nextDay(), clean: true }) },
-      { label: 'Оценка 5', hint: '+3', make: () => ({ type: 'rating', at: nextDay(), stars: 5 }) },
-      { label: 'Оценка 3', hint: '0', make: () => ({ type: 'rating', at: nextDay(), stars: 3 }) },
-      { label: 'Оценка 1', hint: '−6', minus: true, make: () => ({ type: 'rating', at: nextDay(), stars: 1 }) },
-      { label: 'Жалоба на упаковку', hint: '−5', minus: true, make: () => ({ type: 'complaint', at: nextDay(), kind: 'damage' }) },
+      { label: 'Доставка без жалоб', hint: '', make: () => ({ type: 'delivery', at: today(), clean: true }) },
+      { label: 'Оценка 5', hint: '+3', make: () => ({ type: 'rating', at: today(), stars: 5 }) },
+      { label: 'Оценка 3', hint: '0', make: () => ({ type: 'rating', at: today(), stars: 3 }) },
+      { label: 'Оценка 1', hint: '−6', minus: true, make: () => ({ type: 'rating', at: today(), stars: 1 }) },
+      { label: 'Жалоба на упаковку', hint: '−5', minus: true, make: () => ({ type: 'complaint', at: today(), kind: 'damage' }) },
     ],
   },
   {
     label: 'Тара, помощь, инциденты',
     items: [
-      { label: 'Вся тара сдана', hint: '+4', make: () => ({ type: 'tare_returned', at: nextDay(), all: true }) },
-      { label: 'Тара сдана не вся', hint: '0', minus: true, make: () => ({ type: 'tare_returned', at: nextDay(), all: false }) },
-      { label: 'Выручил коллегу', hint: '+6', make: () => ({ type: 'helped', at: nextDay() }) },
-      { label: 'Провёл новичка', hint: '+10', make: () => ({ type: 'mentored', at: nextDay() }) },
-      { label: 'Падение или ДТП', hint: '0', minus: true, make: () => ({ type: 'incident', at: nextDay() }) },
+      { label: 'Вся тара сдана', hint: '+4', make: () => ({ type: 'tare_returned', at: today(), all: true }) },
+      { label: 'Тара сдана не вся', hint: '0', minus: true, make: () => ({ type: 'tare_returned', at: today(), all: false }) },
+      { label: 'Выручил коллегу', hint: '+6', make: () => ({ type: 'helped', at: today() }) },
+      { label: 'Провёл новичка', hint: '+10', make: () => ({ type: 'mentored', at: today() }) },
+      { label: 'Падение или ДТП', hint: '0', minus: true, make: () => ({ type: 'incident', at: today() }) },
     ],
   },
 ];
