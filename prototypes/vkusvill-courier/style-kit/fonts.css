@@ -1,0 +1,7 @@
+/* Шрифты набора. Настоящий фирменный шрифт ВкусВилла (Юрий Гордон)
+   проприетарный; здесь ближайшая по духу свободная пара с Google Fonts:
+   Unbounded — заголовки, Golos Text — текст и интерфейс (OFL).
+   Для скорости лучше <link> в <head> вместо @import:
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600;700&display=swap">
+*/
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600;700&display=swap');

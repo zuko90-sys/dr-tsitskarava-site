@@ -1,0 +1,9 @@
+/* Иконки-спрайт. Контурные, цвет берут из currentColor.
+   Использование: <svg class="icon"><use href="icons.svg#i-shield"/></svg>
+   (для file:// и почтовых вебвью надёжнее инлайнить спрайт в разметку,
+   как сделано в demo.html, и ссылаться <use href="#i-shield">) */
+.icon{
+  width:20px;height:20px;display:inline-block;vertical-align:middle;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+}

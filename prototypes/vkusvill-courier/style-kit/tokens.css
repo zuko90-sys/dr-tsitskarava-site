@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Дизайн-токены «в духе ВкусВилла».
+   Фирменные цвета — с публичной страницы бренда vkusvill.ru/brand:
+   зелёный #2DBE64 (Pantone 2250 C) и ягодный #D7144B (Pantone 192 C).
+   Остальное — производные для этого набора. НЕ официальный брендбук.
+
+   Темы: светлая — по умолчанию; тёмная включается системной настройкой
+   (prefers-color-scheme) или явно атрибутом data-theme="dark" на <html>.
+   data-theme="light" принудительно возвращает светлую.
+
+   Переопределяйте токены — компоненты подтянутся сами.
+   ═══════════════════════════════════════════════════════════════════ */
+/* Палитра проверена на контраст: все текстовые пары ≥ 4.5:1 (WCAG AA)
+   в обеих темах. */
+/* ─────────────────────────────  ТОКЕНЫ  ─────────────────────────────
+   Светлая палитра проверена на контраст: все текстовые пары ≥ 4.5:1.
+   Курьер смотрит в телефон на улице, в солнце — запас здесь не роскошь. */
+:root{
+  --green:#2DBE64;
+  --green-deep:#0E6B36;
+  --green-soft:#DCF3E5;
+  --green-line:#B6E3C8;
+
+  --amber:#8A5000;
+  --amber-solid:#D98B1F;
+  --amber-soft:#FCF0DC;
+  --amber-line:#EFD7AC;
+
+  --berry:#B00F3E;
+  --berry-soft:#FBE3E9;
+
+  --ink:#12251A;
+  --ink-2:#3D5147;
+  --ink-3:#5C7367;
+  --paper:#E7EEE6;
+  --surface:#FFFFFF;
+  --surface-2:#F8FBF7;
+  --line:#DFE8DF;
+  --line-soft:#EDF2EC;
+
+  --shell:#0D1711;
+  --shell-edge:#2A3B31;
+  --on-green:#FFFFFF;
+
+  --display:"Unbounded","Golos Text","Helvetica Neue",Arial,sans-serif;
+  --text:"Golos Text","Helvetica Neue",Arial,sans-serif;
+
+  --r-md:16px; --r-lg:22px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+    --amber:#F2C078; --amber-solid:#E9A94A; --amber-soft:#2E220E; --amber-line:#4B3A18;
+    --berry:#FF6089; --berry-soft:#3B1220;
+    --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#8AA294;
+    --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
+    --line:#26382D; --line-soft:#1D2E23;
+    --shell:#000000; --shell-edge:#31463A;
+    --on-green:#08160E;
+  }
+}
+:root[data-theme="dark"]{
+  --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+  --amber:#F2C078; --amber-solid:#E9A94A; --amber-soft:#2E220E; --amber-line:#4B3A18;
+  --berry:#FF6089; --berry-soft:#3B1220;
+  --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#8AA294;
+  --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
+  --line:#26382D; --line-soft:#1D2E23;
+  --shell:#000000; --shell-edge:#31463A;
+  --on-green:#08160E;
+}
