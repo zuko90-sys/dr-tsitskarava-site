@@ -1,21 +1,29 @@
 <title>Экран курьера</title>
-<meta name="description" content="Концепт мотивационного слоя в приложении курьера: пять рабочих экранов.">
+<meta name="description" content="Концепт мотивационного слоя в приложении курьера: пять экранов в трёх состояниях.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600&family=Golos+Text:wght@400;500;600;700&display=swap">
 <style>
-/* ─────────────────────────────  ТОКЕНЫ  ───────────────────────────── */
+/* ─────────────────────────────  ТОКЕНЫ  ─────────────────────────────
+   Светлая палитра проверена на контраст: все текстовые пары ≥ 4.5:1.
+   Курьер смотрит в телефон на улице, в солнце — запас здесь не роскошь. */
 :root{
   --green:#2DBE64;
-  --green-deep:#178A48;
+  --green-deep:#0E6B36;
   --green-soft:#DCF3E5;
   --green-line:#B6E3C8;
-  --berry:#D7144B;
+
+  --amber:#8A5000;
+  --amber-solid:#D98B1F;
+  --amber-soft:#FCF0DC;
+  --amber-line:#EFD7AC;
+
+  --berry:#B00F3E;
   --berry-soft:#FBE3E9;
 
   --ink:#12251A;
   --ink-2:#3D5147;
-  --ink-3:#71887B;
+  --ink-3:#5C7367;
   --paper:#E7EEE6;
   --surface:#FFFFFF;
   --surface-2:#F8FBF7;
@@ -34,8 +42,9 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+    --amber:#F2C078; --amber-solid:#E9A94A; --amber-soft:#2E220E; --amber-line:#4B3A18;
     --berry:#FF6089; --berry-soft:#3B1220;
-    --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#7C9486;
+    --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#8AA294;
     --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
     --line:#26382D; --line-soft:#1D2E23;
     --shell:#000000; --shell-edge:#31463A;
@@ -44,8 +53,9 @@
 }
 :root[data-theme="dark"]{
   --green:#3FDA7C; --green-deep:#8FEDB5; --green-soft:#123222; --green-line:#215C3B;
+  --amber:#F2C078; --amber-solid:#E9A94A; --amber-soft:#2E220E; --amber-line:#4B3A18;
   --berry:#FF6089; --berry-soft:#3B1220;
-  --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#7C9486;
+  --ink:#E9F3EB; --ink-2:#AAC2B2; --ink-3:#8AA294;
   --paper:#070D09; --surface:#121E17; --surface-2:#17271D;
   --line:#26382D; --line-soft:#1D2E23;
   --shell:#000000; --shell-edge:#31463A;
@@ -57,13 +67,11 @@
 html{-webkit-text-size-adjust:100%}
 body{
   margin:0;min-height:100dvh;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:var(--text);
-  font-size:16px;line-height:1.5;
+  background:var(--paper);color:var(--ink);
+  font-family:var(--text);font-size:16px;line-height:1.5;
   -webkit-font-smoothing:antialiased;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:18px;padding:26px 16px 30px;
+  gap:16px;padding:22px 16px 28px;
 }
 h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.15}
 p{margin:0}
@@ -71,66 +79,68 @@ ul{margin:0;padding:0;list-style:none}
 button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
 :focus-visible{outline:2.5px solid var(--green);outline-offset:2px;border-radius:8px}
 .num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
-/* Плашка «это концепт» */
+/* Шапка стенда */
+.deck{display:flex;flex-direction:column;align-items:center;gap:12px;flex:none}
 .stamp{
-  display:inline-flex;align-items:center;gap:8px;flex:none;
+  display:inline-flex;align-items:center;gap:8px;
   padding:6px 13px 6px 10px;border-radius:100px;
   background:var(--berry-soft);color:var(--berry);
   font-size:11.5px;font-weight:600;line-height:1.3;text-align:center;
 }
 .stamp::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 
-.hint{
-  font-size:12.5px;color:var(--ink-3);text-align:center;max-width:42ch;flex:none;
+.profiles{
+  display:inline-flex;gap:3px;padding:4px;border-radius:100px;
+  background:var(--surface);border:1px solid var(--line);
 }
-.hint kbd{
-  font:inherit;font-size:11.5px;border:1px solid var(--line);background:var(--surface);
-  border-radius:5px;padding:1px 6px;color:var(--ink-2);
+.profile{
+  padding:7px 15px;border-radius:100px;
+  font-size:12.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;
+  transition:background .18s ease,color .18s ease;
 }
+.profile:hover{color:var(--ink-2)}
+.profile[aria-pressed="true"]{background:var(--green-soft);color:var(--green-deep)}
 
 /* ─────────────────────────────  ТЕЛЕФОН  ───────────────────────────── */
 .phone{
-  flex:none;
-  width:384px;
-  background:var(--shell);
-  border:1px solid var(--shell-edge);
+  flex:none;width:384px;
+  background:var(--shell);border:1px solid var(--shell-edge);
   border-radius:48px;padding:11px;
   box-shadow:0 2px 4px rgba(18,37,26,.06), 0 34px 70px -24px rgba(18,37,26,.38);
 }
 .app{
-  position:relative;
-  height:788px;
-  background:var(--surface-2);
-  border-radius:38px;
-  overflow:hidden;
-  display:flex;flex-direction:column;
-  isolation:isolate;
+  position:relative;height:760px;
+  background:var(--surface-2);border-radius:38px;overflow:hidden;
+  display:flex;flex-direction:column;isolation:isolate;
 }
 
-/* Полноэкранный режим на телефоне */
 @media (max-width:719px){
   body{padding:0;gap:0;justify-content:flex-start;height:100dvh;overflow:hidden}
+  .deck{width:100%;gap:0}
   .phone{width:100%;border:0;border-radius:0;padding:0;box-shadow:none;flex:1;min-height:0;display:flex}
   .app{height:auto;flex:1;min-height:0;border-radius:0;width:100%}
-  .stamp{
-    order:-1;width:100%;justify-content:center;border-radius:0;
-    padding:7px 12px;font-size:11px;
-  }
+  .stamp{width:100%;justify-content:center;border-radius:0;padding:6px 12px;font-size:10.5px}
   .stamp__more{display:none}
+  .profiles{
+    width:100%;border-radius:0;border-width:0 0 1px;padding:5px 8px;
+    justify-content:center;gap:4px;background:var(--surface);
+  }
+  .profile{padding:6px 10px;font-size:11.5px}
   .hint{display:none}
-  .status{padding-top:max(12px, env(safe-area-inset-top))}
+  .status{padding-top:max(10px, env(safe-area-inset-top))}
   .tabbar{padding-bottom:max(15px, env(safe-area-inset-bottom))}
 }
-@media (min-width:720px) and (max-height:900px){
-  .app{height:min(788px, calc(100dvh - 150px))}
+@media (min-width:720px) and (max-height:940px){
+  .app{height:min(760px, calc(100dvh - 190px))}
 }
 
+.hint{font-size:12.5px;color:var(--ink-3);text-align:center;max-width:44ch;flex:none}
+.hint kbd{font:inherit;font-size:11.5px;border:1px solid var(--line);background:var(--surface);border-radius:5px;padding:1px 6px;color:var(--ink-2)}
+
 /* Статус-бар */
-.status{
-  flex:none;display:flex;align-items:center;justify-content:space-between;
-  padding:13px 24px 6px;font-size:12.5px;font-weight:600;
-}
+.status{flex:none;display:flex;align-items:center;justify-content:space-between;padding:13px 24px 6px;font-size:12.5px;font-weight:600}
 .status__icons{display:flex;gap:5px;align-items:center;opacity:.85}
 .status__icons i{display:block;width:15px;height:10px;border:1.4px solid currentColor;border-radius:3px}
 .status__icons i:first-child{width:4px;height:9px;border-width:0;border-radius:1px;background:currentColor}
@@ -154,26 +164,25 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .viewport{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 20px;scrollbar-width:thin}
 .viewport::-webkit-scrollbar{width:5px}
 .viewport::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px}
-
-.screen{display:none;flex-direction:column;gap:12px}
-.screen.is-on{display:flex;animation:slide .32s cubic-bezier(.22,1,.36,1) both}
+.screen{display:flex;flex-direction:column;gap:12px;animation:slide .32s cubic-bezier(.22,1,.36,1) both}
 @keyframes slide{from{opacity:0;transform:translateX(var(--from,10px))}to{opacity:1;transform:none}}
 
 /* ── Карточки ── */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px}
 .card--flat{border-color:var(--line-soft)}
 .card--green{background:var(--green-soft);border-color:var(--green-line)}
+.card--warn{background:var(--amber-soft);border-color:var(--amber-line)}
 .card__label{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
 .card--green .card__label{color:var(--green-deep)}
+.card--warn .card__label{color:var(--amber)}
 .card__title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.02em;margin-top:7px}
-.card__note{font-size:13px;color:var(--ink-2);margin-top:6px;line-height:1.45}
+.card__title--lg{font-size:20px}
+.card__note{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.45}
 
 .live{display:flex;align-items:center;gap:11px}
-.live__dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none;position:relative}
-.live__dot::after{
-  content:"";position:absolute;inset:-5px;border-radius:50%;
-  border:2px solid var(--green);opacity:.4;animation:pulse 2.4s ease-out infinite;
-}
+.live__dot{width:9px;height:9px;border-radius:50%;flex:none;position:relative;color:var(--green);background:currentColor}
+.live__dot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid currentColor;opacity:.4;animation:pulse 2.4s ease-out infinite}
+.card--warn .live__dot{color:var(--amber-solid)}
 @keyframes pulse{0%{transform:scale(.55);opacity:.55}100%{transform:scale(1.25);opacity:0}}
 .live__text{font-size:13.5px;font-weight:600}
 .live__meta{font-size:12.5px;color:var(--ink-3);margin-left:auto}
@@ -188,6 +197,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
   stroke-dasharray:283;stroke-dashoffset:283;
   transition:stroke-dashoffset 1.15s cubic-bezier(.22,1,.36,1) .15s;
 }
+.ring--warn .ring__fill{stroke:var(--amber-solid)}
 .ring.is-drawn .ring__fill{stroke-dashoffset:var(--dash,60)}
 .ring__center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
 .ring__big{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.03em;line-height:1}
@@ -199,12 +209,15 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .stat__line{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px)}
 .stat__v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .stat__v--good{color:var(--green-deep)}
+.stat__v--warn{color:var(--amber)}
 
 /* Полоса */
 .bar{height:9px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px}
 .bar__fill{display:block;height:100%;border-radius:99px;background:var(--green);width:0;transition:width 1s cubic-bezier(.22,1,.36,1) .2s}
 .bar.is-drawn .bar__fill{width:var(--pct,50%)}
+.bar--warn .bar__fill{background:var(--amber-solid)}
 .card--green .bar{background:var(--green-line)}
+.card--warn .bar{background:var(--amber-line)}
 .bar-legend{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-3);margin-top:8px}
 
 .reward{
@@ -212,15 +225,14 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
   padding-top:13px;border-top:1px dashed var(--green-line);
   font-size:12.5px;color:var(--ink-2);line-height:1.45;
 }
+.card--warn .reward{border-top-color:var(--amber-line)}
 .reward svg{width:16px;height:16px;flex:none;color:var(--green-deep);margin-top:1px}
+.card--warn .reward svg{color:var(--amber)}
 
 /* Уровни */
 .levels{display:flex;flex-direction:column;gap:2px;margin-top:8px}
 .level{display:flex;align-items:center;gap:11px;padding:9px 2px;font-size:13.5px;color:var(--ink-3)}
-.level__pip{
-  width:22px;height:22px;border-radius:50%;flex:none;position:relative;
-  border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;
-}
+.level__pip{width:22px;height:22px;border-radius:50%;flex:none;position:relative;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center}
 .level__pip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);width:2px;height:11px;background:var(--line)}
 .level:last-child .level__pip::after{display:none}
 .level.done{color:var(--ink-2)}
@@ -244,7 +256,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .badge__ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--green-soft);color:var(--green-deep)}
 .badge__ic svg{width:19px;height:19px}
 .badge__n{font-size:10.5px;font-weight:600;line-height:1.25}
-.badge.locked{opacity:.55}
+.badge.locked{opacity:.62}
 .badge.locked .badge__ic{background:var(--line-soft);color:var(--ink-3)}
 .badge__how{
   font-size:12.5px;color:var(--ink-2);line-height:1.45;margin-top:10px;
@@ -253,12 +265,14 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 }
 .badge__how b{color:var(--ink);font-weight:600}
 
-/* Подсказка-плашка */
+/* Плашка-подсказка */
 .note-chip{
   display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.45;color:var(--ink-2);
   background:var(--surface-2);border:1px solid var(--line-soft);border-radius:var(--r-md);padding:11px 13px;
 }
 .note-chip svg{width:15px;height:15px;flex:none;color:var(--green-deep);margin-top:2px}
+.note-chip--warn{background:var(--amber-soft);border-color:var(--amber-line)}
+.note-chip--warn svg{color:var(--amber)}
 
 /* Лига */
 .rank{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:var(--r-md);font-size:13.5px}
@@ -268,27 +282,30 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .rank__pts{font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .rank.me{background:var(--green-soft);border:1px solid var(--green-line);font-weight:600}
 .rank.me .rank__pos,.rank.me .rank__pts{color:var(--green-deep)}
-.rank.promo{border-bottom:1px dashed var(--green-line);border-radius:var(--r-md) var(--r-md) 0 0}
-.promo-label{font-size:11px;color:var(--green-deep);font-weight:600;text-align:center;padding:7px 0 2px}
+.rank.me--warn{background:var(--amber-soft);border-color:var(--amber-line)}
+.rank.me--warn .rank__pos,.rank.me--warn .rank__pts{color:var(--amber)}
+.promo-label{font-size:11px;color:var(--green-deep);font-weight:600;text-align:center;padding:8px 0 4px;border-top:1px dashed var(--green-line);margin-top:3px}
 
 /* Команда */
 .team-row{display:flex;align-items:center;gap:10px;font-size:13px;padding:7px 0}
 .team-row + .team-row{border-top:1px solid var(--line-soft)}
-.team-row__av{
-  width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
-  background:var(--surface-2);border:1px solid var(--line);
-  font-size:11px;font-weight:600;color:var(--ink-2);
-}
+.team-row__av{width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);font-size:11px;font-weight:600;color:var(--ink-2)}
 .team-row__n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .team-row__v{font-size:12.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .team-row.me .team-row__av{background:var(--green-soft);border-color:var(--green-line);color:var(--green-deep)}
 .team-row.me .team-row__n{font-weight:600}
 
-/* Слоты */
+/* Слоты и замок */
 .unlock{display:flex;gap:12px;align-items:center;padding:14px 15px;border-radius:var(--r-lg);background:var(--green-soft);border:1px solid var(--green-line)}
+.unlock--warn{background:var(--amber-soft);border-color:var(--amber-line)}
+.unlock--off{background:var(--surface);border-color:var(--line)}
 .unlock__ic{width:38px;height:38px;border-radius:12px;flex:none;display:grid;place-items:center;background:var(--green);color:var(--on-green)}
+.unlock--warn .unlock__ic{background:var(--amber-solid);color:#2A1C05}
+.unlock--off .unlock__ic{background:var(--line-soft);color:var(--ink-3)}
 .unlock__ic svg{width:19px;height:19px}
 .unlock__t{font-size:13.5px;font-weight:600;color:var(--green-deep)}
+.unlock--warn .unlock__t{color:var(--amber)}
+.unlock--off .unlock__t{color:var(--ink-2)}
 .unlock__s{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4}
 
 .slot{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface)}
@@ -297,23 +314,54 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .slot__d1{font-size:12.5px;font-weight:600}
 .slot__d2{font-size:11px;color:var(--ink-3)}
 .slot__time{flex:1;font-size:13.5px;font-variant-numeric:tabular-nums}
-.slot__pill{
-  font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;white-space:nowrap;
-  background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line);
-}
+.slot__pill{font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;white-space:nowrap;background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line)}
 .slot__pill--muted{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
-.slot.taken{opacity:.5}
+.slot.taken{opacity:.55}
+
+/* Чек-лист новичка */
+.check{display:flex;flex-direction:column;margin-top:8px}
+.check__i{display:flex;align-items:flex-start;gap:11px;padding:9px 0;font-size:13px;color:var(--ink-2);line-height:1.4}
+.check__i + .check__i{border-top:1px solid var(--line-soft)}
+.check__box{
+  width:20px;height:20px;border-radius:7px;flex:none;margin-top:1px;
+  border:1.8px solid var(--line);background:var(--surface);display:grid;place-items:center;
+}
+.check__i.done .check__box{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.check__i.done .check__box svg{width:11px;height:11px}
+.check__i.done{color:var(--ink-3)}
+
+/* Наставник */
+.mentor{display:flex;align-items:center;gap:13px;margin-top:10px}
+.mentor__av{width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:var(--green-soft);border:1px solid var(--green-line);color:var(--green-deep);font-family:var(--display);font-size:17px;font-weight:600}
+.mentor__n{font-size:14.5px;font-weight:600}
+.mentor__r{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.mentor__btn{
+  margin-left:auto;flex:none;display:grid;place-items:center;
+  width:40px;height:40px;border-radius:13px;
+  background:var(--green);color:var(--on-green);
+}
+.mentor__btn svg{width:18px;height:18px}
+
+/* Что подтянуть */
+.fix{display:flex;flex-direction:column;gap:11px;margin-top:11px}
+.fix__i{display:flex;gap:11px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.fix__n{
+  width:22px;height:22px;border-radius:8px;flex:none;margin-top:1px;
+  background:var(--amber-line);color:var(--amber);
+  display:grid;place-items:center;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.fix__i b{color:var(--ink);font-weight:600}
+.appeal{
+  display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+  padding:9px 14px;border-radius:100px;
+  border:1px solid var(--amber-line);background:var(--surface);
+  font-size:12.5px;font-weight:600;color:var(--amber);
+}
+.appeal svg{width:14px;height:14px}
 
 /* Таб-бар */
-.tabbar{
-  flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;
-  padding:9px 8px 15px;background:var(--surface);border-top:1px solid var(--line);
-}
-.tab{
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:6px 2px;border-radius:13px;color:var(--ink-3);
-  transition:color .18s ease,background .18s ease;
-}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:9px 8px 15px;background:var(--surface);border-top:1px solid var(--line)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;border-radius:13px;color:var(--ink-3);transition:color .18s ease,background .18s ease}
 .tab svg{width:21px;height:21px;stroke-width:1.7}
 .tab span{font-size:9.5px;font-weight:600}
 .tab:hover{color:var(--ink-2)}
@@ -324,7 +372,14 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 }
 </style>
 
-<p class="stamp">Концепт · не официальный продукт ВкусВилл<span class="stamp__more"> · данные вымышлены</span></p>
+<div class="deck">
+  <p class="stamp">Концепт · не официальный продукт ВкусВилл<span class="stamp__more"> · данные вымышлены</span></p>
+  <div class="profiles" id="profiles" role="group" aria-label="Состояние курьера">
+    <button class="profile" type="button" data-profile="rookie" aria-pressed="false">Первая неделя</button>
+    <button class="profile" type="button" data-profile="steady" aria-pressed="true">Ровная неделя</button>
+    <button class="profile" type="button" data-profile="dip" aria-pressed="false">Просевшая неделя</button>
+  </div>
+</div>
 
 <div class="phone">
   <div class="app">
@@ -339,250 +394,30 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
         <div class="appbar__title" id="barTitle">Привет, Ислам</div>
         <div class="appbar__sub" id="barSub">Профсоюзная, 43 · велосипед</div>
       </div>
-      <div class="avatar" aria-hidden="true">И</div>
+      <div class="avatar" id="avatar" aria-hidden="true">И</div>
     </div>
 
-    <div class="viewport" id="viewport">
-
-      <!-- ── Смена ── -->
-      <section class="screen is-on" id="s-shift" role="tabpanel" aria-labelledby="t-shift">
-        <div class="card card--green">
-          <div class="live">
-            <span class="live__dot" aria-hidden="true"></span>
-            <span class="live__text">Смена идёт</span>
-            <span class="live__meta num">до 18:00</span>
-          </div>
-          <p class="card__note">9 заказов из 14 по плану смены. Идёшь ровно — торопиться не нужно.</p>
-        </div>
-
-        <div class="card">
-          <p class="card__label">Неделя</p>
-          <div class="ring-row">
-            <div class="ring" style="--dash:31">
-              <svg viewBox="0 0 100 100" aria-hidden="true">
-                <circle class="ring__track" cx="50" cy="50" r="45"></circle>
-                <circle class="ring__fill" cx="50" cy="50" r="45"></circle>
-              </svg>
-              <div class="ring__center">
-                <div class="ring__big num">89</div>
-                <div class="ring__small">баллов<br>качества</div>
-              </div>
-            </div>
-            <ul class="stat-list">
-              <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v stat__v--good num">4,97</span></li>
-              <li class="stat"><span class="stat__k">Вышел на слот</span><span class="stat__line"></span><span class="stat__v num">5 / 5</span></li>
-              <li class="stat"><span class="stat__k">Тара вернулась</span><span class="stat__line"></span><span class="stat__v stat__v--good num">100 %</span></li>
-              <li class="stat"><span class="stat__k">Без замечаний</span><span class="stat__line"></span><span class="stat__v num">62 / 64</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="card card--green">
-          <p class="card__label">Цель недели</p>
-          <p class="card__title">Все термосумки вернулись на точку</p>
-          <div class="bar" style="--pct:90%"><span class="bar__fill"></span></div>
-          <div class="bar-legend"><span class="num">18 из 20</span><span>осталось 2 дня</span></div>
-          <p class="reward">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
-            <span>Выполнишь — слоты на следующую неделю откроются тебе в четверг, а не в пятницу</span>
-          </p>
-        </div>
-
-        <div class="card card--flat">
-          <p class="card__label">Твоя лига</p>
-          <div class="rank me" style="margin-top:10px">
-            <span class="rank__pos num">7</span>
-            <span class="rank__who">Ты · Лига Юго-Запада</span>
-            <span class="rank__pts num">412</span>
-          </div>
-          <p class="card__note">До шестого места — 9 баллов. Это одна смена без замечаний.</p>
-        </div>
-      </section>
-
-      <!-- ── Прогресс ── -->
-      <section class="screen" id="s-progress" role="tabpanel" aria-labelledby="t-progress" hidden>
-        <div class="card card--green">
-          <p class="card__label">Сейчас</p>
-          <p class="card__title" style="font-size:20px">Знаток района</p>
-          <div class="bar" style="--pct:76%"><span class="bar__fill"></span></div>
-          <div class="bar-legend"><span class="num">68 из 90 зачётных смен</span><span>≈ 5 недель</span></div>
-        </div>
-
-        <div class="card">
-          <p class="card__label">Путь</p>
-          <ul class="levels">
-            <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Новичок<span class="level__meta num">10 смен</span></li>
-            <li class="level done"><span class="level__pip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Свой человек<span class="level__meta num">30 смен</span></li>
-            <li class="level now"><span class="level__pip"><i></i></span>Знаток района<span class="level__meta num">90 смен</span></li>
-            <li class="level"><span class="level__pip"></span>Наставник<span class="level__meta num">180 смен</span></li>
-            <li class="level"><span class="level__pip"></span>Опора точки<span class="level__meta num">360 смен</span></li>
-          </ul>
-          <p class="card__note">Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь, просто не добавляет шаг.</p>
-        </div>
-
-        <div class="card">
-          <p class="card__label">Знаки</p>
-          <div class="badges">
-            <button class="badge" type="button" aria-expanded="false" data-how="<b>Бережная доставка.</b> 100 заказов подряд без повреждений и жалоб на состояние продуктов.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
-              <span class="badge__n">Бережная<br>доставка</span>
-            </button>
-            <button class="badge" type="button" aria-expanded="false" data-how="<b>Ноль инцидентов.</b> 30 смен подряд без ДТП, падений и обращений в травмпункт. Обновляется каждый месяц.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
-              <span class="badge__n">Ноль<br>инцидентов</span>
-            </button>
-            <button class="badge" type="button" aria-expanded="false" data-how="<b>Тара на месте.</b> Все термосумки и пакеты вернулись на точку три недели подряд.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/></svg></span>
-              <span class="badge__n">Тара<br>на месте</span>
-            </button>
-            <button class="badge" type="button" aria-expanded="false" data-how="<b>Знаток района.</b> 200 доставок в одном районе. Ты знаешь домофоны, дворы и где не проехать.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-              <span class="badge__n">Знаток<br>района</span>
-            </button>
-            <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Наставник.</b> Провести трёх новичков через первую неделю. Пока — один из трёх.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13A4 4 0 0119 7"/></svg></span>
-              <span class="badge__n">Наставник<br>1 из 3</span>
-            </button>
-            <button class="badge locked" type="button" aria-expanded="false" data-how="<b>Зимний курьер.</b> 40 смен при температуре ниже −10 °C. Открывается с декабря.">
-              <span class="badge__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5L4.9 17.5"/></svg></span>
-              <span class="badge__n">Зимний<br>курьер</span>
-            </button>
-          </div>
-          <div class="badge__how" id="badgeHow" hidden></div>
-        </div>
-      </section>
-
-      <!-- ── Лига ── -->
-      <section class="screen" id="s-league" role="tabpanel" aria-labelledby="t-league" hidden>
-        <div class="card card--flat">
-          <div class="live">
-            <span class="live__text">Лига Юго-Запада</span>
-            <span class="live__meta">2 дня до итогов</span>
-          </div>
-          <p class="card__note">24 курьера · велосипед · стаж от полугода</p>
-        </div>
-
-        <p class="note-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          <span>Ты сравниваешься с курьерами похожего профиля. Общего топа по компании нет — и не будет.</span>
-        </p>
-
-        <div class="card" style="padding:12px">
-          <div class="rank"><span class="rank__pos num">4</span><span class="rank__who">Марина К.</span><span class="rank__pts num">468</span></div>
-          <div class="rank"><span class="rank__pos num">5</span><span class="rank__who">Тимур А.</span><span class="rank__pts num">441</span></div>
-          <div class="rank promo"><span class="rank__pos num">6</span><span class="rank__who">Женя Л.</span><span class="rank__pts num">421</span></div>
-          <p class="promo-label">↑ шестёрка переходит в следующую лигу</p>
-          <div class="rank me"><span class="rank__pos num">7</span><span class="rank__who">Ты</span><span class="rank__pts num">412</span></div>
-          <div class="rank"><span class="rank__pos num">8</span><span class="rank__who">Артём В.</span><span class="rank__pts num">400</span></div>
-          <div class="rank"><span class="rank__pos num">9</span><span class="rank__who">Настя Ш.</span><span class="rank__pts num">387</span></div>
-          <div class="rank"><span class="rank__pos num">10</span><span class="rank__who">Данила Р.</span><span class="rank__pts num">371</span></div>
-        </div>
-
-        <div class="card">
-          <p class="card__label">Из чего баллы</p>
-          <ul class="stat-list" style="margin-top:12px">
-            <li class="stat"><span class="stat__k">Оценки клиентов</span><span class="stat__line"></span><span class="stat__v num">168</span></li>
-            <li class="stat"><span class="stat__k">Выходы на слот</span><span class="stat__line"></span><span class="stat__v num">125</span></li>
-            <li class="stat"><span class="stat__k">Возврат тары</span><span class="stat__line"></span><span class="stat__v num">64</span></li>
-            <li class="stat"><span class="stat__k">Помощь коллегам</span><span class="stat__line"></span><span class="stat__v num">55</span></li>
-          </ul>
-          <p class="card__note">Время в пути и скорость доставки в баллы не входят. Совсем.</p>
-        </div>
-
-        <p class="note-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Низкое место в лиге не уменьшает количество заказов и не снижает оплату. Лига — только про призы и ранний выбор слотов.</span>
-        </p>
-      </section>
-
-      <!-- ── Команда ── -->
-      <section class="screen" id="s-team" role="tabpanel" aria-labelledby="t-team" hidden>
-        <div class="card card--green">
-          <p class="card__label">Челлендж недели</p>
-          <p class="card__title" style="font-size:19px">Неделя бережной доставки</p>
-          <p class="card__note">Профсоюзная, 43 — вся точка целиком, 19 курьеров</p>
-          <div class="bar" style="--pct:82%"><span class="bar__fill"></span></div>
-          <div class="bar-legend"><span class="num">156 из 190 заказов без замечаний</span><span class="num">82 %</span></div>
-        </div>
-
-        <div class="card">
-          <p class="card__label">Кто как вложился</p>
-          <div style="margin-top:8px">
-            <div class="team-row"><span class="team-row__av">М</span><span class="team-row__n">Марина К.</span><span class="team-row__v num">14</span></div>
-            <div class="team-row"><span class="team-row__av">Т</span><span class="team-row__n">Тимур А.</span><span class="team-row__v num">13</span></div>
-            <div class="team-row me"><span class="team-row__av">И</span><span class="team-row__n">Ты</span><span class="team-row__v num">12</span></div>
-            <div class="team-row"><span class="team-row__av">Ж</span><span class="team-row__n">Женя Л.</span><span class="team-row__v num">12</span></div>
-            <div class="team-row"><span class="team-row__av">+15</span><span class="team-row__n">остальные курьеры точки</span><span class="team-row__v num">105</span></div>
-          </div>
-          <p class="card__note">Внутри точки места не показываются — важен только общий результат.</p>
-        </div>
-
-        <div class="card card--flat">
-          <p class="card__label">Если возьмём</p>
-          <p class="card__title" style="font-size:16px">Завтрак на точке в понедельник</p>
-          <p class="card__note">И вся смена получает ранний выбор слотов на неделю вперёд — не только те, кто вложился больше всех.</p>
-        </div>
-
-        <p class="note-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <span>Новичок в первые две недели считается за двоих. Так команде выгодно его подтянуть, а не обойти.</span>
-        </p>
-      </section>
-
-      <!-- ── Слоты ── -->
-      <section class="screen" id="s-slots" role="tabpanel" aria-labelledby="t-slots" hidden>
-        <div class="unlock">
-          <span class="unlock__ic" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
-          </span>
-          <div>
-            <p class="unlock__t">Ранний выбор открыт</p>
-            <p class="unlock__s">Ты выбираешь слоты с четверга 18:00. Остальные — с пятницы 12:00.</p>
-          </div>
-        </div>
-
-        <div class="card card--flat">
-          <p class="card__label">Следующая неделя</p>
-          <div style="margin-top:12px">
-            <div class="slot"><span class="slot__day"><span class="slot__d1">Пн</span><br><span class="slot__d2">1 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
-            <div class="slot"><span class="slot__day"><span class="slot__d1">Вт</span><br><span class="slot__d2">2 сент</span></span><span class="slot__time num">14:00 — 20:00</span><span class="slot__pill">Взять</span></div>
-            <div class="slot"><span class="slot__day"><span class="slot__d1">Ср</span><br><span class="slot__d2">3 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
-            <div class="slot taken"><span class="slot__day"><span class="slot__d1">Чт</span><br><span class="slot__d2">4 сент</span></span><span class="slot__time num">14:00 — 20:00</span><span class="slot__pill slot__pill--muted">Занят</span></div>
-            <div class="slot"><span class="slot__day"><span class="slot__d1">Пт</span><br><span class="slot__d2">5 сент</span></span><span class="slot__time num">09:00 — 15:00</span><span class="slot__pill">Взять</span></div>
-          </div>
-        </div>
-
-        <p class="note-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <span>Ранний доступ — награда, которая ничего не стоит компании и никого не заставляет ехать быстрее.</span>
-        </p>
-
-        <div class="card">
-          <p class="card__label">Как это работает</p>
-          <p class="card__note" style="margin-top:8px">Доступ открывается на неделю вперёд и пересматривается каждый понедельник. Потерять его нельзя внезапно: за неделю до закрытия придёт уведомление с точным списком того, что нужно подтянуть.</p>
-        </div>
-      </section>
-
-    </div>
+    <div class="viewport" id="viewport"></div>
+    <p class="sr" role="status" aria-live="polite" id="announce"></p>
 
     <nav class="tabbar" role="tablist" aria-label="Разделы приложения">
-      <button class="tab" type="button" role="tab" id="t-shift" aria-selected="true" aria-controls="s-shift" data-screen="shift">
+      <button class="tab" type="button" role="tab" id="t-shift" aria-selected="true" aria-controls="panel" data-screen="shift">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
         <span>Смена</span>
       </button>
-      <button class="tab" type="button" role="tab" id="t-progress" aria-selected="false" aria-controls="s-progress" data-screen="progress" tabindex="-1">
+      <button class="tab" type="button" role="tab" id="t-progress" aria-selected="false" aria-controls="panel" data-screen="progress" tabindex="-1">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
         <span>Прогресс</span>
       </button>
-      <button class="tab" type="button" role="tab" id="t-league" aria-selected="false" aria-controls="s-league" data-screen="league" tabindex="-1">
+      <button class="tab" type="button" role="tab" id="t-league" aria-selected="false" aria-controls="panel" data-screen="league" tabindex="-1">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
         <span>Лига</span>
       </button>
-      <button class="tab" type="button" role="tab" id="t-team" aria-selected="false" aria-controls="s-team" data-screen="team" tabindex="-1">
+      <button class="tab" type="button" role="tab" id="t-team" aria-selected="false" aria-controls="panel" data-screen="team" tabindex="-1">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg>
         <span>Команда</span>
       </button>
-      <button class="tab" type="button" role="tab" id="t-slots" aria-selected="false" aria-controls="s-slots" data-screen="slots" tabindex="-1">
+      <button class="tab" type="button" role="tab" id="t-slots" aria-selected="false" aria-controls="panel" data-screen="slots" tabindex="-1">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         <span>Слоты</span>
       </button>
@@ -591,103 +426,614 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
   </div>
 </div>
 
-<p class="hint">Переключайте вкладки внизу, листайте свайпом или стрелками <kbd>←</kbd> <kbd>→</kbd>. Знаки в разделе «Прогресс» нажимаются.</p>
+<p class="hint">Три состояния курьера — переключатель сверху. Внутри: вкладки, свайп и стрелки <kbd>←</kbd> <kbd>→</kbd>. Знаки в «Прогрессе» нажимаются.</p>
 
 <script>
 (function(){
   "use strict";
 
-  var ORDER = ["shift","progress","league","team","slots"];
-  var tabs  = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-  var viewport = document.getElementById("viewport");
-  var barTitle = document.getElementById("barTitle");
-  var barSub   = document.getElementById("barSub");
-  var howBox   = document.getElementById("badgeHow");
-  var openBadge = null;
-  var current = "shift";
-
-  var HEAD = {
-    shift:    ["Привет, Ислам", "Профсоюзная, 43 · велосипед"],
-    progress: ["Твой прогресс", "Знаток района · 68 из 90 смен"],
-    league:   ["Лига", "Юго-Запад · 24 курьера"],
-    team:     ["Команда точки", "Профсоюзная, 43 · 19 курьеров"],
-    slots:    ["Слоты", "Ранний доступ открыт"]
+  /* ══════════════════════════ ИКОНКИ ══════════════════════════ */
+  var ICONS = {
+    shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    alert:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+    bag:'<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 01-8 0"/>',
+    pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1116 0z"/><circle cx="12" cy="10" r="3"/>',
+    users:'<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13A4 4 0 0119 7"/>',
+    snow:'<path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5L4.9 17.5"/>',
+    check:'<path d="M20 6L9 17l-5-5"/>',
+    spark:'<path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>',
+    lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/>',
+    locked:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
+    clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+    phone:'<path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6A19.8 19.8 0 012 4.2 2 2 0 014 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.6a2 2 0 01-.5 2.1L8 9.5a16 16 0 006 6l1.1-1.1a2 2 0 012.1-.5c.8.3 1.7.5 2.6.6A2 2 0 0122 16.9z"/>',
+    star:'<path d="M12 2l2.9 6.3 6.6.8-4.9 4.5 1.3 6.4L12 16.8 6.1 20l1.3-6.4L2.5 9.1l6.6-.8z"/>',
+    box:'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/>',
+    sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    flag:'<path d="M4 22V4M4 4h13l-2 4 2 4H4"/>'
   };
-
-  function closeBadge(){
-    if(openBadge){ openBadge.setAttribute("aria-expanded","false"); openBadge = null; }
-    if(howBox){ howBox.hidden = true; howBox.innerHTML = ""; }
+  function svg(n, w){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.9) +
+           '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[n] || '') + '</svg>';
+  }
+  function tone(t){
+    return t === 'green' ? ' card--green' : t === 'warn' ? ' card--warn' : t === 'flat' ? ' card--flat' : '';
   }
 
-  function show(key){
-    if(!HEAD[key] || key === current) return;
-    var dir = ORDER.indexOf(key) > ORDER.indexOf(current) ? "18px" : "-18px";
-    current = key;
+  /* ══════════════════════════ БЛОКИ ══════════════════════════ */
+  var BLOCK = {
+    live: function(b){
+      return '<div class="card' + tone(b.tone) + '">' +
+        '<div class="live"><span class="live__dot"></span><span class="live__text">' + b.text +
+        '</span><span class="live__meta num">' + b.meta + '</span></div>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
 
+    metrics: function(b){
+      var dash = Math.round(283 - 283 * b.pct / 100);
+      return '<div class="card">' +
+        '<p class="card__label">' + b.label + '</p>' +
+        '<div class="ring-row"><div class="ring' + (b.tone === 'warn' ? ' ring--warn' : '') + '" style="--dash:' + dash + '">' +
+        '<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ring__track" cx="50" cy="50" r="45"></circle>' +
+        '<circle class="ring__fill" cx="50" cy="50" r="45"></circle></svg>' +
+        '<div class="ring__center"><div class="ring__big num">' + b.value + '</div>' +
+        '<div class="ring__small">' + b.unit + '</div></div></div>' +
+        '<ul class="stat-list">' + b.stats.map(function(s){
+          return '<li class="stat"><span class="stat__k">' + s.k + '</span><span class="stat__line"></span>' +
+                 '<span class="stat__v' + (s.mood ? ' stat__v--' + s.mood : '') + ' num">' + s.v + '</span></li>';
+        }).join('') + '</ul></div></div>';
+    },
+
+    goal: function(b){
+      return '<div class="card' + tone(b.tone) + '">' +
+        '<p class="card__label">' + b.label + '</p>' +
+        '<p class="card__title' + (b.big ? ' card__title--lg' : '') + '">' + b.title + '</p>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') +
+        '<div class="bar' + (b.tone === 'warn' ? ' bar--warn' : '') + '" style="--pct:' + b.pct + '%"><span class="bar__fill"></span></div>' +
+        '<div class="bar-legend"><span class="num">' + b.left + '</span><span>' + b.right + '</span></div>' +
+        (b.reward ? '<p class="reward">' + svg('spark', 2) + '<span>' + b.reward + '</span></p>' : '') + '</div>';
+    },
+
+    card: function(b){
+      return '<div class="card' + tone(b.tone) + '">' +
+        (b.label ? '<p class="card__label">' + b.label + '</p>' : '') +
+        (b.title ? '<p class="card__title' + (b.big ? ' card__title--lg' : '') + '">' + b.title + '</p>' : '') +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    note: function(b){
+      return '<p class="note-chip' + (b.tone === 'warn' ? ' note-chip--warn' : '') + '">' +
+        svg(b.icon || 'info', 2) + '<span>' + b.text + '</span></p>';
+    },
+
+    myrank: function(b){
+      return '<div class="card card--flat"><p class="card__label">' + b.label + '</p>' +
+        '<div class="rank me' + (b.tone === 'warn' ? ' me--warn' : '') + '" style="margin-top:10px">' +
+        '<span class="rank__pos num">' + b.pos + '</span><span class="rank__who">' + b.who + '</span>' +
+        '<span class="rank__pts num">' + b.pts + '</span></div>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    levels: function(b){
+      return '<div class="card"><p class="card__label">' + b.label + '</p><ul class="levels">' +
+        b.items.map(function(l){
+          var inner = l.state === 'done' ? svg('check', 3.5) : l.state === 'now' ? '<i></i>' : '';
+          return '<li class="level ' + (l.state || '') + '"><span class="level__pip">' + inner + '</span>' +
+                 l.name + '<span class="level__meta num">' + l.meta + '</span></li>';
+        }).join('') + '</ul>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    badges: function(b){
+      return '<div class="card"><p class="card__label">' + b.label + '</p><div class="badges">' +
+        b.items.map(function(x){
+          return '<button class="badge' + (x.locked ? ' locked' : '') + '" type="button" aria-expanded="false" ' +
+                 'data-how="' + x.how.replace(/"/g, '&quot;') + '">' +
+                 '<span class="badge__ic">' + svg(x.icon) + '</span>' +
+                 '<span class="badge__n">' + x.name + '</span></button>';
+        }).join('') + '</div><div class="badge__how" data-how-box hidden></div></div>';
+    },
+
+    board: function(b){
+      return '<div class="card" style="padding:12px">' + b.rows.map(function(r){
+        var cls = r.me ? ' me' + (b.tone === 'warn' ? ' me--warn' : '') : '';
+        return '<div class="rank' + cls + '"><span class="rank__pos num">' + r.pos + '</span>' +
+               '<span class="rank__who">' + r.who + '</span><span class="rank__pts num">' + r.pts + '</span></div>' +
+               (r.cut ? '<p class="promo-label">' + b.cutLabel + '</p>' : '');
+      }).join('') + '</div>';
+    },
+
+    stats: function(b){
+      return '<div class="card"><p class="card__label">' + b.label + '</p>' +
+        '<ul class="stat-list" style="margin-top:12px">' + b.items.map(function(s){
+          return '<li class="stat"><span class="stat__k">' + s.k + '</span><span class="stat__line"></span>' +
+                 '<span class="stat__v num">' + s.v + '</span></li>';
+        }).join('') + '</ul>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    contrib: function(b){
+      return '<div class="card"><p class="card__label">' + b.label + '</p><div style="margin-top:8px">' +
+        b.rows.map(function(r){
+          return '<div class="team-row' + (r.me ? ' me' : '') + '"><span class="team-row__av">' + r.av + '</span>' +
+                 '<span class="team-row__n">' + r.name + '</span><span class="team-row__v num">' + r.val + '</span></div>';
+        }).join('') + '</div>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    unlock: function(b){
+      var mod = b.state === 'warn' ? ' unlock--warn' : b.state === 'off' ? ' unlock--off' : '';
+      return '<div class="unlock' + mod + '"><span class="unlock__ic">' +
+        svg(b.state === 'off' ? 'locked' : 'lock', 2) + '</span><div>' +
+        '<p class="unlock__t">' + b.title + '</p><p class="unlock__s">' + b.sub + '</p></div></div>';
+    },
+
+    slots: function(b){
+      return '<div class="card card--flat"><p class="card__label">' + b.label + '</p><div style="margin-top:12px">' +
+        b.rows.map(function(s){
+          var taken = s.state === 'taken';
+          return '<div class="slot' + (taken ? ' taken' : '') + '">' +
+                 '<span class="slot__day"><span class="slot__d1">' + s.d1 + '</span><br>' +
+                 '<span class="slot__d2">' + s.d2 + '</span></span>' +
+                 '<span class="slot__time num">' + s.time + '</span>' +
+                 '<span class="slot__pill' + (taken ? ' slot__pill--muted' : '') + '">' + (taken ? 'Занят' : 'Взять') + '</span></div>';
+        }).join('') + '</div></div>';
+    },
+
+    checklist: function(b){
+      var done = b.items.filter(function(i){ return i.done; }).length;
+      return '<div class="card"><p class="card__label">' + b.label + '</p>' +
+        '<p class="card__title">' + b.title + '</p>' +
+        '<div class="bar" style="--pct:' + Math.round(done / b.items.length * 100) + '%"><span class="bar__fill"></span></div>' +
+        '<div class="bar-legend"><span class="num">' + done + ' из ' + b.items.length + '</span><span>' + b.right + '</span></div>' +
+        '<div class="check">' + b.items.map(function(i){
+          return '<div class="check__i' + (i.done ? ' done' : '') + '"><span class="check__box">' +
+                 (i.done ? svg('check', 3.5) : '') + '</span><span>' + i.text + '</span></div>';
+        }).join('') + '</div></div>';
+    },
+
+    mentor: function(b){
+      return '<div class="card"><p class="card__label">' + b.label + '</p>' +
+        '<div class="mentor"><span class="mentor__av">' + b.initial + '</span>' +
+        '<div><p class="mentor__n">' + b.name + '</p><p class="mentor__r">' + b.role + '</p></div>' +
+        '<span class="mentor__btn">' + svg('phone', 2) + '</span></div>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') + '</div>';
+    },
+
+    fix: function(b){
+      return '<div class="card card--warn"><p class="card__label">' + b.label + '</p>' +
+        '<p class="card__title">' + b.title + '</p>' +
+        '<div class="fix">' + b.items.map(function(t, i){
+          return '<div class="fix__i"><span class="fix__n num">' + (i + 1) + '</span><span>' + t + '</span></div>';
+        }).join('') + '</div>' +
+        (b.note ? '<p class="card__note">' + b.note + '</p>' : '') +
+        (b.appeal ? '<button class="appeal" type="button">' + svg('alert', 2) + b.appeal + '</button>' : '') + '</div>';
+    }
+  };
+
+  /* ══════════════════════════ ОБЩИЕ КУСКИ ══════════════════════════ */
+  var PATH = [
+    { name: 'Новичок', meta: '10 смен' },
+    { name: 'Свой человек', meta: '30 смен' },
+    { name: 'Знаток района', meta: '90 смен' },
+    { name: 'Наставник', meta: '180 смен' },
+    { name: 'Опора точки', meta: '360 смен' }
+  ];
+  function path(atIndex){
+    return PATH.map(function(l, i){
+      return { name: l.name, meta: l.meta, state: i < atIndex ? 'done' : i === atIndex ? 'now' : '' };
+    });
+  }
+
+  var BADGE = {
+    care:   { icon: 'shield', name: 'Бережная<br>доставка', how: '<b>Бережная доставка.</b> 100 заказов подряд без повреждений и жалоб на состояние продуктов.' },
+    zero:   { icon: 'alert',  name: 'Ноль<br>инцидентов',   how: '<b>Ноль инцидентов.</b> 30 смен подряд без ДТП, падений и обращений в травмпункт. Обновляется каждый месяц.' },
+    tare:   { icon: 'bag',    name: 'Тара<br>на месте',     how: '<b>Тара на месте.</b> Все термосумки и пакеты вернулись на точку три недели подряд.' },
+    local:  { icon: 'pin',    name: 'Знаток<br>района',     how: '<b>Знаток района.</b> 200 доставок в одном районе. Ты знаешь домофоны, дворы и где не проехать.' },
+    mentor: { icon: 'users',  name: 'Наставник<br>1 из 3',  how: '<b>Наставник.</b> Провести трёх новичков через первую неделю. Пока — один из трёх.' },
+    winter: { icon: 'snow',   name: 'Зимний<br>курьер',     how: '<b>Зимний курьер.</b> 40 смен при температуре ниже −10 °C. Открывается с декабря.' }
+  };
+  function badge(key, locked, name){
+    var b = BADGE[key];
+    return { icon: b.icon, name: name || b.name, how: b.how, locked: !!locked };
+  }
+
+  var WEEK_SLOTS = [
+    { d1: 'Пн', d2: '1 сент', time: '09:00 — 15:00' },
+    { d1: 'Вт', d2: '2 сент', time: '14:00 — 20:00' },
+    { d1: 'Ср', d2: '3 сент', time: '09:00 — 15:00' },
+    { d1: 'Чт', d2: '4 сент', time: '14:00 — 20:00', state: 'taken' },
+    { d1: 'Пт', d2: '5 сент', time: '09:00 — 15:00' }
+  ];
+
+  /* ══════════════════════════ ПРОФИЛИ ══════════════════════════ */
+  var PROFILES = {
+
+    /* ── Первая неделя: лиг нет, есть наставник и чек-лист ── */
+    rookie: {
+      who: { title: 'Привет, Айгуль', sub: 'Профсоюзная, 43 · 4-й день', initial: 'А' },
+      screens: {
+        shift: {
+          head: ['Привет, Айгуль', 'Профсоюзная, 43 · 4-й день'],
+          blocks: [
+            { type: 'live', tone: 'green', text: 'Смена идёт', meta: 'до 15:00',
+              note: '3 заказа из 8. Первая неделя короткая — спешить некуда, спрашивай что угодно.' },
+            { type: 'mentor', label: 'Твой наставник', initial: 'Т', name: 'Тимур Ахмедов', role: 'Знаток района · 4 года на точке',
+              note: 'Пишет и берёт трубку в любое время смены. За тебя ему идёт знак «Наставник».' },
+            { type: 'checklist', label: 'Первые две недели', title: 'Освоиться без спешки', right: 'до 10 сентября',
+              items: [
+                { done: true,  text: 'Собрать заказ по списку и сверить состав' },
+                { done: true,  text: 'Проверить сроки годности при сборке' },
+                { done: true,  text: 'Оформить возврат прямо у двери' },
+                { done: true,  text: 'Найти подъезд по коду домофона' },
+                { done: false, text: 'Что делать, если клиента нет дома' },
+                { done: false, text: 'Как сдать тару в конце смены' },
+                { done: false, text: 'Холодовая цепь в жару: что нельзя везти дольше 20 минут' },
+                { done: false, text: 'Если сломался велосипед посреди маршрута' },
+                { done: false, text: 'Если заказ повредился в дороге' }
+              ] },
+            { type: 'note', icon: 'shield', text: 'Лиги и рейтинги включатся на 15-й день. Первые две недели тебя ни с кем не сравнивают.' }
+          ]
+        },
+        progress: {
+          head: ['Твой прогресс', 'Новичок · 4 из 10 смен'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Сейчас', title: 'Новичок', big: true,
+              pct: 40, left: '4 из 10 зачётных смен', right: '≈ следующая неделя' },
+            { type: 'levels', label: 'Путь', items: path(0),
+              note: 'Зачётная — смена, отработанная полностью. В первые две недели замечания в счёт не идут.' },
+            { type: 'badges', label: 'Первые шаги', items: [
+              { icon: 'flag',  name: 'Первый<br>заказ',      how: '<b>Первый заказ.</b> Взят и доставлен. Дальше будет проще.' },
+              { icon: 'clock', name: 'Первая<br>смена',      how: '<b>Первая смена.</b> Отработана целиком, от начала до конца.' },
+              { icon: 'star',  name: 'Первые<br>пять звёзд', how: '<b>Первые пять звёзд.</b> Клиент поставил высшую оценку.' },
+              { icon: 'box',   name: 'Десять<br>заказов',    how: '<b>Десять заказов.</b> Осталось четыре. Обычно набирается за две смены.', locked: true },
+              { icon: 'bag',   name: 'Тара<br>на месте',     how: '<b>Тара на месте.</b> Неделя, в которую все термосумки вернулись на точку.', locked: true },
+              { icon: 'pin',   name: 'Знаток<br>района',     how: '<b>Знаток района.</b> 200 доставок в одном районе. Пока 27.', locked: true }
+            ] },
+            { type: 'note', icon: 'info', text: 'Шаги первой недели — маленькие и почти все достижимые. Пустой экран в первый день демотивирует сильнее, чем отсутствие наград вообще.' }
+          ]
+        },
+        league: {
+          head: ['Лига', 'Откроется на 15-й день'],
+          blocks: [
+            { type: 'unlock', state: 'off', title: 'Лига пока закрыта',
+              sub: 'Откроется 10 сентября, на 15-й день работы.' },
+            { type: 'card', label: 'Почему так', title: 'Сначала научиться, потом соревноваться',
+              note: 'В первые две недели скорость и точность растут сами. Если поставить новичка в таблицу рядом с людьми, у которых 300 смен, он увидит только своё последнее место — и уйдёт.' },
+            { type: 'card', tone: 'flat', label: 'Когда откроется', title: 'Лига Юго-Запада',
+              note: 'Курьеры на велосипеде, тот же район, стаж до полугода. Двадцать четыре человека, из них шестеро идут вверх каждую неделю.' },
+            { type: 'note', icon: 'shield', text: 'Отток курьеров сосредоточен в первых двух неделях. Всё, что в этот период сравнивает человека с другими, работает против удержания.' }
+          ]
+        },
+        team: {
+          head: ['Команда точки', 'Профсоюзная, 43 · 19 курьеров'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Челлендж недели', title: 'Неделя бережной доставки',
+              note: 'Профсоюзная, 43 — вся точка целиком', pct: 82, left: '156 из 190 заказов без замечаний', right: '82 %' },
+            { type: 'card', tone: 'flat', label: 'Твой вклад', title: 'Считается за двоих',
+              note: 'Первые две недели каждый твой чистый заказ идёт в общий счёт с коэффициентом два. Команде выгодно, чтобы ты втянулась, а не чтобы тебя обошли.' },
+            { type: 'contrib', label: 'Кто как вложился', rows: [
+              { av: 'М', name: 'Марина К.', val: '14' },
+              { av: 'Т', name: 'Тимур А.', val: '13' },
+              { av: 'А', name: 'Ты (×2)', val: '8', me: true },
+              { av: 'Ж', name: 'Женя Л.', val: '12' },
+              { av: '+15', name: 'остальные курьеры точки', val: '109' }
+            ], note: 'Внутри точки места не показываются — важен только общий результат.' },
+            { type: 'note', icon: 'users', text: 'Если возьмём — завтрак на точке в понедельник для всей смены, включая тех, кто вложился меньше.' }
+          ]
+        },
+        slots: {
+          head: ['Слоты', 'Обычный доступ'],
+          blocks: [
+            { type: 'unlock', state: 'off', title: 'Ранний выбор пока недоступен',
+              sub: 'Открывается с уровня «Свой человек» — это 30 смен.' },
+            { type: 'card', tone: 'green', label: 'Зато', title: 'Слоты первой недели закреплены за тобой',
+              note: 'Пока идёт обучение, твой график согласован с наставником. Их никто не заберёт, даже если разберут всё остальное.' },
+            { type: 'slots', label: 'Твоя неделя', rows: WEEK_SLOTS },
+            { type: 'note', icon: 'clock', text: 'Обычный доступ к общим слотам — с пятницы 12:00, как у всех.' }
+          ]
+        }
+      }
+    },
+
+    /* ── Ровная неделя ── */
+    steady: {
+      who: { title: 'Привет, Ислам', sub: 'Профсоюзная, 43 · велосипед', initial: 'И' },
+      screens: {
+        shift: {
+          head: ['Привет, Ислам', 'Профсоюзная, 43 · велосипед'],
+          blocks: [
+            { type: 'live', tone: 'green', text: 'Смена идёт', meta: 'до 18:00',
+              note: '9 заказов из 14 по плану смены. Идёшь ровно — торопиться не нужно.' },
+            { type: 'metrics', label: 'Неделя', value: '89', unit: 'баллов<br>качества', pct: 89, stats: [
+              { k: 'Оценки клиентов', v: '4,97', mood: 'good' },
+              { k: 'Вышел на слот', v: '5 / 5' },
+              { k: 'Тара вернулась', v: '100 %', mood: 'good' },
+              { k: 'Без замечаний', v: '62 / 64' }
+            ] },
+            { type: 'goal', tone: 'green', label: 'Цель недели', title: 'Все термосумки вернулись на точку',
+              pct: 90, left: '18 из 20', right: 'осталось 2 дня',
+              reward: 'Выполнишь — слоты на следующую неделю откроются тебе в четверг, а не в пятницу' },
+            { type: 'myrank', label: 'Твоя лига', pos: '7', who: 'Ты · Лига Юго-Запада', pts: '412',
+              note: 'До шестого места — 9 баллов. Это одна смена без замечаний.' }
+          ]
+        },
+        progress: {
+          head: ['Твой прогресс', 'Знаток района · 68 из 90 смен'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Сейчас', title: 'Знаток района', big: true,
+              pct: 76, left: '68 из 90 зачётных смен', right: '≈ 5 недель' },
+            { type: 'levels', label: 'Путь', items: path(2),
+              note: 'Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь, просто не добавляет шаг.' },
+            { type: 'badges', label: 'Знаки', items: [
+              badge('care'), badge('zero'), badge('tare'), badge('local'),
+              badge('mentor', true), badge('winter', true)
+            ] }
+          ]
+        },
+        league: {
+          head: ['Лига', 'Юго-Запад · 24 курьера'],
+          blocks: [
+            { type: 'card', tone: 'flat', label: 'Лига Юго-Запада', title: '2 дня до итогов',
+              note: '24 курьера · велосипед · стаж от полугода' },
+            { type: 'note', icon: 'info', text: 'Ты сравниваешься с курьерами похожего профиля. Общего топа по компании нет — и не будет.' },
+            { type: 'board', cutLabel: '↑ шестёрка переходит в следующую лигу', rows: [
+              { pos: '4', who: 'Марина К.', pts: '468' },
+              { pos: '5', who: 'Тимур А.', pts: '441' },
+              { pos: '6', who: 'Женя Л.', pts: '421', cut: true },
+              { pos: '7', who: 'Ты', pts: '412', me: true },
+              { pos: '8', who: 'Артём В.', pts: '400' },
+              { pos: '9', who: 'Настя Ш.', pts: '387' },
+              { pos: '10', who: 'Данила Р.', pts: '371' }
+            ] },
+            { type: 'stats', label: 'Из чего баллы', items: [
+              { k: 'Оценки клиентов', v: '168' },
+              { k: 'Выходы на слот', v: '125' },
+              { k: 'Возврат тары', v: '64' },
+              { k: 'Помощь коллегам', v: '55' }
+            ], note: 'Время в пути и скорость доставки в баллы не входят. Совсем.' },
+            { type: 'note', icon: 'shield', text: 'Низкое место в лиге не уменьшает количество заказов и не снижает оплату. Лига — только про призы и ранний выбор слотов.' }
+          ]
+        },
+        team: {
+          head: ['Команда точки', 'Профсоюзная, 43 · 19 курьеров'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Челлендж недели', title: 'Неделя бережной доставки',
+              note: 'Профсоюзная, 43 — вся точка целиком, 19 курьеров',
+              pct: 82, left: '156 из 190 заказов без замечаний', right: '82 %' },
+            { type: 'contrib', label: 'Кто как вложился', rows: [
+              { av: 'М', name: 'Марина К.', val: '14' },
+              { av: 'Т', name: 'Тимур А.', val: '13' },
+              { av: 'И', name: 'Ты', val: '12', me: true },
+              { av: 'Ж', name: 'Женя Л.', val: '12' },
+              { av: '+15', name: 'остальные курьеры точки', val: '105' }
+            ], note: 'Внутри точки места не показываются — важен только общий результат.' },
+            { type: 'card', tone: 'flat', label: 'Если возьмём', title: 'Завтрак на точке в понедельник',
+              note: 'И вся смена получает ранний выбор слотов на неделю вперёд — не только те, кто вложился больше всех.' },
+            { type: 'note', icon: 'users', text: 'Новичок в первые две недели считается за двоих. Так команде выгодно его подтянуть, а не обойти.' }
+          ]
+        },
+        slots: {
+          head: ['Слоты', 'Ранний доступ открыт'],
+          blocks: [
+            { type: 'unlock', title: 'Ранний выбор открыт',
+              sub: 'Ты выбираешь слоты с четверга 18:00. Остальные — с пятницы 12:00.' },
+            { type: 'slots', label: 'Следующая неделя', rows: WEEK_SLOTS },
+            { type: 'note', icon: 'clock', text: 'Ранний доступ — награда, которая ничего не стоит компании и никого не заставляет ехать быстрее.' },
+            { type: 'card', label: 'Как это работает',
+              note: 'Доступ открывается на неделю вперёд и пересматривается каждый понедельник. Потерять его нельзя внезапно: за неделю до закрытия придёт уведомление с точным списком того, что нужно подтянуть.' }
+          ]
+        }
+      }
+    },
+
+    /* ── Просевшая неделя: без наказания, с конкретикой ── */
+    dip: {
+      who: { title: 'Привет, Ислам', sub: 'Профсоюзная, 43 · велосипед', initial: 'И' },
+      screens: {
+        shift: {
+          head: ['Привет, Ислам', 'Профсоюзная, 43 · велосипед'],
+          blocks: [
+            { type: 'live', tone: 'warn', text: 'Смена идёт', meta: 'до 18:00',
+              note: '7 заказов из 14 по плану смены.' },
+            { type: 'metrics', label: 'Неделя', tone: 'warn', value: '61', unit: 'балл<br>качества', pct: 61, stats: [
+              { k: 'Оценки клиентов', v: '4,71', mood: 'warn' },
+              { k: 'Вышел на слот', v: '3 / 5', mood: 'warn' },
+              { k: 'Тара вернулась', v: '85 %' },
+              { k: 'Без замечаний', v: '48 / 56' }
+            ] },
+            { type: 'fix', label: 'Что подтянуть', title: 'Две вещи, обе поправимые',
+              items: [
+                '<b>Два пропущенных слота.</b> Если не получается выйти — отметь в приложении накануне, слот уйдёт другому и не будет засчитан как пропуск.',
+                '<b>Три жалобы на помятые упаковки.</b> Обычно это крепление термосумки на багажнике. Тимур с точки показывает за пять минут.'
+              ],
+              note: 'Уровень и ранний доступ к слотам на этой неделе сохраняются. Пересмотр — в понедельник, не сегодня.',
+              appeal: 'Не согласен с оценкой' },
+            { type: 'myrank', label: 'Твоя лига', tone: 'warn', pos: '19', who: 'Ты · Лига Юго-Запада', pts: '246',
+              note: 'Место в лиге не влияет ни на количество заказов, ни на оплату.' }
+          ]
+        },
+        progress: {
+          head: ['Твой прогресс', 'Знаток района · 68 из 90 смен'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Сейчас', title: 'Знаток района', big: true,
+              pct: 76, left: '68 из 90 зачётных смен', right: 'без изменений' },
+            { type: 'note', icon: 'shield', text: 'На этой неделе шагов не добавилось — но и не убавилось. Ничего не сгорело и не откатилось.' },
+            { type: 'levels', label: 'Путь', items: path(2),
+              note: 'Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь, просто не добавляет шаг.' },
+            { type: 'badges', label: 'Знаки', items: [
+              badge('care', true, 'Бережная<br>доставка'),
+              badge('zero', true, 'Ноль инцидентов<br>14 из 30'),
+              badge('tare'), badge('local'),
+              badge('mentor', true), badge('winter', true)
+            ] },
+            { type: 'note', icon: 'info', tone: 'warn', text: 'Два знака ушли на перезапуск: «Бережная доставка» — из-за жалоб, «Ноль инцидентов» — из-за падения 26 августа. Оба набираются заново, ничего не потеряно навсегда.' }
+          ]
+        },
+        league: {
+          head: ['Лига', 'Юго-Запад · 24 курьера'],
+          blocks: [
+            { type: 'card', tone: 'flat', label: 'Лига Юго-Запада', title: '2 дня до итогов',
+              note: '24 курьера · велосипед · стаж от полугода' },
+            { type: 'note', icon: 'shield', tone: 'warn',
+              text: 'Ты в нижней части таблицы. Это не меняет ничего в твоей работе: заказов приходит столько же, оплата не снижается, из лиги никто не вылетает.' },
+            { type: 'board', tone: 'warn', rows: [
+              { pos: '16', who: 'Кирилл С.', pts: '289' },
+              { pos: '17', who: 'Лена Б.', pts: '271' },
+              { pos: '18', who: 'Саша Н.', pts: '259' },
+              { pos: '19', who: 'Ты', pts: '246', me: true },
+              { pos: '20', who: 'Рома Ф.', pts: '238' },
+              { pos: '21', who: 'Гуля М.', pts: '224' },
+              { pos: '22', who: 'Влад Т.', pts: '210' }
+            ] },
+            { type: 'stats', label: 'Из чего баллы', items: [
+              { k: 'Оценки клиентов', v: '96' },
+              { k: 'Выходы на слот', v: '75' },
+              { k: 'Возврат тары', v: '48' },
+              { k: 'Помощь коллегам', v: '27' }
+            ], note: 'Больше всего просело на выходах на слот. Это же самая быстро восстанавливаемая строка.' },
+            { type: 'card', tone: 'green', label: 'Следующая неделя', title: 'Счёт обнуляется в понедельник',
+              note: 'Лига считается за неделю, а не накопительно. Плохая неделя не тянется за тобой в следующую.' }
+          ]
+        },
+        team: {
+          head: ['Команда точки', 'Профсоюзная, 43 · 19 курьеров'],
+          blocks: [
+            { type: 'goal', tone: 'green', label: 'Челлендж недели', title: 'Неделя бережной доставки',
+              note: 'Профсоюзная, 43 — вся точка целиком, 19 курьеров',
+              pct: 79, left: '150 из 190 заказов без замечаний', right: '79 %' },
+            { type: 'contrib', label: 'Кто как вложился', rows: [
+              { av: 'М', name: 'Марина К.', val: '14' },
+              { av: 'Т', name: 'Тимур А.', val: '13' },
+              { av: 'Ж', name: 'Женя Л.', val: '12' },
+              { av: 'И', name: 'Ты', val: '6', me: true },
+              { av: '+15', name: 'остальные курьеры точки', val: '105' }
+            ], note: 'Внутри точки места не показываются — важен только общий результат.' },
+            { type: 'card', tone: 'green', label: 'Челлендж всё ещё берётся', title: 'Не хватает 40 чистых заказов',
+              note: 'За два дня точка это добирает. Твой вклад меньше обычного, но команда идёт к цели — и завтрак получат все.' },
+            { type: 'note', icon: 'users', text: 'Командный челлендж намеренно не показывает, кто «тянет вниз». Иначе плохая неделя одного человека превращается в конфликт на точке.' }
+          ]
+        },
+        slots: {
+          head: ['Слоты', 'Доступ сохранён до понедельника'],
+          blocks: [
+            { type: 'unlock', state: 'warn', title: 'Ранний выбор пока сохранён',
+              sub: 'На этой неделе ты выбираешь с четверга 18:00, как обычно.' },
+            { type: 'fix', label: 'Предупреждение', title: 'Если следующая неделя закроется так же',
+              items: [
+                '<b>Ранний доступ приостановится с 8 сентября.</b> Выбор слотов станет с пятницы 12:00, как у всех. Ни заказы, ни оплата при этом не меняются.',
+                '<b>Вернуть — две недели без пропусков слотов.</b> Обычно это происходит с первой же ровной недели.'
+              ],
+              note: 'Уведомление приходит за неделю до изменения и всегда с точным списком того, что нужно подтянуть. Внезапных понижений в системе нет.' },
+            { type: 'slots', label: 'Следующая неделя', rows: WEEK_SLOTS },
+            { type: 'note', icon: 'clock', text: 'Ранний доступ — единственное, чем управляет уровень. Поток заказов и ставка от уровня не зависят никогда.' }
+          ]
+        }
+      }
+    }
+  };
+
+  /* ══════════════════════════ НАВИГАЦИЯ ══════════════════════════ */
+  var ORDER = ['shift', 'progress', 'league', 'team', 'slots'];
+  var LABEL = { shift: 'Смена', progress: 'Прогресс', league: 'Лига', team: 'Команда', slots: 'Слоты' };
+
+  var tabs     = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var profiles = Array.prototype.slice.call(document.querySelectorAll('.profile'));
+  var viewport = document.getElementById('viewport');
+  var barTitle = document.getElementById('barTitle');
+  var barSub   = document.getElementById('barSub');
+  var avatar   = document.getElementById('avatar');
+  var announce = document.getElementById('announce');
+
+  var profile = 'steady';
+  var screen  = 'shift';
+
+  function render(dir){
+    var data = PROFILES[profile].screens[screen];
+    var html = data.blocks.map(function(b){
+      var fn = BLOCK[b.type];
+      return fn ? fn(b) : '';
+    }).join('');
+
+    viewport.innerHTML = '<section class="screen" id="panel" role="tabpanel" aria-labelledby="t-' + screen +
+                         '" style="--from:' + (dir || '10px') + '">' + html + '</section>';
+    barTitle.textContent = data.head[0];
+    barSub.textContent   = data.head[1];
+    avatar.textContent   = PROFILES[profile].who.initial;
+    viewport.scrollTop = 0;
+
+    // Кольца и полосы рисуются после вставки в документ, иначе перехода не будет
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        viewport.querySelectorAll('.ring, .bar').forEach(function(el){ el.classList.add('is-drawn'); });
+      });
+    });
+  }
+
+  function showScreen(key, dir){
+    if (ORDER.indexOf(key) < 0 || key === screen) return;
+    var d = dir || (ORDER.indexOf(key) > ORDER.indexOf(screen) ? '18px' : '-18px');
+    screen = key;
     tabs.forEach(function(t){
       var on = t.dataset.screen === key;
-      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
       t.tabIndex = on ? 0 : -1;
     });
-    ORDER.forEach(function(k){
-      var el = document.getElementById("s-" + k);
-      if(!el) return;
-      var on = k === key;
-      el.style.setProperty("--from", dir);
-      el.classList.toggle("is-on", on);
-      el.hidden = !on;
+    render(d);
+    announce.textContent = LABEL[key];
+  }
+
+  function showProfile(key){
+    if (!PROFILES[key] || key === profile) return;
+    profile = key;
+    profiles.forEach(function(p){
+      p.setAttribute('aria-pressed', p.dataset.profile === key ? 'true' : 'false');
     });
-    barTitle.textContent = HEAD[key][0];
-    barSub.textContent   = HEAD[key][1];
-    if(viewport) viewport.scrollTop = 0;
-    closeBadge();
+    render('0px');
+    announce.textContent = 'Состояние: ' + document.querySelector('.profile[aria-pressed="true"]').textContent +
+                           '. Экран: ' + LABEL[screen];
   }
 
   function step(delta){
-    var i = ORDER.indexOf(current) + delta;
-    if(i < 0 || i >= ORDER.length) return;
-    show(ORDER[i]);
+    var i = ORDER.indexOf(screen) + delta;
+    if (i < 0 || i >= ORDER.length) return;
+    showScreen(ORDER[i]);
   }
 
-  tabs.forEach(function(tab){
-    tab.addEventListener("click", function(){ show(tab.dataset.screen); });
-  });
+  tabs.forEach(function(t){ t.addEventListener('click', function(){ showScreen(t.dataset.screen); }); });
+  profiles.forEach(function(p){ p.addEventListener('click', function(){ showProfile(p.dataset.profile); }); });
 
-  document.addEventListener("keydown", function(e){
-    if(e.key === "ArrowRight"){ e.preventDefault(); step(1); }
-    else if(e.key === "ArrowLeft"){ e.preventDefault(); step(-1); }
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
   });
 
   /* Свайп по области экрана */
   var x0 = null, y0 = null;
-  viewport.addEventListener("touchstart", function(e){
-    if(e.touches.length !== 1) { x0 = null; return; }
+  viewport.addEventListener('touchstart', function(e){
+    if (e.touches.length !== 1) { x0 = null; return; }
     x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
-  }, {passive:true});
-  viewport.addEventListener("touchend", function(e){
-    if(x0 === null) return;
-    var t = e.changedTouches[0];
-    var dx = t.clientX - x0, dy = t.clientY - y0;
+  }, { passive: true });
+  viewport.addEventListener('touchend', function(e){
+    if (x0 === null) return;
+    var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0;
     x0 = null;
-    if(Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1);
-  }, {passive:true});
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
 
-  /* Знаки */
-  document.querySelectorAll(".badge").forEach(function(b){
-    b.addEventListener("click", function(){
-      if(openBadge === b){ closeBadge(); return; }
-      closeBadge();
-      b.setAttribute("aria-expanded","true");
-      openBadge = b;
-      if(howBox){ howBox.innerHTML = b.dataset.how; howBox.hidden = false; }
-    });
+  /* Знаки: раскрытие условия. Делегируем — разметка пересобирается на каждый рендер */
+  viewport.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.badge') : null;
+    if (!b) return;
+    var box = viewport.querySelector('[data-how-box]');
+    var wasOpen = b.getAttribute('aria-expanded') === 'true';
+    viewport.querySelectorAll('.badge').forEach(function(x){ x.setAttribute('aria-expanded', 'false'); });
+    if (wasOpen) { box.hidden = true; box.innerHTML = ''; return; }
+    b.setAttribute('aria-expanded', 'true');
+    box.innerHTML = b.dataset.how;
+    box.hidden = false;
   });
 
-  /* Отрисовка колец и полос */
-  function draw(){
-    document.querySelectorAll(".ring, .bar").forEach(function(el){ el.classList.add("is-drawn"); });
-  }
-  if(window.requestAnimationFrame){ requestAnimationFrame(function(){ requestAnimationFrame(draw); }); }
-  else { draw(); }
+  render();
 })();
 </script>
