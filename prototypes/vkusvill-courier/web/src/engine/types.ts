@@ -10,20 +10,36 @@
 
 /* ─────────────────────────── СОБЫТИЯ ─────────────────────────── */
 
+/**
+ * Причина «не по моей вине». Событие с такой пометкой остаётся в журнале —
+ * его видно, — но не считается: ни в балл, ни в счётчики, ни в сброс знаков.
+ * Кто ставит пометку, решает таблица excuses в правилах: часть причин
+ * подтверждает сама система, остальные проверяет управляющий точкой.
+ */
+export type ExcuseId = 'store_delay' | 'weather' | 'app_failure' | 'incident' | 'customer' | 'health' | 'other';
+
+/** За что клиент похвалил. «Быстро» здесь нет намеренно: скорость не поощряется нигде. */
+export type ComplimentId = 'polite' | 'careful' | 'helpful' | 'tare';
+
 /** Всё, что система уже умеет фиксировать по ходу смены. */
 export type CourierEvent =
-  | { type: 'shift_closed'; at: string; clean: boolean }
+  | { type: 'shift_closed'; at: string; clean: boolean; hours?: number }
   | { type: 'delivery'; at: string; clean: boolean }
-  | { type: 'rating'; at: string; stars: 1 | 2 | 3 | 4 | 5 }
+  | { type: 'rating'; at: string; stars: 1 | 2 | 3 | 4 | 5; compliment?: ComplimentId; excused?: ExcuseId }
   | { type: 'tare_returned'; at: string; all: boolean }
   | { type: 'slot_attended'; at: string }
-  | { type: 'slot_missed'; at: string; warnedAhead: boolean }
-  | { type: 'complaint'; at: string; kind: 'damage' | 'late' | 'other' }
+  | { type: 'slot_missed'; at: string; warnedAhead: boolean; excused?: ExcuseId }
+  | { type: 'complaint'; at: string; kind: 'damage' | 'late' | 'other'; excused?: ExcuseId }
   | { type: 'incident'; at: string }
   | { type: 'mentored'; at: string }
-  | { type: 'helped'; at: string };
+  | { type: 'helped'; at: string }
+  /** «Спасибо» от коллеги или сотрудника точки — с именем и словами. */
+  | { type: 'kudos'; at: string; from: string; text: string };
 
 export type EventType = CourierEvent['type'];
+
+/** События, у которых бывает пометка «не по моей вине». */
+export type Contestable = Extract<CourierEvent, { excused?: ExcuseId }>;
 
 /** Частичное совпадение по полям события. Пусто — совпадает всё. */
 export type Match = Record<string, string | number | boolean>;
@@ -79,7 +95,10 @@ export type CounterId =
   | 'cleanDeliveries'
   | 'shifts'
   | 'cleanShifts'
-  | 'qualifyingShifts';
+  | 'qualifyingShifts'
+  | 'hours'
+  | 'excused'
+  | 'kudos';
 
 export interface FixRule {
   id: string;
@@ -112,8 +131,40 @@ export interface LeagueRule {
   promote: number;
 }
 
+export interface ExcuseRule {
+  id: ExcuseId;
+  label: string;
+  /** true — подтверждает система, применяется сразу. false — проверяет управляющий. */
+  auto: boolean;
+  /** Чем подтверждается. Показывается курьеру, чтобы решение не было «чёрным ящиком». */
+  proof: string;
+}
+
+/**
+ * Нагрузка. Это единственные правила про время в системе — и они работают
+ * в обратную сторону: не «больше», а «хватит».
+ */
+export interface LoadRule {
+  /** Часов в неделю, после которых счётчик становится красным. */
+  maxWeekHours: number;
+  /** Сколько дней подряд можно работать до того, как приложение предложит выходной. */
+  restAfterDays: number;
+  /** Длина смены, если событие её не указало. */
+  shiftHours: number;
+}
+
+export interface RuleChange {
+  version: string;
+  date: string;
+  text: string;
+}
+
 export interface RulesConfig {
   version: string;
+  /** С какого числа действует текущая версия. */
+  since: string;
+  /** Что менялось — новое сверху. Обязательная часть правил, а не примечание к релизу. */
+  changes: RuleChange[];
   /** Сколько дней новичок не сравнивается ни с кем. */
   rookieDays: number;
   points: PointRule[];
@@ -124,6 +175,9 @@ export interface RulesConfig {
   fixes: FixRule[];
   access: AccessRule;
   league: LeagueRule;
+  excuses: ExcuseRule[];
+  compliments: { id: ComplimentId; label: string }[];
+  load: LoadRule;
 }
 
 /* ─────────────────────────── РЕЗУЛЬТАТ ─────────────────────────── */
@@ -163,6 +217,23 @@ export interface AccessState {
   reasons: string[];
 }
 
+export interface LoadState {
+  hours: number;
+  maxHours: number;
+  /** Рабочих дней подряд к концу журнала, с учётом накопленного до него. */
+  daysInRow: number;
+  restAfterDays: number;
+  /** Пора выходной. Единственная подсказка в системе, которая просит работать меньше. */
+  rest: boolean;
+}
+
+/** Тёплые слова за неделю: комплименты клиентов и спасибо с точки. */
+export interface Praise {
+  id: string;
+  label: string;
+  count: number;
+}
+
 /**
  * Лента: что произошло и во что это превратилось.
  *
@@ -173,12 +244,15 @@ export interface AccessState {
  */
 export type FeedKind =
   | 'points'        // обычное начисление, повторы сворачиваются
+  | 'excused'       // событие есть, но не учтено: не по вине курьера
+  | 'kudos'         // спасибо от коллеги или комплимент клиента
   | 'badge'         // знак получен
   | 'badge_reset'   // счётчик знака пошёл заново
   | 'level'         // поднялся уровень
   | 'goal'          // закрыта цель недели
   | 'access'        // изменился доступ к слотам
-  | 'rank';         // пересёк линию перехода в лиге
+  | 'rank'          // пересёк линию перехода в лиге
+  | 'rest';         // слишком много дней подряд — пора выходной
 
 export interface FeedEntry {
   at: string;
@@ -210,11 +284,15 @@ export interface Snapshot {
   goal: { title: string; done: number; target: number; pct: number; reward: string };
   league: { name: string; size: number; rank: number; rows: LeagueRow[]; promote: number };
   access: AccessState;
+  load: LoadState;
+  praise: Praise[];
   fixes: { title: string; text: string }[];
   feed: FeedEntry[];
   nudges: Nudge[];
-  /** Средняя оценка за неделю, null — если оценок ещё не было. */
+  /** Средняя оценка за неделю без неучтённых, null — если оценок ещё не было. */
   rating: number | null;
+  /** Неделя словами: три-четыре предложения, собранные из тех же цифр. */
+  summary: string;
 }
 
 export interface EvaluateContext {
@@ -231,5 +309,7 @@ export interface EvaluateContext {
   badgesBefore?: Record<string, number>;
   /** Сколько недель подряд курьер уже не дотягивает до порога. */
   weeksBelow: number;
+  /** Рабочих дней подряд к началу журнала: журнал недельный, а усталость — нет. */
+  workedInRowBefore?: number;
   courierName: string;
 }

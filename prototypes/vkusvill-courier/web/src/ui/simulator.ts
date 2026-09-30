@@ -1,5 +1,6 @@
+import { RULES } from '../engine/rules';
 import type { CourierEvent } from '../engine/types';
-import { getState, pushEvent, resetScenario, undoEvent } from '../state/store';
+import { getState, pushEvent, resetScenario, today, undoEvent } from '../state/store';
 
 interface Button {
   label: string;
@@ -8,21 +9,22 @@ interface Button {
   minus?: boolean;
 }
 
-/**
- * День для нового события — тот же, что у последнего в журнале.
- * Журнал хронологический, и лента группируется по дням: если раскладывать
- * новые события по кругу, один и тот же день появится в ленте дважды.
- */
-function today(): string {
-  const events = getState().events;
-  return events.length > 0 ? events[events.length - 1].at : 'Пн';
-}
+const COLLEAGUES = ['Марина К.', 'Тимур А.', 'Женя Л.', 'Настя Ш.'];
+const THANKS = [
+  'Спасибо, что подменил на вечернем слоте',
+  'Выручил с тарой, я бы не успела',
+  'Довёз мой забытый заказ — спасибо',
+  'Спасибо за помощь с новичком',
+];
+
+/** По кругу, а не случайно: одинаковая последовательность нажатий даёт одинаковый журнал. */
+const pick = <T,>(arr: T[]): T => arr[getState().events.length % arr.length];
 
 const GROUPS: { label: string; items: Button[] }[] = [
   {
     label: 'Смена',
     items: [
-      { label: 'Закрыл смену', hint: '+12', make: () => ({ type: 'shift_closed', at: today(), clean: true }) },
+      { label: 'Закрыл смену', hint: '+12 · закрывает день', make: () => ({ type: 'shift_closed', at: today(), clean: true }) },
       { label: 'Смена с замечанием', hint: '+6', make: () => ({ type: 'shift_closed', at: today(), clean: false }) },
       { label: 'Вышел на слот', hint: '+5', make: () => ({ type: 'slot_attended', at: today() }) },
       { label: 'Предупредил и не вышел', hint: '0', make: () => ({ type: 'slot_missed', at: today(), warnedAhead: true }) },
@@ -34,18 +36,20 @@ const GROUPS: { label: string; items: Button[] }[] = [
     items: [
       { label: 'Доставка без жалоб', hint: '', make: () => ({ type: 'delivery', at: today(), clean: true }) },
       { label: 'Оценка 5', hint: '+3', make: () => ({ type: 'rating', at: today(), stars: 5 }) },
+      { label: 'Оценка 5 с комплиментом', hint: '+3', make: () => ({ type: 'rating', at: today(), stars: 5, compliment: pick(RULES.compliments).id }) },
       { label: 'Оценка 3', hint: '0', make: () => ({ type: 'rating', at: today(), stars: 3 }) },
       { label: 'Оценка 1', hint: '−6', minus: true, make: () => ({ type: 'rating', at: today(), stars: 1 }) },
       { label: 'Жалоба на упаковку', hint: '−5', minus: true, make: () => ({ type: 'complaint', at: today(), kind: 'damage' }) },
     ],
   },
   {
-    label: 'Тара, помощь, инциденты',
+    label: 'Тара, люди, инциденты',
     items: [
       { label: 'Вся тара сдана', hint: '+4', make: () => ({ type: 'tare_returned', at: today(), all: true }) },
       { label: 'Тара сдана не вся', hint: '0', minus: true, make: () => ({ type: 'tare_returned', at: today(), all: false }) },
       { label: 'Выручил коллегу', hint: '+6', make: () => ({ type: 'helped', at: today() }) },
       { label: 'Провёл новичка', hint: '+10', make: () => ({ type: 'mentored', at: today() }) },
+      { label: 'Спасибо от коллеги', hint: '0 · в знак', make: () => ({ type: 'kudos', at: today(), from: pick(COLLEAGUES), text: pick(THANKS) }) },
       { label: 'Падение или ДТП', hint: '0', minus: true, make: () => ({ type: 'incident', at: today() }) },
     ],
   },
@@ -55,10 +59,11 @@ export function renderSimulator(): string {
   const s = getState();
   const base = s.events.length;
 
-  return '<aside class="sim">'
+  return '<aside class="sim" aria-label="Симулятор событий">'
     + '<h2>Подать событие</h2>'
     + '<p class="sim__lead">Всё на экране пересчитывается из журнала событий. '
-    + 'Нажмите любую кнопку и посмотрите, что изменится: балл, знаки, место в лиге, доступ к слотам.</p>'
+    + 'Нажмите любую кнопку и посмотрите, что изменится: балл, знаки, место в лиге, доступ к слотам. '
+    + `Сейчас в журнале ${today()}: «Закрыл смену» завершает день, дальше идёт следующий.</p>`
     + GROUPS.map((g, gi) => `<div class="sim__group"><p class="sim__label">${g.label}</p><div class="sim__row">`
       + g.items.map((b, bi) => `<button class="ev${b.minus ? ' ev--minus' : ''}" type="button" `
         + `data-ev="${gi}:${bi}">${b.label}${b.hint ? ` <b>${b.hint}</b>` : ''}</button>`).join('')
@@ -69,6 +74,8 @@ export function renderSimulator(): string {
     + `<b class="num">${s.snapshot.weekPoints}</b></div>`
     + '<div class="sim__stat"><span>Место в лиге</span>'
     + `<b class="num">${s.snapshot.isRookie ? '—' : `${s.snapshot.league.rank} из ${s.snapshot.league.size}`}</b></div>`
+    + '<div class="sim__stat"><span>Дней подряд · часов</span>'
+    + `<b class="num">${s.snapshot.load.daysInRow} · ${s.snapshot.load.hours}</b></div>`
     + '<div class="sim__foot">'
     + '<button class="ev ev--ghost" type="button" data-sim="undo">Отменить последнее</button>'
     + '<button class="ev ev--ghost" type="button" data-sim="reset">Сбросить сценарий</button>'

@@ -1,16 +1,28 @@
+import type { ExcuseId } from '../engine/types';
 import { disputable } from '../state/appeals';
 import { SCENARIOS } from '../state/scenarios';
 import {
-  closeSheet, fileAppeal, getState, openSheet, resolveAppeal,
-  setScenario, setScreen, subscribe, toggleCheck, toggleSlot, type AppState,
+  ackIncident, closeSheet, contest, getState, openSheet, pickDispute, resolveAppeal,
+  setScenario, setScreen, subscribe, takeRest, toggleCheck, toggleSlot,
+  type AppState, type SheetId,
 } from '../state/store';
-import { appealSheet } from './components';
+import { appealSheet, rulesSheet } from './components';
 import { icon } from './icons';
 import { headOf, renderScreen, SCREENS, TABS, type ScreenId } from './screens';
 import { bindSimulator, renderSimulator } from './simulator';
 
+/** Chrome отдаёт это событие, когда страницу можно поставить на экран «Домой». */
+interface InstallPrompt extends Event {
+  prompt: () => Promise<void>;
+}
+
 let mount: HTMLElement;
 let lastScreen: ScreenId = 'shift';
+let lastSheet: SheetId | null = null;
+let installPrompt: InstallPrompt | null = null;
+
+const isIos = (): boolean =>
+  /iP(hone|ad|od)/.test(navigator.userAgent) && !(navigator as { standalone?: boolean }).standalone;
 
 function shell(state: AppState): string {
   const screen = state.screen as ScreenId;
@@ -19,9 +31,12 @@ function shell(state: AppState): string {
   return '<div class="deck">'
     + '<p class="stamp">Концепт · не официальный продукт ВкусВилл'
     + '<span class="stamp__more"> · данные вымышлены</span></p>'
+    + '<div class="deck__row">'
     + '<div class="profiles" role="group" aria-label="Сценарий недели">'
     + SCENARIOS.map((s) => `<button class="profile" type="button" data-scenario="${s.id}" `
       + `aria-pressed="${s.id === state.scenarioId}">${s.label}</button>`).join('')
+    + '</div>'
+    + (installPrompt ? `<button class="install" type="button" data-install>${icon('download', 2)}Установить</button>` : '')
     + '</div></div>'
 
     + '<div class="stage">'
@@ -46,7 +61,9 @@ function shell(state: AppState): string {
         + `<span>${t.label}</span>${dot}</button>`;
     }).join('')
     + '</nav>'
-    + (state.sheet === 'appeal' ? appealSheet(disputable(state.events), state.appeals) : '')
+    + (state.sheet === 'appeal'
+      ? appealSheet(disputable(state.events), state.appeals, state.picked)
+      : state.sheet === 'rules' ? rulesSheet() : '')
     + '</div></div>'
 
     + renderSimulator()
@@ -54,7 +71,9 @@ function shell(state: AppState): string {
 
     + '<p class="hint">Слева — приложение, справа — симулятор событий. '
     + 'Всё, что вы видите на экране, посчитано движком правил из журнала: '
-    + 'нажмите любое событие и цифры пересчитаются. Знаки в «Прогрессе» нажимаются.</p>';
+    + 'нажмите любое событие и цифры пересчитаются. Знаки в «Прогрессе» нажимаются.'
+    + (isIos() ? ' На iPhone страницу можно поставить на экран «Домой»: Поделиться → «На экран „Домой“».' : '')
+    + '</p>';
 }
 
 function paint(state: AppState): void {
@@ -73,6 +92,17 @@ function paint(state: AppState): void {
 
   const announce = mount.querySelector('#announce');
   if (announce) announce.textContent = TABS.find((t) => t.id === screen)?.label ?? '';
+
+  // Фокус идёт за шторкой: открылась — внутрь, закрылась — обратно на кнопку,
+  // которая её открыла. Иначе с клавиатуры и из скринридера шторки нет.
+  if (state.sheet && state.sheet !== lastSheet) {
+    mount.querySelector<HTMLElement>('.sheet')?.focus();
+  } else if (!state.sheet && lastSheet) {
+    const back = mount.querySelector<HTMLElement>(`[data-sheet-open="${lastSheet}"]`)
+      ?? mount.querySelector<HTMLElement>('.tab[aria-selected="true"]');
+    back?.focus();
+  }
+  lastSheet = state.sheet;
 }
 
 /** Короткое сообщение поверх телефона — для действий, которых в демо нет. */
@@ -82,6 +112,7 @@ function toast(msg: string): void {
   app.querySelector('.toast')?.remove();
   const t = document.createElement('div');
   t.className = 'toast';
+  t.setAttribute('role', 'status');
   t.textContent = msg;
   app.appendChild(t);
   setTimeout(() => t.remove(), 2200);
@@ -102,12 +133,19 @@ export function start(root: HTMLElement): void {
     if (!target?.closest) return;
 
     const sheetOpen = target.closest<HTMLElement>('[data-sheet-open]');
-    if (sheetOpen) { openSheet('appeal'); return; }
+    if (sheetOpen?.dataset.sheetOpen) { openSheet(sheetOpen.dataset.sheetOpen as SheetId); return; }
     if (target.closest('[data-sheet-close]')) { closeSheet(); return; }
-    const file = target.closest<HTMLElement>('[data-appeal-file]');
-    if (file) { fileAppeal(Number(file.dataset.appealFile)); return; }
+
+    const pick = target.closest<HTMLElement>('[data-pick]');
+    if (pick) { pickDispute(Number(pick.dataset.pick)); return; }
+    const reason = target.closest<HTMLElement>('[data-reason]');
+    if (reason?.dataset.reason) { contest(Number(reason.dataset.index), reason.dataset.reason as ExcuseId); return; }
     const resolve = target.closest<HTMLElement>('[data-appeal-resolve]');
     if (resolve) { resolveAppeal(Number(resolve.dataset.appealResolve)); return; }
+
+    if (target.closest('[data-rest]')) { takeRest(); toast('Завтрашний слот освобождён заранее. 0 баллов — это не пропуск.'); return; }
+    if (target.closest('[data-ack]')) { ackIncident(); return; }
+    if (target.closest('[data-install]')) { void install(); return; }
 
     const slot = target.closest<HTMLElement>('[data-slot]');
     if (slot?.dataset.slot) { toggleSlot(slot.dataset.slot); return; }
@@ -164,6 +202,25 @@ export function start(root: HTMLElement): void {
     if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.6) step(dx < 0 ? 1 : -1);
   }, { passive: true });
 
+  // Установка на экран «Домой»: кнопка появляется, только когда браузер готов
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPrompt = e as InstallPrompt;
+    paint(getState());
+  });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    paint(getState());
+  });
+
   subscribe(paint);
   paint(getState());
+}
+
+async function install(): Promise<void> {
+  const p = installPrompt;
+  if (!p) return;
+  installPrompt = null;
+  paint(getState());
+  try { await p.prompt(); } catch { /* пользователь передумал — это нормально */ }
 }

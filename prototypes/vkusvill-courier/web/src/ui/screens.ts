@@ -1,9 +1,10 @@
 import { RULES } from '../engine/rules';
+import { low } from '../engine/text';
 import type { Snapshot } from '../engine/types';
 import type { AppState } from '../state/store';
 import * as C from './components';
 import { plural } from './components';
-import { disputable } from '../state/appeals';
+import { disputable, excuseRule } from '../state/appeals';
 
 export const SCREENS = ['shift', 'feed', 'progress', 'league', 'team', 'slots'] as const;
 export type ScreenId = (typeof SCREENS)[number];
@@ -19,11 +20,11 @@ export const TABS: { id: ScreenId; label: string; icon: string }[] = [
 
 // Чт занят другим курьером — единственный неинтерактивный слот
 const WEEK_SLOTS = [
-  { d1: 'Пн', d2: '1 сент', time: '09:00 — 15:00' },
-  { d1: 'Вт', d2: '2 сент', time: '14:00 — 20:00' },
-  { d1: 'Ср', d2: '3 сент', time: '09:00 — 15:00' },
-  { d1: 'Чт', d2: '4 сент', time: '14:00 — 20:00', other: true },
-  { d1: 'Пт', d2: '5 сент', time: '09:00 — 15:00' },
+  { d1: 'Пн', d2: '5 окт', time: '09:00 — 15:00' },
+  { d1: 'Вт', d2: '6 окт', time: '14:00 — 20:00' },
+  { d1: 'Ср', d2: '7 окт', time: '09:00 — 15:00' },
+  { d1: 'Чт', d2: '8 окт', time: '14:00 — 20:00', other: true },
+  { d1: 'Пт', d2: '9 окт', time: '09:00 — 15:00' },
 ];
 
 function weekSlots(mySlots: string[]) {
@@ -60,20 +61,35 @@ export function headOf(state: AppState, screen: ScreenId): [string, string] {
   }
 }
 
+/** День последнего инцидента в журнале — для карточки «после инцидента». */
+function lastIncidentDay(state: AppState): string | null {
+  for (let i = state.events.length - 1; i >= 0; i--) {
+    if (state.events[i].type === 'incident') return state.events[i].at;
+  }
+  return null;
+}
+
 /* ─────────────────────────── СМЕНА ─────────────────────────── */
 
 function shift(s: Snapshot, rookie: boolean, state: AppState): string {
   const warn = isDip(s);
   const parts: string[] = [];
 
+  // Погода — единственное, что здесь говорится про время: его не считают
+  const weather = `Сегодня ${low(state.profile.weather)}. Время в пути не считается — не спеши.`;
   parts.push(C.live({
     tone: warn ? 'warn' : 'green',
     text: 'Смена идёт',
     meta: rookie ? 'до 15:00' : 'до 18:00',
     note: rookie
-      ? `${s.counters.deliveries} заказов за первые дни. Первая неделя короткая — спешить некуда, спрашивай что угодно.`
-      : `${s.counters.deliveries} доставок за неделю. Идёшь ровно — торопиться не нужно.`,
+      ? `${s.counters.deliveries} заказов за первые дни. Первая неделя короткая — спрашивай что угодно. ${weather}`
+      : `${s.counters.deliveries} доставок за неделю. ${weather}`,
   }));
+
+  const incidentAt = lastIncidentDay(state);
+  if (incidentAt) parts.push(C.incident(incidentAt, state.incidentAck));
+  parts.push(C.rest(s.load));
+  parts.push(C.summary(s.summary));
 
   if (rookie) {
     parts.push(C.mentor({
@@ -82,7 +98,7 @@ function shift(s: Snapshot, rookie: boolean, state: AppState): string {
     }));
     parts.push(C.checklist({
       label: 'Первые две недели', title: 'Освоиться без спешки',
-      right: 'до 10 сентября',
+      right: 'до 14 октября',
       items: ROOKIE_CHECKLIST.map((text, i) => ({ text, done: state.checklist.includes(i) })),
     }));
     parts.push(C.note(
@@ -102,15 +118,20 @@ function shift(s: Snapshot, rookie: boolean, state: AppState): string {
       { k: 'Вышел на слот', v: `${s.counters.attendedSlots} / ${s.counters.attendedSlots + s.counters.missedSlots}`, mood: s.counters.missedSlots > 0 ? 'warn' : undefined },
       { k: 'Смены без замечаний', v: `${s.counters.cleanShifts} / ${s.counters.shifts}`, mood: s.counters.cleanShifts < s.counters.shifts ? 'warn' : undefined },
       { k: 'Доставки без жалоб', v: `${s.counters.cleanDeliveries} / ${s.counters.deliveries}`, mood: s.counters.damageComplaints > 0 ? 'warn' : 'good' },
+      { k: 'Часов за неделю', v: `${s.load.hours} / ${s.load.maxHours}`, mood: s.load.hours > s.load.maxHours ? 'warn' : undefined },
     ],
   }));
 
   if (warn) {
-    const filed = disputable(state.events).filter((d) => state.appeals.includes(d.index));
+    const rows = disputable(state.events);
+    const filed = state.appeals.flatMap((a) => {
+      const d = rows.find((r) => r.index === a.index);
+      return d ? [{ label: d.label, at: d.at, reason: excuseRule(a.reason)?.label ?? a.reason }] : [];
+    });
     parts.push(C.fixes(
       s.fixes,
       'Уровень и ранний доступ к слотам на этой неделе сохраняются. Пересмотр — в понедельник, не сегодня.',
-      'Не согласен с оценкой',
+      'Не по моей вине',
       filed,
     ));
   } else {
@@ -168,6 +189,7 @@ function progress(s: Snapshot, rookie: boolean): string {
   parts.push(C.levels(path,
     'Зачётная — смена, отработанная полностью и без замечаний. Пропуск не обнуляет путь, просто не добавляет шаг.'));
   parts.push(C.badges(rookie ? 'Первые шаги' : 'Знаки', s.badges));
+  parts.push(C.praise(s.praise));
 
   if (rookie) {
     parts.push(C.note(
@@ -199,6 +221,7 @@ function league(s: Snapshot): string {
         note: `Курьеры на велосипеде, тот же район, сопоставимый стаж. ${s.league.size} человека, из них ${s.league.promote} идут вверх каждую неделю.`,
       }),
       C.note('Отток курьеров сосредоточен в первых двух неделях. Всё, что в этот период сравнивает человека с другими, работает против удержания.', 'shield'),
+      C.rulesLink(),
     ].join('');
   }
 
@@ -222,6 +245,7 @@ function league(s: Snapshot): string {
       'Время в пути и скорость доставки в баллы не входят. Совсем.',
       `Сумма строк: <b>${s.buckets.ratings} + ${s.buckets.slots} + ${s.buckets.tare} + ${s.buckets.help} = ${s.weekPoints}</b>. `
       + 'Это и есть балл в кольце на «Смене» — цифры не разъезжаются, потому что считает один движок.'),
+    C.rulesLink(),
     warn
       ? C.card({ tone: 'green', label: 'Следующая неделя', title: 'Счёт обнуляется в понедельник', note: 'Лига считается за неделю, а не накопительно. Плохая неделя не тянется за тобой в следующую.' })
       : C.note('Низкое место в лиге не уменьшает количество заказов и не снижает оплату. Лига — только про призы и ранний выбор слотов.', 'shield'),
@@ -260,6 +284,7 @@ function team(s: Snapshot, rookie: boolean): string {
     pct >= 100
       ? C.card({ tone: 'green', label: 'Взяли', title: 'Завтрак на точке в понедельник', note: 'Его получает вся смена, включая тех, кто вложился меньше.' })
       : C.card({ tone: 'green', label: 'Если возьмём', title: `Не хватает ${target - total} чистых заказов`, note: 'Завтрак на точке в понедельник и ранний выбор слотов для всей смены — не только для тех, кто вложился больше всех.' }),
+    C.praise(s.praise),
     C.note('Командный челлендж намеренно не показывает, кто «тянет вниз». Иначе плохая неделя одного человека превращается в конфликт на точке.', 'team'),
   ].join('');
 }
@@ -292,9 +317,11 @@ function slots(s: Snapshot, state: AppState): string {
     { k: 'Баллов за неделю', v: `${s.weekPoints} из ${RULES.access.minWeekPoints}` },
     { k: 'Пропущено слотов', v: `${s.counters.missedSlots}, допустимо ${RULES.access.maxMissedSlots}` },
     { k: 'Уровень', v: s.level.current.name },
+    { k: 'Часов за неделю', v: `${s.load.hours} из ${s.load.maxHours}` },
   ],
     'Ранний доступ — единственное, чем управляет результат недели. Поток заказов и ставка от уровня не зависят никогда.',
     'Порог виден целиком и заранее. Внезапных понижений в системе нет: сначала неделя предупреждения, только потом изменение.'));
+  parts.push(C.rulesLink());
 
   return parts.join('');
 }
@@ -302,9 +329,10 @@ function slots(s: Snapshot, state: AppState): string {
 /* ─────────────────────────── ЛЕНТА ─────────────────────────── */
 
 function feedScreen(s: Snapshot, unread: number): string {
-  const wins = s.feed.filter((f) => f.kind !== 'points').length;
+  const wins = s.feed.filter((f) => f.kind !== 'points' && f.kind !== 'kudos' && f.kind !== 'excused').length;
 
   return [
+    C.rulesLink(`Правила обновлены ${RULES.since} — что изменилось`),
     C.card({
       tone: unread > 0 ? 'green' : 'flat',
       label: 'За неделю',

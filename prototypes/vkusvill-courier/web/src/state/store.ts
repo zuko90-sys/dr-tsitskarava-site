@@ -1,8 +1,11 @@
-import { evaluate } from '../engine/engine';
+import { nextDay } from '../engine/days';
+import { evaluate, isExcused } from '../engine/engine';
 import { RULES } from '../engine/rules';
-import type { CourierEvent, Snapshot } from '../engine/types';
-import { shiftAppeals } from './appeals';
+import type { CourierEvent, ExcuseId, Snapshot } from '../engine/types';
+import { disputable, shiftAppeals, type Appeal } from './appeals';
 import { PROFILE, scenarioById, type Scenario } from './scenarios';
+
+export type SheetId = 'appeal' | 'rules';
 
 export interface AppState {
   scenarioId: string;
@@ -10,17 +13,21 @@ export interface AppState {
   events: CourierEvent[];
   screen: string;
   snapshot: Snapshot;
-  profile: { name: string; initial: string; sub: string };
+  profile: { name: string; initial: string; sub: string; weather: string };
   /** Сколько записей ленты добавилось с тех пор, как её открывали. */
   unreadFeed: number;
-  /** Поданные обжалования — индексы спорных событий в журнале. */
-  appeals: number[];
+  /** Поданные обжалования, ждущие решения управляющего. */
+  appeals: Appeal[];
   /** Дни, на которые курьер взял слот на следующую неделю. */
   mySlots: string[];
   /** Отмеченные пункты чек-листа новичка (индексы). */
   checklist: number[];
+  /** Курьер отметил «я в порядке» после инцидента. */
+  incidentAck: boolean;
   /** Открытая шторка. Не сохраняется: после перезагрузки шторок нет. */
-  sheet: 'appeal' | null;
+  sheet: SheetId | null;
+  /** Спорное событие, у которого раскрыт список причин. Тоже не сохраняется. */
+  picked: number | null;
 }
 
 type Listener = (state: AppState) => void;
@@ -38,10 +45,12 @@ interface Draft {
   events: CourierEvent[];
   screen: string;
   seen: number;
-  appeals: number[];
+  appeals: Appeal[];
   mySlots: string[];
   checklist: number[];
-  sheet: 'appeal' | null;
+  incidentAck: boolean;
+  sheet: SheetId | null;
+  picked: number | null;
 }
 
 function build(d: Draft): AppState {
@@ -59,7 +68,9 @@ function build(d: Draft): AppState {
     appeals: d.appeals,
     mySlots: d.mySlots,
     checklist: d.checklist,
+    incidentAck: d.incidentAck,
     sheet: d.sheet,
+    picked: d.picked,
   };
 }
 
@@ -68,8 +79,24 @@ function draft(): Draft {
   return {
     scenarioId: state.scenarioId, events: state.events, screen: state.screen,
     seen: seenFeed, appeals: state.appeals, mySlots: state.mySlots,
-    checklist: state.checklist, sheet: state.sheet,
+    checklist: state.checklist, incidentAck: state.incidentAck,
+    sheet: state.sheet, picked: state.picked,
   };
+}
+
+/** Заявки старого формата — просто индексы — превращаются в заявки «другое». */
+function readAppeals(raw: unknown, size: number): Appeal[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Appeal[] = [];
+  for (const item of raw) {
+    const a: Appeal | null = typeof item === 'number'
+      ? { index: item, reason: 'other' }
+      : item && typeof item === 'object' && typeof (item as Appeal).index === 'number'
+        ? { index: (item as Appeal).index, reason: (item as Appeal).reason ?? 'other' }
+        : null;
+    if (a && Number.isInteger(a.index) && a.index >= 0 && a.index < size) out.push(a);
+  }
+  return out;
 }
 
 function restore(): AppState {
@@ -78,19 +105,18 @@ function restore(): AppState {
     if (raw) {
       const saved = JSON.parse(raw) as {
         scenarioId?: string; events?: CourierEvent[]; screen?: string;
-        seenFeed?: number; appeals?: number[]; mySlots?: string[]; checklist?: number[];
+        seenFeed?: number; appeals?: unknown; mySlots?: string[]; checklist?: number[];
+        incidentAck?: boolean;
       };
       if (saved.scenarioId && Array.isArray(saved.events)) {
         seenFeed = saved.seenFeed ?? 0;
-        const appeals = (saved.appeals ?? []).filter(
-          (i) => Number.isInteger(i) && i >= 0 && i < saved.events!.length,
-        );
         return build({
           scenarioId: saved.scenarioId, events: saved.events, screen: saved.screen ?? 'shift',
-          seen: seenFeed, appeals,
+          seen: seenFeed, appeals: readAppeals(saved.appeals, saved.events.length),
           mySlots: Array.isArray(saved.mySlots) ? saved.mySlots : [],
           checklist: Array.isArray(saved.checklist) ? saved.checklist : CHECKLIST_START,
-          sheet: null,
+          incidentAck: saved.incidentAck === true,
+          sheet: null, picked: null,
         });
       }
     }
@@ -101,7 +127,8 @@ function restore(): AppState {
   const s = scenarioById('steady');
   return build({
     scenarioId: s.id, events: s.events, screen: 'shift',
-    seen: 0, appeals: [], mySlots: [], checklist: CHECKLIST_START, sheet: null,
+    seen: 0, appeals: [], mySlots: [], checklist: CHECKLIST_START,
+    incidentAck: false, sheet: null, picked: null,
   });
 }
 
@@ -113,6 +140,7 @@ function persist(): void {
     localStorage.setItem(KEY, JSON.stringify({
       scenarioId: state.scenarioId, events: state.events, screen: state.screen,
       seenFeed, appeals: state.appeals, mySlots: state.mySlots, checklist: state.checklist,
+      incidentAck: state.incidentAck,
     }));
   } catch {
     // Сохранение — удобство, а не требование. Молча живём дальше.
@@ -134,21 +162,37 @@ export function subscribe(fn: Listener): () => void {
   return () => listeners.delete(fn);
 }
 
+/** Всё, что относится к одному курьеру и одной неделе, — заново. */
+function fresh(s: Scenario): Draft {
+  return {
+    ...draft(), scenarioId: s.id, events: s.events, seen: 0,
+    appeals: [], mySlots: [], checklist: CHECKLIST_START,
+    incidentAck: false, sheet: null, picked: null,
+  };
+}
+
 export function setScenario(id: string): void {
-  const s = scenarioById(id);
   // Смена сценария — это другой курьер: ни счётчик непрочитанного,
   // ни заявки, ни взятые слоты к нему не относятся.
   seenFeed = 0;
-  commit(build({
-    ...draft(), scenarioId: s.id, events: s.events,
-    appeals: [], mySlots: [], checklist: CHECKLIST_START, sheet: null, seen: 0,
-  }));
+  commit(build(fresh(scenarioById(id))));
 }
 
 export function setScreen(screen: string): void {
   if (screen === state.screen) return;
   if (screen === 'feed') seenFeed = state.snapshot.feed.length;
   commit(build({ ...draft(), screen, seen: seenFeed }));
+}
+
+/**
+ * День для нового события. Закрытая смена завершает день: всё, что подано
+ * после неё, относится уже к следующему. Иначе один и тот же день появлялся
+ * бы в ленте дважды, а «дни подряд» нельзя было бы набрать вообще.
+ */
+export function today(events: CourierEvent[] = state.events): string {
+  if (events.length === 0) return 'Пн';
+  const last = events[events.length - 1];
+  return last.type === 'shift_closed' ? nextDay(last.at) : last.at;
 }
 
 /** Добавить событие руками — так проверяется, что движок реально считает. */
@@ -166,6 +210,7 @@ export function undoEvent(): void {
   const next = build({
     ...draft(), events: state.events.slice(0, -1),
     appeals: shiftAppeals(state.appeals, lastIndex),
+    picked: state.picked === lastIndex ? null : state.picked,
   });
   seenFeed = Math.min(seenFeed, next.snapshot.feed.length);
   commit(next);
@@ -173,12 +218,8 @@ export function undoEvent(): void {
 
 /** Вернуть сценарий к исходному журналу. */
 export function resetScenario(): void {
-  const s = scenarioById(state.scenarioId);
   seenFeed = 0;
-  commit(build({
-    ...draft(), events: s.events,
-    appeals: [], mySlots: [], checklist: CHECKLIST_START, sheet: null, seen: 0,
-  }));
+  commit(build(fresh(scenarioById(state.scenarioId))));
 }
 
 /* ─────────────────────────── СЛОТЫ И ЧЕК-ЛИСТ ─────────────────────────── */
@@ -199,35 +240,79 @@ export function toggleCheck(index: number): void {
   commit(build({ ...draft(), checklist }));
 }
 
+/* ─────────────────────────── НАГРУЗКА И ИНЦИДЕНТ ─────────────────────────── */
+
+/**
+ * Взять выходной: завтрашний слот освобождается заранее. Это обычное
+ * событие журнала — «слот освобождён заранее», 0 баллов, — и серия дней
+ * подряд на нём обрывается.
+ */
+export function takeRest(): void {
+  pushEvent({ type: 'slot_missed', at: today(), warnedAhead: true });
+}
+
+/** «Я в порядке» после инцидента. Карточка с порядком действий сворачивается. */
+export function ackIncident(): void {
+  if (state.incidentAck) return;
+  commit(build({ ...draft(), incidentAck: true }));
+}
+
 /* ─────────────────────────── ОБЖАЛОВАНИЕ ─────────────────────────── */
 
-export function openSheet(sheet: 'appeal'): void {
+export function openSheet(sheet: SheetId): void {
   if (state.sheet === sheet) return;
-  commit({ ...state, sheet });
+  commit({ ...state, sheet, picked: null });
 }
 
 export function closeSheet(): void {
   if (state.sheet === null) return;
-  commit({ ...state, sheet: null });
+  commit({ ...state, sheet: null, picked: null });
 }
 
-/** Подать заявку. Баллы не меняются — влияет только решение по ней. */
-export function fileAppeal(eventIndex: number): void {
-  if (eventIndex < 0 || eventIndex >= state.events.length) return;
-  if (state.appeals.includes(eventIndex)) return;
-  commit(build({ ...draft(), appeals: [...state.appeals, eventIndex] }));
+/** Раскрыть или свернуть список причин у спорного события. */
+export function pickDispute(index: number): void {
+  commit({ ...state, picked: state.picked === index ? null : index });
+}
+
+/** Пометить событие «не по моей вине» с этой причиной. Журнал меняется, всё остальное — пересчёт. */
+function excuse(events: CourierEvent[], index: number, reason: ExcuseId): CourierEvent[] {
+  return events.map((e, i) => (i === index ? { ...e, excused: reason } as CourierEvent : e));
 }
 
 /**
- * Решение по заявке: спорное событие удаляется из журнала.
- * Пересчёт всего остального — балла, знаков, лиги, доступа — происходит
- * сам, потому что движок считает из журнала. В этом и смысл.
+ * Оспорить событие, назвав причину.
+ * Причину, которую подтверждает система, движок применяет сразу — заявка
+ * не нужна. Остальные уходят управляющему и до решения ничего не меняют.
  */
-export function resolveAppeal(eventIndex: number): void {
-  if (!state.appeals.includes(eventIndex)) return;
+export function contest(index: number, reason: ExcuseId): void {
+  const target = disputable(state.events).find((d) => d.index === index);
+  if (!target || target.excused !== undefined) return;
+  const rule = RULES.excuses.find((x) => x.id === reason);
+  if (!rule) return;
+
+  if (rule.auto) {
+    commit(build({
+      ...draft(), events: excuse(state.events, index, reason),
+      appeals: state.appeals.filter((a) => a.index !== index), picked: null,
+    }));
+    return;
+  }
+
+  if (state.appeals.some((a) => a.index === index)) return;
+  commit(build({ ...draft(), appeals: [...state.appeals, { index, reason }], picked: null }));
+}
+
+/**
+ * Решение по заявке: событие получает пометку «не по моей вине» и остаётся
+ * в журнале. Пересчёт всего остального — балла, знаков, лиги, доступа —
+ * происходит сам, потому что движок считает из журнала. В этом и смысл.
+ */
+export function resolveAppeal(index: number): void {
+  const appeal = state.appeals.find((a) => a.index === index);
+  if (!appeal || isExcused(state.events[index])) return;
   const next = build({
-    ...draft(), events: state.events.filter((_, i) => i !== eventIndex),
-    appeals: shiftAppeals(state.appeals, eventIndex),
+    ...draft(), events: excuse(state.events, index, appeal.reason),
+    appeals: state.appeals.filter((a) => a.index !== index),
   });
   seenFeed = Math.min(seenFeed, next.snapshot.feed.length);
   commit(next);

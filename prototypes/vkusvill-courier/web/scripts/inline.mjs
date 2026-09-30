@@ -50,6 +50,9 @@ for (const re of [
   /^\s*<meta name="viewport"[^>]*>\n/im,
   /^\s*<meta name="robots"[^>]*>\n/im,
   /^\s*<link rel="icon"[^>]*>\n/im, // иконку артефакту задаёт параметр favicon
+  // PWA-обвязка — для копии на сайте; артефакт живёт в iframe и не устанавливается
+  /^\s*<meta name="(?:theme-color|mobile-web-app-capable|apple-mobile-web-app-[a-z-]+)"[^>]*>\n/gim,
+  /^\s*<link rel="apple-touch-icon"[^>]*>\n/im,
 ]) {
   art = art.replace(re, '');
 }
@@ -57,6 +60,7 @@ art = art.trimStart();
 
 if (!art.startsWith('<title>')) throw new Error('артефакт: <title> должен остаться первой строкой');
 if (/<!doctype|<html|<head>|<body>/i.test(art)) throw new Error('артефакт: обёртка снята не полностью');
+if (/apple-touch-icon|theme-color/.test(art)) throw new Error('артефакт: PWA-теги не вырезаны');
 
 writeFileSync(outArtifact, art, 'utf8');
 console.log(`app-engine.artifact.html собран, ${Math.round(art.length / 1024)} КБ`);

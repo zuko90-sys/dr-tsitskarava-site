@@ -1,6 +1,12 @@
+import { DAY_NAMES } from '../engine/days';
+import { RULES } from '../engine/rules';
+import { count } from '../engine/text';
+import type { BadgeState, BucketId, FeedEntry, LeagueRow, LoadState, Nudge, Praise } from '../engine/types';
+import type { Appeal, Disputable } from '../state/appeals';
 import { icon } from './icons';
-import type { BadgeState, FeedEntry, LeagueRow, Nudge } from '../engine/types';
-import type { Disputable } from '../state/appeals';
+
+export { plural } from '../engine/text';
+import { plural } from '../engine/text';
 
 /* Экранирование: в данные попадают имена и тексты правил, а не разметка.
    Исключение — поля how/name знаков, где <br> и <b> заданы намеренно. */
@@ -10,14 +16,8 @@ export function esc(s: string): string {
 
 export const num = (n: number): string => `<span class="num">${n}</span>`;
 
-/** Русское склонение при числительном: 1 балл, 2 балла, 5 баллов. */
-export function plural(n: number, one: string, few: string, many: string): string {
-  const m10 = n % 10;
-  const m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
-  return many;
-}
+const dayName = (at: string): string => DAY_NAMES[at] ?? at;
+const signed = (n: number): string => (n > 0 ? `+${n}` : String(n));
 
 type Tone = 'green' | 'warn' | 'flat' | undefined;
 const toneClass = (t: Tone): string =>
@@ -41,6 +41,12 @@ export function live(opts: { text: string; meta: string; note?: string; tone?: T
     + `<span class="live__meta num">${esc(opts.meta)}</span></div>`
     + (opts.note ? `<p class="card__note">${esc(opts.note)}</p>` : '')
     + '</div>';
+}
+
+/** Неделя словами — абзац, собранный движком из тех же цифр, что и экраны. */
+export function summary(text: string): string {
+  return '<div class="card"><p class="card__label">Неделя словами</p>'
+    + `<p class="summary">${esc(text)}</p></div>`;
 }
 
 export function ring(opts: {
@@ -86,6 +92,11 @@ export function note(text: string, iconName = 'info', tone?: 'warn'): string {
     + `${icon(iconName, 2)}<span>${text}</span></p>`;
 }
 
+/** Ссылка на правила: откуда цифры и что менялось. Открывает шторку. */
+export function rulesLink(text = `Правила · версия ${RULES.version} · что изменилось ${RULES.since}`): string {
+  return `<button class="rules-link" type="button" data-sheet-open="rules">${icon('book', 2)}<span>${esc(text)}</span></button>`;
+}
+
 export function levels(items: { name: string; meta: string; state: '' | 'done' | 'now' }[], noteText?: string): string {
   return '<div class="card"><p class="card__label">Путь</p><ul class="levels">'
     + items.map((l) => {
@@ -105,12 +116,21 @@ export function badges(label: string, items: BadgeState[]): string {
       const how = b.how + (b.wasReset
         ? ' <b>Счётчик пошёл заново</b> — предыдущий прогресс обнулился, но ничего не потеряно навсегда.'
         : '');
-      return `<button class="badge${locked ? ' locked' : ''}" type="button" aria-expanded="false" `
+      return `<button class="badge${locked ? ' locked' : ''}" type="button" aria-expanded="false" aria-controls="how-box" `
         + `data-how="${how.replace(/"/g, '&quot;')}">`
         + `<span class="badge__ic">${icon(b.icon)}</span>`
         + `<span class="badge__n">${b.name}${progress}</span></button>`;
     }).join('')
-    + '</div><div class="badge__how" data-how-box hidden></div></div>';
+    + '</div><div class="badge__how" id="how-box" data-how-box hidden></div></div>';
+}
+
+/** Тёплые слова: комплименты клиентов и спасибо с точки. Баллов не стоят — потому им и верят. */
+export function praise(items: Praise[]): string {
+  if (items.length === 0) return '';
+  return '<div class="card"><p class="card__label">Тёплые слова за неделю</p><div class="chips">'
+    + items.map((p) => `<span class="chip">${icon('heart', 2)}${esc(p.label)}<b class="num">× ${p.count}</b></span>`).join('')
+    + '</div><p class="card__note">Комплименты пишут клиенты, спасибо — коллеги. '
+    + 'Ни то ни другое не стоит баллов, поэтому их не выпрашивают.</p></div>';
 }
 
 export function board(rows: LeagueRow[], cutLabel: string, tone?: Tone): string {
@@ -163,8 +183,8 @@ export function slots(label: string, rows: { d1: string; d2: string; time: strin
       const control = r.state === 'other'
         ? '<span class="slot__pill slot__pill--muted">Занят</span>'
         : r.state === 'mine'
-          ? `<button class="slot__pill slot__pill--mine" type="button" data-slot="${esc(r.d1)}">${icon('check', 3)}Твой</button>`
-          : `<button class="slot__pill" type="button" data-slot="${esc(r.d1)}">Взять</button>`;
+          ? `<button class="slot__pill slot__pill--mine" type="button" data-slot="${esc(r.d1)}" aria-label="Отпустить слот ${esc(r.d1)}">${icon('check', 3)}Твой</button>`
+          : `<button class="slot__pill" type="button" data-slot="${esc(r.d1)}" aria-label="Взять слот ${esc(r.d1)}">Взять</button>`;
       return `<div class="slot${r.state === 'other' ? ' taken' : ''}">`
         + `<span class="slot__day"><span class="slot__d1">${esc(r.d1)}</span><br>`
         + `<span class="slot__d2">${esc(r.d2)}</span></span>`
@@ -175,7 +195,7 @@ export function slots(label: string, rows: { d1: string; d2: string; time: strin
 
 export function fixes(
   items: { title: string; text: string }[], noteText: string,
-  appeal?: string, filed?: Disputable[],
+  appeal?: string, filed?: { label: string; at: string; reason: string }[],
 ): string {
   return '<div class="card card--warn"><p class="card__label">Что подтянуть</p>'
     + `<p class="card__title">${items.length} ${plural(items.length, 'вещь', 'вещи', 'вещей')}, ${plural(items.length, 'поправимая', 'все поправимые', 'все поправимые')}</p>`
@@ -186,42 +206,175 @@ export function fixes(
     + `<p class="card__note">${esc(noteText)}</p>`
     + (filed && filed.length > 0
       ? filed.map((f) => `<p class="appeal-status">${icon('clock', 2)}`
-        + `<span>«${esc(f.label)}» (${esc(f.at)}) — обжалование на рассмотрении, ответ до 48 часов</span></p>`).join('')
+        + `<span>«${esc(f.label)}» (${esc(f.at)}) — у управляющего: ${esc(f.reason.toLowerCase())}. Ответ до 48 часов</span></p>`).join('')
       : '')
     + (appeal ? `<button class="appeal" type="button" data-sheet-open="appeal">${icon('alert', 2)}${esc(appeal)}</button>` : '')
     + '</div>';
 }
 
+/* ─────────────────────────── НАГРУЗКА И ИНЦИДЕНТ ─────────────────────────── */
+
+/** Единственная карточка в приложении, которая просит работать меньше. */
+export function rest(load: LoadState): string {
+  if (!load.rest) return '';
+  return '<div class="card card--warn"><p class="card__label">Нагрузка</p>'
+    + `<p class="card__title">${count(load.daysInRow, 'день', 'дня', 'дней')} подряд</p>`
+    + `<p class="card__note">${load.hours} ${plural(load.hours, 'час', 'часа', 'часов')} за неделю из ${load.maxHours} допустимых. `
+    + 'Возьми выходной: балл за него не снижается, ранний выбор слотов не теряется, место в лиге не зависит от количества смен.</p>'
+    + `<button class="appeal" type="button" data-rest>${icon('moon', 2)}Освободить завтрашний слот</button>`
+    + '</div>';
+}
+
 /**
- * Шторка обжалования. Заявка не меняет баллы — меняет их решение, и оно
- * приходит как правка журнала. Демо-кнопка «жалобу сняли» показывает ровно
- * это: событие исчезает, и всё пересчитывается само.
+ * Порядок действий после падения или ДТП. Показывается, пока курьер
+ * не отметил, что в порядке. Инцидент не штрафуется — и это сказано здесь
+ * прямо, чтобы о нём не было причин молчать.
  */
-export function appealSheet(items: Disputable[], appeals: number[]): string {
+export function incident(at: string, acked: boolean): string {
+  if (acked) {
+    return '<div class="card card--flat"><p class="card__label">Инцидент</p>'
+      + `<p class="card__title">${esc(dayName(at))}: отмечен, ты в порядке</p>`
+      + '<p class="card__note">Баллы не снижены. Знак «Ноль инцидентов» пошёл заново — это единственное последствие. '
+      + 'Жалобы и оценки за этот день можно отметить как «не по моей вине».</p></div>';
+  }
+  const steps = [
+    ['Ты в порядке?', 'Если нет — сначала 112, потом всё остальное. Заказ подождёт.'],
+    ['Позвони на точку', 'Заказ заберёт коллега. Клиенту напишет поддержка — не ты.'],
+    ['Заказ повреждён?', 'Отметь в приложении. Жалобы по нему не считаются: причина «инцидент в этот день» подтверждается сама.'],
+  ];
+  return '<div class="card card--warn"><p class="card__label">После инцидента</p>'
+    + `<p class="card__title">${esc(dayName(at))}: падение или ДТП</p>`
+    + '<ol class="steps">'
+    + steps.map(([t, d], i) => `<li class="steps__i"><span class="fix__n num">${i + 1}</span>`
+      + `<span><b>${esc(t)}</b> ${esc(d)}</span></li>`).join('')
+    + '</ol>'
+    + '<p class="card__note">Баллы за инцидент не снимаются. Знак «Ноль инцидентов» начнёт набираться заново — и это всё.</p>'
+    + `<button class="appeal appeal--ok" type="button" data-ack>${icon('check', 2.5)}Я в порядке</button>`
+    + '</div>';
+}
+
+/* ─────────────────────────── ОБЖАЛОВАНИЕ ─────────────────────────── */
+
+/**
+ * Шторка «не по моей вине». Заявка не меняет баллы — меняет их решение,
+ * и оно приходит как пометка в журнале. Причины, которые подтверждает
+ * система, применяются сразу; остальные ждут управляющего. Демо-кнопка
+ * «решение управляющего» показывает ровно это: пометка встаёт, и всё
+ * пересчитывается само.
+ */
+export function appealSheet(items: Disputable[], appeals: Appeal[], picked: number | null): string {
+  const reasonLabel = (id: string): string => RULES.excuses.find((x) => x.id === id)?.label ?? id;
+
   const rows = items.length === 0
     ? '<p class="card__note">За эту неделю нет ни жалоб, ни низких оценок, ни пропусков — оспаривать нечего.</p>'
     : items.map((d) => {
-      const isFiled = appeals.includes(d.index);
-      return `<div class="dispute${isFiled ? ' dispute--filed' : ''}">`
-        + `<span class="dispute__body"><span class="dispute__t">${esc(d.label)}</span>`
-        + `<span class="dispute__m">${esc(d.at)}${d.delta !== 0 ? ` · ${d.delta > 0 ? '+' : ''}${d.delta} к баллу` : ''}</span></span>`
-        + (isFiled
-          ? `<span class="dispute__state">${icon('clock', 2)}На рассмотрении</span>`
-            + `<button class="ev" type="button" data-appeal-resolve="${d.index}">Жалобу сняли (демо)</button>`
-          : `<button class="ev" type="button" data-appeal-file="${d.index}">Обжаловать</button>`)
+      const filed = appeals.find((a) => a.index === d.index);
+      const head = `<span class="dispute__body"><span class="dispute__t">${esc(d.label)}</span>`
+        + `<span class="dispute__m">${esc(d.at)}${d.delta !== 0 ? ` · ${signed(d.delta)} к баллу` : ''}</span></span>`;
+
+      if (d.excused !== undefined) {
+        const rule = RULES.excuses.find((x) => x.id === d.excused);
+        return `<div class="dispute dispute--done">${head}`
+          + `<span class="dispute__state dispute__state--ok">${icon('shield', 2)}Не учтено</span>`
+          + `<span class="dispute__why">${esc(reasonLabel(d.excused))} · ${rule?.auto ? `подтверждено ${esc(rule.proof)}` : 'решение управляющего'}</span>`
+          + '</div>';
+      }
+      if (filed) {
+        return `<div class="dispute dispute--filed">${head}`
+          + `<span class="dispute__state">${icon('clock', 2)}На рассмотрении</span>`
+          + `<span class="dispute__why">${esc(reasonLabel(filed.reason))} · управляющий точки, ответ до 48 часов</span>`
+          + `<button class="ev" type="button" data-appeal-resolve="${d.index}">Решение управляющего: не по вине (демо)</button>`
+          + '</div>';
+      }
+      if (picked === d.index) {
+        return `<div class="dispute dispute--open">${head}`
+          + '<p class="dispute__ask">Что случилось?</p>'
+          + '<div class="reasons">'
+          + RULES.excuses.map((x) => `<button class="reason" type="button" data-reason="${x.id}" data-index="${d.index}">`
+            + `<span class="reason__t">${esc(x.label)}</span>`
+            + `<span class="reason__p">${x.auto ? `сразу, ${esc(x.proof)}` : esc(x.proof)}</span></button>`).join('')
+          + '</div>'
+          + `<button class="ev ev--ghost" type="button" data-pick="${d.index}">Отмена</button>`
+          + '</div>';
+      }
+      return `<div class="dispute">${head}`
+        + `<button class="ev" type="button" data-pick="${d.index}">Не по моей вине</button>`
         + '</div>';
     }).join('');
 
   return '<div class="sheet-back" data-sheet-close></div>'
-    + '<section class="sheet" role="dialog" aria-modal="true" aria-label="Обжалование">'
+    + '<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">'
     + '<div class="sheet__grip" aria-hidden="true"></div>'
-    + '<h2 class="sheet__title">Обжалование</h2>'
-    + '<p class="sheet__lead">Выбери, с чем не согласен, — заявка уйдёт управляющему точкой. '
-    + 'Пока идёт разбор, ничего не меняется: баллы не снимаются повторно и не возвращаются авансом.</p>'
+    + '<h2 class="sheet__title" id="sheet-title">Не по моей вине</h2>'
+    + '<p class="sheet__lead">Выбери событие и назови причину. То, что система проверяет сама — сборку на точке, погоду, '
+    + 'сбой приложения, инцидент, — она применяет сразу. Остальное уходит управляющему точки; пока идёт разбор, ничего не меняется.</p>'
     + `<div class="sheet__list">${rows}</div>`
     + '<p class="note-chip">' + icon('info', 2)
-    + '<span>Если жалобу снимут, запись удалится из журнала — и балл, знаки, место в лиге пересчитаются сами. '
+    + '<span>Событие остаётся в журнале с пометкой и причиной — и перестаёт считаться. Балл, знаки, место в лиге пересчитываются сами. '
     + 'Вручную никто ничего не правит, поэтому «забыли поправить рейтинг» здесь невозможно.</span></p>'
+    + '<button class="ev sheet__close" type="button" data-sheet-close>Закрыть</button>'
+    + '</section>';
+}
+
+/* ─────────────────────────── ПРАВИЛА ─────────────────────────── */
+
+const BUCKET_NAME: Record<BucketId, string> = {
+  ratings: 'Оценки клиентов', slots: 'Смены и слоты', tare: 'Возврат тары', help: 'Помощь коллегам',
+};
+
+/**
+ * Правила целиком, с историей изменений. Это не справка, а обязательство:
+ * всё, что считает движок, курьер может прочитать здесь до того, как это
+ * повлияет на его неделю.
+ */
+export function rulesSheet(): string {
+  const byBucket = (Object.keys(BUCKET_NAME) as BucketId[]).map((b) =>
+    `<p class="rules__h">${esc(BUCKET_NAME[b])}</p>`
+    + RULES.points.filter((p) => p.bucket === b).map((p) =>
+      `<div class="rules__row"><span>${esc(p.label)}</span><b class="num${p.add < 0 ? ' minus' : ''}">${signed(p.add)}</b></div>`).join(''));
+
+  return '<div class="sheet-back" data-sheet-close></div>'
+    + '<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">'
+    + '<div class="sheet__grip" aria-hidden="true"></div>'
+    + `<h2 class="sheet__title" id="sheet-title">Правила · версия ${esc(RULES.version)}</h2>`
+    + `<p class="sheet__lead">Действуют с ${esc(RULES.since)}. Всё, что считает приложение, описано здесь; `
+    + 'любое изменение появляется в этом списке с датой раньше, чем начинает действовать.</p>'
+
+    + '<div class="rules"><p class="rules__h">Что изменилось</p>'
+    + RULES.changes.map((c) => `<div class="rules__change"><span class="rules__date num">${esc(c.date)} · v${esc(c.version)}</span>`
+      + `<span>${esc(c.text)}</span></div>`).join('')
+    + '</div>'
+
+    + `<div class="rules">${byBucket.join('')}`
+    + '<p class="card__note">Строка не уходит в минус. Балл недели — сумма строк.</p></div>'
+
+    + '<div class="rules"><p class="rules__h">Уровни — зачётными сменами</p>'
+    + RULES.levels.map((l) => `<div class="rules__row"><span>${esc(l.name)}</span><b class="num">${l.shifts}</b></div>`).join('')
+    + '<p class="card__note">Зачётная — смена без замечаний. Пропуск, жалоба и инцидент шаг не отнимают.</p></div>'
+
+    + '<div class="rules"><p class="rules__h">Ранний выбор слотов</p>'
+    + `<div class="rules__row"><span>Баллов за неделю от</span><b class="num">${RULES.access.minWeekPoints}</b></div>`
+    + `<div class="rules__row"><span>Пропусков без предупреждения не больше</span><b class="num">${RULES.access.maxMissedSlots}</b></div>`
+    + `<div class="rules__row"><span>С уровня</span><b>${esc(RULES.levels.find((l) => l.id === RULES.access.fromLevel)?.name ?? '')}</b></div>`
+    + `<div class="rules__row"><span>Недель предупреждения до приостановки</span><b class="num">${RULES.access.graceWeeks}</b></div>`
+    + '<p class="card__note">Единственное, чем управляет результат недели. Поток заказов и ставка от него не зависят никогда.</p></div>'
+
+    + '<div class="rules"><p class="rules__h">Не по моей вине</p>'
+    + RULES.excuses.map((x) => `<div class="rules__row"><span>${esc(x.label)}</span>`
+      + `<b class="rules__who">${x.auto ? 'сразу' : 'управляющий'}</b></div>`).join('')
+    + '<p class="card__note">Событие остаётся в журнале с причиной и не считается. «Сразу» — подтверждает система по своим данным; «управляющий» — решение человека, ответ до 48 часов.</p></div>'
+
+    + '<div class="rules"><p class="rules__h">Нагрузка</p>'
+    + `<div class="rules__row"><span>Часов в неделю, после которых счётчик красный</span><b class="num">${RULES.load.maxWeekHours}</b></div>`
+    + `<div class="rules__row"><span>Дней подряд, после которых приложение предложит выходной</span><b class="num">${RULES.load.restAfterDays}</b></div>`
+    + '</div>'
+
+    + '<div class="rules"><p class="rules__h">Чего в правилах нет</p>'
+    + '<div class="rules__none"><span>Скорости доставки и времени в пути — ни в баллах, ни в знаках, ни в комплиментах.</span>'
+    + '<span>Серий без выходных, которые обнуляются.</span>'
+    + '<span>Влияния уровня и места в лиге на количество заказов и оплату.</span>'
+    + '<span>Штрафа за инцидент.</span></div></div>'
+
     + '<button class="ev sheet__close" type="button" data-sheet-close>Закрыть</button>'
     + '</section>';
 }
@@ -238,8 +391,10 @@ export function nudges(items: Nudge[]): string {
 }
 
 const KIND_CLASS: Record<FeedEntry['kind'], string> = {
-  points: '', badge: ' feed__i--win', badge_reset: ' feed__i--warn',
+  points: '', excused: ' feed__i--void', kudos: ' feed__i--warm',
+  badge: ' feed__i--win', badge_reset: ' feed__i--warn',
   level: ' feed__i--win', goal: ' feed__i--win', access: ' feed__i--warn', rank: ' feed__i--win',
+  rest: ' feed__i--warn',
 };
 
 /**
@@ -253,36 +408,33 @@ export function feed(items: FeedEntry[], unread: number): string {
   }
 
   const days: { at: string; rows: FeedEntry[] }[] = [];
-  items.forEach((e, i) => {
+  for (const e of items) {
     const last = days[days.length - 1];
     if (last && last.at === e.at) last.rows.push(e);
     else days.push({ at: e.at, rows: [e] });
-    void i;
-  });
+  }
 
   return days.map((d) => '<div class="card"><p class="card__label">'
     + `${esc(dayName(d.at))}</p><div class="feed">`
     + d.rows.map((e, i) => {
       const isNew = unread > 0 && days[0] === d && i < unread;
-      const val = e.kind !== 'points' ? '' : e.delta === 0 ? '—' : `${e.delta > 0 ? '+' : ''}${e.delta}`;
-      const cls = e.delta > 0 ? '' : e.delta < 0 ? ' feed__d--minus' : ' feed__d--zero';
+      let val = '';
+      if (e.kind === 'points') {
+        const cls = e.delta > 0 ? '' : e.delta < 0 ? ' feed__d--minus' : ' feed__d--zero';
+        val = `<span class="feed__d${cls}">${e.delta === 0 ? '—' : signed(e.delta)}</span>`;
+      } else if (e.kind === 'excused' && e.delta !== 0) {
+        // Сколько это стоило бы — зачёркнуто. Событие видно, но не в счёт
+        val = `<span class="feed__d feed__d--void"><s>${signed(e.delta)}</s></span>`;
+      }
       return `<div class="feed__i${KIND_CLASS[e.kind]}${isNew ? ' feed__i--new' : ''}">`
         + `<span class="feed__ic">${icon(e.icon)}</span>`
         + '<span class="feed__body">'
         + `<span class="feed__t">${esc(e.text)}${e.count > 1 ? ` <em>× ${e.count}</em>` : ''}</span>`
         + (e.detail ? `<span class="feed__sub">${esc(e.detail)}</span>` : '')
-        + '</span>'
-        + (val ? `<span class="feed__d${cls}">${val}</span>` : '')
-        + '</div>';
+        + '</span>' + val + '</div>';
     }).join('')
     + '</div></div>').join('');
 }
-
-const DAY_NAMES: Record<string, string> = {
-  'Пн': 'Понедельник', 'Вт': 'Вторник', 'Ср': 'Среда',
-  'Чт': 'Четверг', 'Пт': 'Пятница', 'Сб': 'Суббота', 'Вс': 'Воскресенье',
-};
-const dayName = (at: string): string => DAY_NAMES[at] ?? at;
 
 export function mentor(opts: { name: string; role: string; initial: string; note: string }): string {
   return '<div class="card"><p class="card__label">Твой наставник</p>'
@@ -301,7 +453,7 @@ export function checklist(opts: {
     + bar(Math.round((done / opts.items.length) * 100))
     + `<div class="bar-legend"><span class="num">${done} из ${opts.items.length}</span>`
     + `<span>${esc(opts.right)}</span></div><div class="check">`
-    + opts.items.map((i, idx) => `<button class="check__i${i.done ? ' done' : ''}" type="button" data-check="${idx}">`
+    + opts.items.map((i, idx) => `<button class="check__i${i.done ? ' done' : ''}" type="button" data-check="${idx}" aria-pressed="${i.done}">`
       + `<span class="check__box">${i.done ? icon('check', 3.5) : ''}</span>`
       + `<span>${esc(i.text)}</span></button>`).join('')
     + '</div></div>';

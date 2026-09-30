@@ -1,16 +1,32 @@
+import { adjacent } from './days';
+import { summarize } from './summary';
 import type {
   AccessState, BadgeRule, BadgeState, BucketId, CounterId, CourierEvent,
-  EvaluateContext, FeedEntry, LeagueRow, LevelState, Match, Nudge, RulesConfig, Snapshot,
+  EvaluateContext, FeedEntry, LeagueRow, LevelState, LoadState, Match, Nudge,
+  PointRule, Praise, RulesConfig, Snapshot,
 } from './types';
 
 /* ─────────────────────────── ХЕЛПЕРЫ ─────────────────────────── */
 
 /** Совпадает ли событие с образцом. Пустой образец совпадает со всем. */
-function matches(event: CourierEvent, on: string, match?: Match): boolean {
+export function matches(event: CourierEvent, on: string, match?: Match): boolean {
   if (event.type !== on) return false;
   if (!match) return true;
   const bag = event as unknown as Record<string, unknown>;
   return Object.keys(match).every((k) => bag[k] === match[k]);
+}
+
+/** Строка таблицы баллов, по которой считается событие. */
+export function pointRuleFor(event: CourierEvent, rules: RulesConfig): PointRule | undefined {
+  return rules.points.find((r) => matches(event, r.on, r.match));
+}
+
+/**
+ * Помечено «не по моей вине». Такое событие остаётся в журнале — его видно
+ * и в ленте, и в шторке обжалования, — но нигде не считается.
+ */
+export function isExcused(event: CourierEvent): boolean {
+  return (event as { excused?: string }).excused !== undefined;
 }
 
 function clampPct(done: number, need: number): number {
@@ -20,12 +36,14 @@ function clampPct(done: number, need: number): number {
 
 /* ─────────────────────────── СЧЁТЧИКИ ─────────────────────────── */
 
-function countAll(events: CourierEvent[], ctx: EvaluateContext): Record<CounterId, number> {
+function countAll(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Record<CounterId, number> {
   const c: Record<CounterId, number> = {
     missedSlots: 0, attendedSlots: 0, damageComplaints: 0, incidents: 0,
     lowRatings: 0, deliveries: 0, cleanDeliveries: 0, shifts: 0, cleanShifts: 0, qualifyingShifts: 0,
+    hours: 0, excused: 0, kudos: 0,
   };
   for (const e of events) {
+    if (isExcused(e)) { c.excused++; continue; }
     switch (e.type) {
       case 'slot_missed': if (!e.warnedAhead) c.missedSlots++; break;
       case 'slot_attended': c.attendedSlots++; break;
@@ -33,7 +51,8 @@ function countAll(events: CourierEvent[], ctx: EvaluateContext): Record<CounterI
       case 'incident': c.incidents++; break;
       case 'rating': if (e.stars < 4) c.lowRatings++; break;
       case 'delivery': c.deliveries++; if (e.clean) c.cleanDeliveries++; break;
-      case 'shift_closed': c.shifts++; if (e.clean) c.cleanShifts++; break;
+      case 'shift_closed': c.shifts++; if (e.clean) c.cleanShifts++; c.hours += e.hours ?? rules.load.shiftHours; break;
+      case 'kudos': c.kudos++; break;
     }
   }
   // qualifyingShifts — весь накопленный путь, cleanShifts — только текущий журнал
@@ -47,7 +66,8 @@ function scorePoints(events: CourierEvent[], rules: RulesConfig) {
   const buckets: Record<BucketId, number> = { ratings: 0, slots: 0, tare: 0, help: 0 };
 
   for (const e of events) {
-    const rule = rules.points.find((r) => matches(e, r.on, r.match));
+    if (isExcused(e)) continue;
+    const rule = pointRuleFor(e, rules);
     if (!rule) continue;
     buckets[rule.bucket] += rule.add;
   }
@@ -95,6 +115,8 @@ function badgeState(rule: BadgeRule, events: CourierEvent[], before = 0): BadgeS
   let wasReset = false;
 
   for (const e of events) {
+    // Неучтённая жалоба и знак не сбрасывает: раз не по вине курьера — значит, не по вине
+    if (isExcused(e)) continue;
     const resets = rule.resets?.some((r) => matches(e, r.on, r.match));
     if (resets) {
       if (done > 0 || earned) wasReset = true;
@@ -181,13 +203,64 @@ function access(
   };
 }
 
+/* ─────────────────────────── НАГРУЗКА ─────────────────────────── */
+
+/**
+ * Рабочие дни подряд к концу журнала. Рабочий день — тот, в котором была
+ * смена, доставка или выход на слот; день с одним «слот освобождён заранее»
+ * серию прерывает. Пропуск в календаре тоже прерывает: «Пн, Ср, Пт» — это
+ * не три дня подряд.
+ */
+function load(events: CourierEvent[], counters: Record<CounterId, number>, rules: RulesConfig, ctx: EvaluateContext): LoadState {
+  const days: string[] = [];
+  const worked = new Set<string>();
+  for (const e of events) {
+    if (!days.includes(e.at)) days.push(e.at);
+    if (e.type === 'shift_closed' || e.type === 'delivery' || e.type === 'slot_attended') worked.add(e.at);
+  }
+
+  let streak = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (!worked.has(days[i])) break;
+    if (i < days.length - 1 && !adjacent(days[i], days[i + 1])) break;
+    streak++;
+  }
+  // Серия тянется через весь журнал — значит, продолжает ту, что была до него
+  if (streak > 0 && streak === days.length) streak += ctx.workedInRowBefore ?? 0;
+
+  return {
+    hours: counters.hours,
+    maxHours: rules.load.maxWeekHours,
+    daysInRow: streak,
+    restAfterDays: rules.load.restAfterDays,
+    rest: streak >= rules.load.restAfterDays,
+  };
+}
+
+/* ─────────────────────────── ТЁПЛЫЕ СЛОВА ─────────────────────────── */
+
+function praise(events: CourierEvent[], rules: RulesConfig): Praise[] {
+  const counts = new Map<string, number>();
+  const inc = (id: string) => counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const e of events) {
+    if (e.type === 'rating' && e.compliment && !isExcused(e)) inc(e.compliment);
+    if (e.type === 'kudos') inc('kudos');
+  }
+  return [
+    ...rules.compliments.map((c) => ({ id: c.id, label: c.label, count: counts.get(c.id) ?? 0 })),
+    { id: 'kudos', label: 'Спасибо с точки', count: counts.get('kudos') ?? 0 },
+  ]
+    .filter((p) => p.count > 0)
+    .sort((a, b) => b.count - a.count);
+}
+
 /* ─────────────────────────── ГЛАВНОЕ ─────────────────────────── */
 
 /** Всё состояние курьера, кроме ленты. Лента строится поверх, отдельным проходом. */
-type Core = Omit<Snapshot, 'feed' | 'nudges'>;
+export type Core = Omit<Snapshot, 'feed' | 'nudges' | 'summary'>;
 
 function evaluateCore(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Core {
-  const counters = countAll(events, ctx);
+  const counters = countAll(events, rules, ctx);
   const { total, buckets } = scorePoints(events, rules);
   const level = levelOf(counters.qualifyingShifts, rules);
   const isRookie = ctx.dayNumber <= rules.rookieDays;
@@ -197,7 +270,8 @@ function evaluateCore(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateC
 
   const goalDone = events.filter((e) => matches(e, rules.goal.counts.on, rules.goal.counts.match)).length;
 
-  const stars = events.filter((e): e is Extract<CourierEvent, { type: 'rating' }> => e.type === 'rating');
+  // Неучтённые оценки в среднее не входят — иначе «не по твоей вине» было бы словами
+  const stars = events.filter((e): e is Extract<CourierEvent, { type: 'rating' }> => e.type === 'rating' && !isExcused(e));
   const rating = stars.length
     ? Math.round((stars.reduce((s, e) => s + e.stars, 0) / stars.length) * 100) / 100
     : null;
@@ -226,6 +300,8 @@ function evaluateCore(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateC
     },
     league: league(total, rules, ctx.courierName),
     access: access(total, counters, level, rules, ctx),
+    load: load(events, counters, rules, ctx),
+    praise: praise(events, rules),
     fixes,
     rating,
   };
@@ -239,6 +315,8 @@ const BUCKET_ICON: Record<BucketId, string> = {
 
 /** Название знака без разметки переноса. */
 const plainName = (s: string): string => s.replace(/<br>/g, ' ');
+
+const lowFirst = (s: string): string => s.charAt(0).toLowerCase() + s.slice(1);
 
 /**
  * Строит ленту, сравнивая состояние до и после каждого события.
@@ -259,12 +337,33 @@ function buildFeed(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateCont
     const e = events[i];
     const next = evaluateCore(events.slice(0, i + 1), rules, ctx);
 
-    const rule = rules.points.find((r) => matches(e, r.on, r.match));
-    if (rule) {
+    const rule = pointRuleFor(e, rules);
+    if (isExcused(e) && rule) {
+      // Событие на месте, но не в счёт — и видно, почему
+      const excuse = rules.excuses.find((x) => x.id === (e as { excused?: string }).excused);
+      // delta здесь — то, что стоило бы событие: лента показывает его зачёркнутым
+      out.push({
+        at: e.at, kind: 'excused', text: rule.label,
+        detail: `Не учтено — ${lowFirst(excuse?.label ?? 'не по твоей вине')}`,
+        delta: rule.add, count: 1, icon: 'shield',
+      });
+    } else if (e.type === 'kudos') {
+      out.push({
+        at: e.at, kind: 'kudos', text: `Спасибо от ${e.from}`, detail: `«${e.text}»`,
+        delta: 0, count: 1, icon: 'heart',
+      });
+    } else if (rule) {
       out.push({
         at: e.at, kind: 'points', text: rule.label, delta: rule.add,
         count: 1, icon: BUCKET_ICON[rule.bucket],
       });
+      if (e.type === 'rating' && e.compliment) {
+        const c = rules.compliments.find((x) => x.id === e.compliment);
+        out.push({
+          at: e.at, kind: 'kudos', text: `Комплимент: ${lowFirst(c?.label ?? e.compliment)}`,
+          detail: `От клиента, к оценке ${e.stars}`, delta: 0, count: 1, icon: 'heart',
+        });
+      }
     }
 
     for (const badge of next.badges) {
@@ -318,6 +417,15 @@ function buildFeed(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateCont
       });
     }
 
+    // Единственная веха, которая просит работать меньше
+    if (!prev.load.rest && next.load.rest) {
+      out.push({
+        at: e.at, kind: 'rest', text: `${next.load.daysInRow} дней подряд`,
+        detail: 'Пора выходной. Балл за него не снижается, слот можно освободить заранее.',
+        delta: 0, count: 1, icon: 'moon',
+      });
+    }
+
     prev = next;
   }
 
@@ -348,7 +456,7 @@ function buildNudges(core: Core, rules: RulesConfig): Nudge[] {
     const left = core.goal.target - core.goal.done;
     out.push({
       text: core.goal.title,
-      detail: `Осталось ${left} ${left === 1 ? 'смена' : left < 5 ? 'смены' : 'смен'} из ${core.goal.target}`,
+      detail: `${left === 1 ? 'Осталась' : 'Осталось'} ${left} ${left === 1 ? 'смена' : left < 5 ? 'смены' : 'смен'} из ${core.goal.target}`,
       icon: 'bag', pct: core.goal.pct,
     });
   }
@@ -357,7 +465,7 @@ function buildNudges(core: Core, rules: RulesConfig): Nudge[] {
   if (left > 0) {
     out.push({
       text: `Уровень «${core.level.current.name}»`,
-      detail: `Осталось ${left} ${left === 1 ? 'зачётная смена' : left < 5 ? 'зачётные смены' : 'зачётных смен'}`,
+      detail: `${left === 1 ? 'Осталась' : 'Осталось'} ${left} ${left === 1 ? 'зачётная смена' : left < 5 ? 'зачётные смены' : 'зачётных смен'}`,
       icon: 'trophy', pct: core.level.pct,
     });
   }
@@ -370,7 +478,7 @@ function buildNudges(core: Core, rules: RulesConfig): Nudge[] {
     const rest = closest.need - closest.done;
     out.push({
       text: `Знак «${plainName(closest.name)}»`,
-      detail: `Осталось ${rest} из ${closest.need}`,
+      detail: `${rest === 1 ? 'Остался' : 'Осталось'} ${rest} из ${closest.need}`,
       icon: closest.icon, pct: Math.round((closest.done / closest.need) * 100),
     });
   }
@@ -393,5 +501,7 @@ function buildNudges(core: Core, rules: RulesConfig): Nudge[] {
  */
 export function evaluate(events: CourierEvent[], rules: RulesConfig, ctx: EvaluateContext): Snapshot {
   const core = evaluateCore(events, rules, ctx);
-  return { ...core, feed: buildFeed(events, rules, ctx), nudges: buildNudges(core, rules) };
+  const feed = buildFeed(events, rules, ctx);
+  const nudges = buildNudges(core, rules);
+  return { ...core, feed, nudges, summary: summarize(core, feed, nudges, rules) };
 }

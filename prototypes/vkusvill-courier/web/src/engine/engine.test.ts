@@ -384,3 +384,178 @@ describe('ближайшие пороги', () => {
     expect(s.nudges.some((n) => n.text === s.goal.title)).toBe(false);
   });
 });
+
+describe('не по моей вине', () => {
+  // Три пятёрки, чтобы строка оценок не упёрлась в ноль и минус был виден
+  const base: CourierEvent[] = [
+    { type: 'shift_closed', at: 'Пн', clean: true },
+    { type: 'rating', at: 'Пн', stars: 5 },
+    { type: 'rating', at: 'Пн', stars: 5 },
+    { type: 'rating', at: 'Пн', stars: 5 },
+  ];
+
+  it('неучтённая оценка не входит ни в балл, ни в среднее, ни в счётчик низких', () => {
+    const counted = run([...base, { type: 'rating', at: 'Пн', stars: 1 }]);
+    const excused = run([...base, { type: 'rating', at: 'Пн', stars: 1, excused: 'store_delay' }]);
+    expect(counted.weekPoints).toBe(12 + 9 - 6);
+    expect(excused.weekPoints).toBe(12 + 9);
+    expect(counted.rating).toBe(4);
+    expect(excused.rating).toBe(5);
+    expect(counted.counters.lowRatings).toBe(1);
+    expect(excused.counters.lowRatings).toBe(0);
+    expect(excused.counters.excused).toBe(1);
+  });
+
+  it('неучтённая жалоба не сбрасывает знак и не считается жалобой', () => {
+    const events: CourierEvent[] = [
+      ...Array.from({ length: 5 }, () => ({ type: 'delivery', at: 'Пн', clean: true }) as CourierEvent),
+      { type: 'complaint', at: 'Пн', kind: 'damage', excused: 'incident' },
+    ];
+    const s = run(events, { badgesBefore: { care: 40 } });
+    expect(s.badges.find((b) => b.id === 'care')!.done).toBe(45);
+    expect(s.badges.find((b) => b.id === 'care')!.wasReset).toBe(false);
+    expect(s.counters.damageComplaints).toBe(0);
+    expect(s.fixes).toHaveLength(0);
+  });
+
+  it('неучтённый пропуск слота не считается пропуском — и доступ остаётся открытым', () => {
+    const good: CourierEvent[] = [
+      ...Array.from({ length: 5 }, (_, i) => ({ type: 'shift_closed', at: String(i), clean: true }) as CourierEvent),
+      ...Array.from({ length: 5 }, (_, i) => ({ type: 'slot_attended', at: String(i) }) as CourierEvent),
+      { type: 'slot_missed', at: '5', warnedAhead: false, excused: 'weather' },
+      { type: 'slot_missed', at: '6', warnedAhead: false, excused: 'weather' },
+    ];
+    const s = run(good, { shiftsBefore: 67 });
+    expect(s.counters.missedSlots).toBe(0);
+    expect(s.access.state).toBe('open');
+  });
+
+  it('в ленте событие остаётся — с причиной и зачёркнутой ценой', () => {
+    const s = run([...base, { type: 'complaint', at: 'Пн', kind: 'damage', excused: 'weather' }]);
+    const row = s.feed.find((f) => f.kind === 'excused')!;
+    expect(row.text).toBe('Жалоба на повреждение');
+    expect(row.detail).toContain('Не учтено');
+    expect(row.detail).toContain('погода');
+    expect(row.delta).toBe(-5);
+  });
+
+  it('у каждой причины есть подпись и способ подтверждения', () => {
+    for (const x of RULES.excuses) {
+      expect(x.label.length).toBeGreaterThan(3);
+      expect(x.proof.length).toBeGreaterThan(3);
+    }
+    expect(RULES.excuses.some((x) => x.auto)).toBe(true);
+    expect(RULES.excuses.some((x) => !x.auto)).toBe(true);
+  });
+});
+
+describe('спасибо и комплименты', () => {
+  it('спасибо не стоит баллов, но идёт в знак и в ленту с именем', () => {
+    const s = run([{ type: 'kudos', at: 'Вт', from: 'Марина К.', text: 'Выручил с тарой' }]);
+    expect(s.weekPoints).toBe(0);
+    expect(s.counters.kudos).toBe(1);
+    expect(s.badges.find((b) => b.id === 'thanks')!.done).toBe(1);
+    const row = s.feed.find((f) => f.kind === 'kudos')!;
+    expect(row.text).toBe('Спасибо от Марина К.');
+    expect(row.detail).toBe('«Выручил с тарой»');
+  });
+
+  it('комплимент — отдельная строка ленты рядом с оценкой, и он считается в тёплых словах', () => {
+    const s = run([
+      { type: 'rating', at: 'Пн', stars: 5, compliment: 'careful' },
+      { type: 'rating', at: 'Пн', stars: 5 },
+    ]);
+    expect(s.weekPoints).toBe(6);
+    expect(s.feed.filter((f) => f.kind === 'kudos')).toHaveLength(1);
+    expect(s.praise).toEqual([{ id: 'careful', label: 'Аккуратно с продуктами', count: 1 }]);
+  });
+
+  it('среди комплиментов нет «быстро»', () => {
+    expect(RULES.compliments.some((c) => /быстр/i.test(c.label))).toBe(false);
+  });
+
+  it('неучтённая оценка комплимент тоже не даёт', () => {
+    const s = run([{ type: 'rating', at: 'Пн', stars: 5, compliment: 'polite', excused: 'other' }]);
+    expect(s.praise).toEqual([]);
+  });
+});
+
+describe('нагрузка', () => {
+  const shift = (at: string, hours?: number): CourierEvent => ({ type: 'shift_closed', at, clean: true, hours });
+
+  it('часы складываются, а смена без указания часов берёт длину из правил', () => {
+    const s = run([shift('Пн', 9), shift('Вт')]);
+    expect(s.load.hours).toBe(9 + RULES.load.shiftHours);
+    expect(s.load.maxHours).toBe(60);
+  });
+
+  it('дни подряд считаются по календарю: Пн, Ср, Пт — это не серия', () => {
+    expect(run([shift('Пн'), shift('Вт'), shift('Ср')]).load.daysInRow).toBe(3);
+    expect(run([shift('Пн'), shift('Ср'), shift('Пт')]).load.daysInRow).toBe(1);
+  });
+
+  it('день с одним «слот освобождён заранее» серию обрывает', () => {
+    const s = run([shift('Пн'), shift('Вт'), { type: 'slot_missed', at: 'Ср', warnedAhead: true }]);
+    expect(s.load.daysInRow).toBe(0);
+  });
+
+  it('серия через весь журнал продолжает накопленную до него', () => {
+    const s = run([shift('Чт'), shift('Пт')], { workedInRowBefore: 4 });
+    expect(s.load.daysInRow).toBe(6);
+    expect(s.load.rest).toBe(true);
+  });
+
+  it('подсказка про выходной — веха ленты, и она появляется ровно один раз', () => {
+    const s = run(['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((d) => shift(d)));
+    const rest = s.feed.filter((f) => f.kind === 'rest');
+    expect(rest).toHaveLength(1);
+    expect(rest[0].at).toBe('Сб');
+  });
+
+  it('в сценариях подсказки нет: у всех была суббота', () => {
+    for (const sc of SCENARIOS) {
+      expect(evaluate(sc.events, RULES, sc.ctx).load.rest, sc.label).toBe(false);
+    }
+  });
+});
+
+describe('неделя словами', () => {
+  it('называет смены, доставки и оценку', () => {
+    const s = evaluate(scenarioById('steady').events, RULES, scenarioById('steady').ctx);
+    expect(s.summary).toContain('5 смен, 64 доставки, средняя оценка 4,97');
+    expect(s.summary).toContain('ранний выбор слотов открыт');
+  });
+
+  it('в просевшей неделе перечисляет, что не так, и говорит про инцидент', () => {
+    const s = evaluate(scenarioById('dip').events, RULES, scenarioById('dip').ctx);
+    expect(s.summary).toContain('2 пропуска без предупреждения');
+    expect(s.summary).toContain('3 жалобы на упаковку');
+    expect(s.summary).toContain('Инцидент баллов не отнял');
+  });
+
+  it('новичку напоминает, что его ни с кем не сравнивают', () => {
+    const s = evaluate(scenarioById('rookie').events, RULES, scenarioById('rookie').ctx);
+    expect(s.summary).toContain('ни с кем не сравнивают');
+  });
+
+  it('упоминает неучтённые события', () => {
+    const s = run([{ type: 'shift_closed', at: 'Пн', clean: true }, { type: 'rating', at: 'Пн', stars: 1, excused: 'weather' }]);
+    expect(s.summary).toContain('1 событие не учтено');
+  });
+
+  it('пустой журнал — честно пустой', () => {
+    expect(run([]).summary).toContain('ещё не было');
+  });
+});
+
+describe('правила как обязательство', () => {
+  it('у текущей версии есть дата и запись в истории изменений', () => {
+    expect(RULES.since.length).toBeGreaterThan(0);
+    expect(RULES.changes[0].version).toBe(RULES.version);
+    for (const c of RULES.changes) expect(c.date.length).toBeGreaterThan(0);
+  });
+
+  it('инцидент не попадает в «что подтянуть»', () => {
+    expect(run([{ type: 'incident', at: 'Пн' }]).fixes).toHaveLength(0);
+  });
+});

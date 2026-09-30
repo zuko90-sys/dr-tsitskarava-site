@@ -93,7 +93,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
   background:var(--surface);border:1px solid var(--line);
 }
 .profile{
-  padding:7px 15px;border-radius:100px;
+  min-height:34px;padding:7px 15px;border-radius:100px;
   font-size:12.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;
   transition:background .18s ease,color .18s ease;
 }
@@ -242,8 +242,10 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .level__meta{margin-left:auto;font-size:12px;font-weight:400;color:var(--ink-3);font-variant-numeric:tabular-nums}
 
 /* Знаки */
-.badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+/* Ряды по три; неполный последний ряд центрируется, а не висит слева */
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px}
 .badge{
+  flex:0 0 calc((100% - 16px) / 3);
   border:1px solid var(--line);border-radius:var(--r-md);padding:11px 8px;
   background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:7px;
   text-align:center;transition:transform .18s ease,border-color .18s ease;
@@ -311,7 +313,8 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .slot__d1{font-size:12.5px;font-weight:600}
 .slot__d2{font-size:11px;color:var(--ink-3)}
 .slot__time{flex:1;font-size:13.5px;font-variant-numeric:tabular-nums}
-.slot__pill{font-size:10.5px;font-weight:600;padding:4px 9px;border-radius:99px;white-space:nowrap;background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line)}
+/* Цель нажатия не меньше 34px: курьер жмёт большим пальцем на ходу */
+.slot__pill{font-size:11.5px;font-weight:600;min-height:34px;padding:6px 13px;border-radius:99px;white-space:nowrap;display:inline-flex;align-items:center;background:var(--green-soft);color:var(--green-deep);border:1px solid var(--green-line)}
 .slot__pill--muted{background:var(--surface-2);color:var(--ink-3);border-color:var(--line)}
 .slot.taken{opacity:.55}
 
@@ -350,7 +353,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .fix__i b{color:var(--ink);font-weight:600}
 .appeal{
   display:inline-flex;align-items:center;gap:7px;margin-top:14px;
-  padding:9px 14px;border-radius:100px;
+  min-height:38px;padding:9px 15px;border-radius:100px;
   border:1px solid var(--amber-line);background:var(--surface);
   font-size:12.5px;font-weight:600;color:var(--amber);
 }
@@ -358,7 +361,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 
 /* Таб-бар */
 .tabbar{flex:none;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;padding:9px 5px 15px;background:var(--surface);border-top:1px solid var(--line)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 1px;border-radius:12px;color:var(--ink-3);transition:color .18s ease,background .18s ease;min-width:0}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;padding:6px 1px;border-radius:12px;color:var(--ink-3);transition:color .18s ease,background .18s ease;min-width:0}
 .tab svg{width:19px;height:19px;stroke-width:1.7}
 .tab span{font-size:8.5px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
 .tab:hover{color:var(--ink-2)}
@@ -385,7 +388,7 @@ button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:p
 .sim__row{display:flex;flex-wrap:wrap;gap:6px}
 .ev{
   display:inline-flex;align-items:center;gap:6px;
-  padding:7px 11px;border-radius:100px;
+  min-height:36px;padding:7px 12px;border-radius:100px;
   border:1px solid var(--line);background:var(--surface-2);
   font-size:12px;font-weight:500;color:var(--ink-2);
   transition:border-color .15s ease,background .15s ease,transform .12s ease;
@@ -569,3 +572,92 @@ button.check__i:active .check__box{transform:scale(.92)}
   animation:toast-in .25s cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* ═══════════════════ Неделя словами, нагрузка, инцидент ═══════════════════ */
+.summary{font-size:13.5px;line-height:1.55;color:var(--ink-2);margin-top:8px}
+
+.steps{display:flex;flex-direction:column;gap:11px;margin-top:11px;padding:0;list-style:none}
+.steps__i{display:flex;gap:11px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.steps__i b{color:var(--ink);font-weight:600}
+.appeal--ok{border-color:var(--green-line);color:var(--green-deep)}
+.appeal svg{width:14px;height:14px;flex:none}
+
+/* Тёплые слова */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 11px;border-radius:99px;font-size:12px;font-weight:500;color:var(--ink-2);
+  background:var(--green-soft);border:1px solid var(--green-line);
+}
+.chip svg{width:13px;height:13px;color:var(--berry);flex:none}
+.chip b{color:var(--green-deep);font-weight:600}
+
+/* Ссылка на правила */
+.rules-link{
+  display:flex;gap:9px;align-items:center;width:100%;text-align:left;
+  font-size:12.5px;font-weight:600;line-height:1.35;color:var(--green-deep);
+  background:var(--surface);border:1px dashed var(--green-line);border-radius:var(--r-md);
+  padding:11px 13px;min-height:44px;cursor:pointer;transition:background .15s ease;
+}
+.rules-link:hover{background:var(--green-soft)}
+.rules-link svg{width:15px;height:15px;flex:none}
+
+/* Шторка правил */
+.rules{display:flex;flex-direction:column;gap:2px}
+.rules__h{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:8px 0 4px}
+.rules__row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink-2);padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.rules__row b{font-weight:600;color:var(--green-deep);white-space:nowrap}
+.rules__row b.minus{color:var(--amber)}
+.rules__who{font-size:11.5px;color:var(--ink-3) !important;font-weight:500 !important}
+.rules__change{display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.45;color:var(--ink-2);padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.rules__date{font-size:11.5px;color:var(--green-deep);font-weight:600}
+.rules__none{display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.rules__none span::before{content:"— "; color:var(--ink-3)}
+.rules .card__note{margin-top:8px}
+
+/* Шторка «не по моей вине» */
+.sheet:focus{outline:none}
+.dispute--open{flex-direction:column;align-items:stretch}
+.dispute--done{border-color:var(--green-line);background:var(--green-soft)}
+.dispute__state--ok{color:var(--green-deep)}
+.dispute__why{flex-basis:100%;font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.dispute__ask{font-size:12.5px;font-weight:600;margin-top:2px}
+.reasons{display:flex;flex-direction:column;gap:6px}
+.reason{
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;
+  padding:9px 12px;border-radius:12px;min-height:44px;
+  background:var(--surface);border:1px solid var(--line);
+  transition:border-color .15s ease,background .15s ease;
+}
+.reason:hover{border-color:var(--green-line);background:var(--green-soft)}
+.reason__t{font-size:13px;font-weight:600;color:var(--ink)}
+.reason__p{font-size:11.5px;color:var(--ink-3)}
+.dispute--open .ev--ghost{align-self:flex-start}
+
+/* Лента: не учтено и тёплые слова */
+.feed__i--void .feed__ic{background:var(--green-soft);color:var(--green-deep);border-color:var(--green-line)}
+.feed__i--void .feed__t{color:var(--ink-3)}
+.feed__d--void{color:var(--ink-3);font-weight:400}
+.feed__d--void s{text-decoration-thickness:1.5px}
+.feed__i--warm .feed__ic{background:var(--berry-soft);color:var(--berry);border-color:transparent}
+.feed__i--warm .feed__t{color:var(--ink);font-weight:600}
+
+/* Установка на экран «Домой» */
+.deck__row{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+.install{
+  display:inline-flex;align-items:center;gap:7px;min-height:38px;
+  padding:7px 15px;border-radius:100px;font-size:12.5px;font-weight:600;
+  background:var(--green);color:var(--on-green);
+  transition:transform .12s ease,background .15s ease;
+}
+.install:hover{background:var(--green-deep);color:var(--surface)}
+.install:active{transform:translateY(1px)}
+.install svg{width:15px;height:15px}
+@media (max-width:719px){
+  .deck__row{width:100%;gap:0;flex-direction:column}
+  .install{width:100%;border-radius:0;min-height:42px}
+}
+/* В установленном виде рамка телефона не нужна — приложение и так на весь экран */
+@media (display-mode:standalone){
+  .hint{display:none}
+}
