@@ -812,6 +812,8 @@
     gap:var(--sp-s);
     margin-block-end:var(--sp-l);
   }
+  /* Онлайн-запись (BigMed) — главный путь: карточка во всю ширину над мессенджерами */
+  .way--online{grid-column:1 / -1}
 
   .way{
     display:block;

@@ -24,6 +24,11 @@
   gtag('js', new Date());
   gtag('config', 'G-5049P7G63E', {'anonymize_ip': true});
 </script>
+<!-- Онлайн-запись BigMed (снипет от Devstudio, 30.09.2026): кнопки с data-bigmed-button открывают окно записи
+     к Софико; язык окна берётся из <html lang>. Ссылки-запасы в href работают, если скрипт не загрузился. -->
+<script src="https://widget.bigmed.ge/v1/widget.js" data-clinic="cwk_01kzpbtsap0b96hxnzstt1gfqq" async></script>
+<script>
+</script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -121,7 +126,7 @@
       <a href="o-mne.html">Обо мне</a>
       <span class="lang" role="group" aria-label="Язык страницы"><a href="/podhod.html" hreflang="ka" lang="ka">ქართული</a><a href="/ru/podhod.html" hreflang="ru" aria-current="true" lang="ru">Русский</a><a href="/en/podhod.html" hreflang="en" lang="en">English</a></span>
     </nav>
-    <a class="btn" href="index.html#book">Записаться</a>
+    <a class="btn" href="index.html#book" data-bigmed-button="emb_01m3rrf3hsp7s07agvqb213rqf" data-bigmed-doctor="533fe27c-fb22-43d3-b010-a4c19e59f066">Записаться</a>
   </div>
 </header>
 
@@ -196,7 +201,7 @@
         <li><b>Приём.</b> 60 минут: разбор жалоб, осмотр (очно), ответы на вопросы</li>
         <li><b>План.</b> Письменные рекомендации: лечение, питание, обследования. На связи для уточнений</li>
       </ol>
-      <p class="help-foot"><a class="textlink" href="index.html#book">Записаться на консультацию</a></p>
+      <p class="help-foot"><a class="textlink" href="index.html#book" data-bigmed-button="emb_01m3rrf3hsp7s07agvqb213rqf" data-bigmed-doctor="533fe27c-fb22-43d3-b010-a4c19e59f066">Записаться на консультацию</a></p>
     </div>
   </div>
 </section>
