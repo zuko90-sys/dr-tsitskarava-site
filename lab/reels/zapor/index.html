@@ -342,6 +342,10 @@ function splashAt(el,x,y,lt,t0){const p=P(lt,t0,.45);T(el,`translate(${x} ${y}) 
 const ART={
 /* 1. Телефон на унитазе: таймер летит к 20 минутам */
 phone:{
+  sfx:(()=>{const a=[[.2,'pop',.45],[.3,'pop',.35],[1,'steam',.5],[1.75,'steam',.5],[2.3,'swipe',.6]];
+    /* тик на каждую «минуту» таймера */
+    let prev=0;for(let lt=.35;lt<2.1;lt+=1/240){const m=Math.floor(P(lt,.35,1.75,E.inOut)*20);if(m>prev){a.push([lt,'tick',.3]);prev=m}}
+    return a})(),
   svg:()=>`${floor}
     <ellipse cx="364" cy="472" rx="130" ry="11" fill="${G}" opacity=".08"/>
     ${toilet(250)}
@@ -393,6 +397,8 @@ phone:{
 
 /* 2. Терпеть позыв: «Пора!» → «потом» → камешек твердеет */
 urge:{
+  sfx:[[.35,'pop',.5],[.7,'thud',.45],[.95,'pop',.5],[1.3,'thud',.5],[1.55,'pop',.5],[1.9,'thud',.55],[1.7,'steam',.4],
+    [2.35,'pop',.5],[2.7,'boing',.4],[3.05,'swipe',.5],[3.6,'pop',.45]],
   svg:()=>`${floor}
     <g class="clock"><circle cx="110" cy="110" r="56" fill="#fff" stroke="${G}" stroke-width="6"/>
       <line class="ch" x1="110" y1="110" x2="110" y2="80" stroke="${G}" stroke-width="7" stroke-linecap="round"/>
@@ -452,19 +458,24 @@ urge:{
   }
 },
 
-/* 3. Поза: колени выше таза — изгиб прямой кишки выпрямляется */
+/* 3. Поза: 90° «как на стуле» → 35° с подставкой; мышца-петля отпускает кишку */
 pose:{
+  sfx:[[.12,'pop',.45],[.55,'pop',.35],[.85,'steam',.5],[2.3,'swipe',.55],[2.5,'boing',.35],[2.95,'ding',.35],[3.74,'plop',.8]],
   svg:()=>`${floor}
     <defs><clipPath id="cl-inset"><circle cx="160" cy="236" r="112"/></clipPath></defs>
     <g class="inset">
-      <circle cx="160" cy="236" r="118" fill="#fff" stroke="${G}" stroke-width="6"/>
+      <circle class="ring" cx="160" cy="236" r="118" fill="#fff" stroke="${CORAL}" stroke-width="7"/>
       <g clip-path="url(#cl-inset)">
         <path class="ko" fill="none" stroke="${G}" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
         <path class="kp" fill="none" stroke="${PINK}" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
         <g class="kb"><rect x="-17" y="-13" width="34" height="26" rx="9" fill="#86573A" stroke="${G}" stroke-width="3.5"/>
           <circle cx="-6" cy="0" r="2.4" fill="#2B1A10"/><circle cx="6" cy="0" r="2.4" fill="#2B1A10"/></g>
+        <ellipse cx="74" cy="296" rx="24" ry="15" transform="rotate(-24 74 296)" fill="#F3E6C8" stroke="${G}" stroke-width="4"/>
+        <path class="so" fill="none" stroke="${G}" stroke-width="22" stroke-linecap="round"/>
+        <path class="sm" fill="none" stroke="#C0503C" stroke-width="12" stroke-linecap="round"/>
+        <path class="sl" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 10"/>
       </g>
-      <text x="160" y="388" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="27" fill="#4A5C55">изгиб прямой кишки</text>
+      <text class="lab" x="160" y="390" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="26" fill="#4A5C55">мышца пережимает кишку</text>
     </g>
     ${toilet(420)}${seat(420)}
     <g class="stool"><rect x="326" y="398" width="132" height="72" rx="10" fill="#D9A066" stroke="${G}" stroke-width="6"/>
@@ -481,45 +492,84 @@ pose:{
       </g>
       <path class="ao" stroke="${G}" stroke-width="40"/><path class="ap" stroke="${MINT}" stroke-width="28"/>
       <circle class="hand" r="15" fill="#F1C7A6" stroke="${G}" stroke-width="5"/>
+    </g>
+    <g class="ang">
+      <path class="aw" fill="${AMBER}" fill-opacity=".45" stroke="${AMBER}" stroke-width="4"/>
+      <path class="al" fill="none" stroke="${AMBER}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="badge">
+      <circle class="bc" r="30" fill="${CORAL}"/>
+      <path class="bx" d="M-10 -10 L10 10 M10 -10 L-10 10" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+      <path class="bv" d="M-13 1 L-4 10 L13 -9" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <text class="bt" x="46" y="18" font-family="Golos Text" font-weight="600" font-size="54" fill="${CORAL}">90°</text>
     </g>`,
   init(root){
     const q=s=>root.querySelector(s);
-    return {ko:q('.ko'),kp:q('.kp'),kb:q('.kb'),stool:q('.stool'),lo:q('.lo'),lp:q('.lp'),fo:q('.fo'),fp:q('.fp'),
+    return {ko:q('.ko'),kp:q('.kp'),kb:q('.kb'),so:q('.so'),sm:q('.sm'),sl:q('.sl'),ring:q('.ring'),lab:q('.lab'),
+      stool:q('.stool'),lo:q('.lo'),lp:q('.lp'),fo:q('.fo'),fp:q('.fp'),
       to:q('.to'),tp:q('.tp'),head:q('.head'),skin:q('.skin'),calm:q('.h-calm'),str:q('.h-strain'),sw:q('.h-sweat'),
-      ao:q('.ao'),ap:q('.ap'),hand:q('.hand'),man:q('.man'),inset:q('.inset')};
+      ao:q('.ao'),ap:q('.ap'),hand:q('.hand'),man:q('.man'),inset:q('.inset'),
+      ang:q('.ang'),aw:q('.aw'),al:q('.al'),badge:q('.badge'),bc:q('.bc'),bx:q('.bx'),bv:q('.bv'),bt:q('.bt')};
   },
   render(lt,R){
     const fix=lt>2.3,k=P(lt,2.45,.55,E.inOut);
-    /* позы: «как на стуле» → ноги на подставке, корпус вперёд */
-    const A={H:[540,312],S:[548,170],Hd:[548,108],K:[420,312],An:[418,446],Toe:[366,454],El:[504,246],Hn:[438,300]};
-    const B={H:[540,312],S:[494,180],Hd:[472,124],K:[424,258],An:[410,390],Toe:[358,396],El:[454,236],Hn:[428,258]};
+    const f=a=>a[0].toFixed(1)+' '+a[1].toFixed(1);
+    /* позы: корпус-бедро 90° «как на стуле» → 35°: ноги на подставке, корпус вперёд */
+    const A={H:[540,312],S:[540,170],Hd:[540,108],K:[420,312],An:[418,446],Toe:[366,454],El:[502,246],Hn:[438,300]};
+    const B={H:[540,312],S:[470,190],Hd:[439,136],K:[424,258],An:[410,390],Toe:[358,396],El:[452,238],Hn:[430,262]};
     const J={};for(const n in A)J[n]=pt(A[n],B[n],k);
-    const ln=(...p)=>'M'+p.map(a=>a[0].toFixed(1)+' '+a[1].toFixed(1)).join(' L');
+    const ln=(...p)=>'M'+p.map(f).join(' L');
     const breathe=!fix?Math.abs(Math.sin(lt*7))*3:0;
     J.S[1]+=breathe;J.Hd[1]+=breathe;
     const leg=ln(J.H,J.K,J.An),foot=ln(J.An,J.Toe),torso=ln(J.H,J.S),arm=ln(J.S,J.El,J.Hn);
     R.lo.setAttribute('d',leg);R.lp.setAttribute('d',leg);R.fo.setAttribute('d',foot);R.fp.setAttribute('d',foot);
     R.to.setAttribute('d',torso);R.tp.setAttribute('d',torso);R.ao.setAttribute('d',arm);R.ap.setAttribute('d',arm);
+    /* красный — неправильно, зелёный — правильно */
+    const shirt=mix('#FF8A6E',MINT,k);R.tp.setAttribute('stroke',shirt);R.ap.setAttribute('stroke',shirt);
     const shake=!fix&&lt>.8?2*Math.sin(lt*50):0;
-    T(R.head,`translate(${J.Hd[0]+shake} ${J.Hd[1]}) rotate(${lerp(0,-12,k)})`);T(R.hand,`translate(${J.Hn[0]} ${J.Hn[1]})`);
+    T(R.head,`translate(${J.Hd[0]+shake} ${J.Hd[1]}) rotate(${lerp(0,-12,k)})`);T(R.hand,`translate(${f(J.Hn)})`);
     const strain=!fix&&lt>.8;
     R.skin.setAttribute('fill',strain?mix('#F1C7A6','#F2917F',P(lt,.8,.5)):mix('#F2917F','#F1C7A6',P(lt,2.3,.4)));
     O(R.calm,strain?0:1);O(R.str,strain?1:0);O(R.sw,strain?1-((lt*1.4)%1):0);
     const pm=P(lt,.05,.45);T(R.man,`translate(0 ${(1-pm)*40})`);O(R.man,pm);
     const ps=P(lt,2.3,.35,E.back);T(R.stool,`translate(${(1-ps)*-260} 0)`);O(R.stool,ps>0?1:0);
-    /* врезка: изгиб кишки */
+    /* угол между корпусом и бедром: жёлтые лучи + сектор; число считается по позе */
+    const u=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy);return [dx/l,dy/l]};
+    const ut=u(J.H,J.S),uh=u(J.H,J.K),r=58,ray=104;
+    const at=(v,d)=>[J.H[0]+v[0]*d,J.H[1]+v[1]*d];
+    R.aw.setAttribute('d',`M${f(J.H)} L${f(at(uh,r))} A${r} ${r} 0 0 1 ${f(at(ut,r))} Z`);
+    R.al.setAttribute('d',`M${f(at(uh,ray))} L${f(J.H)} L${f(at(ut,ray))}`);
+    const pa=P(lt,.5,.35);O(R.ang,pa);
+    const deg=Math.round(Math.acos(clamp(ut[0]*uh[0]+ut[1]*uh[1],-1,1))*180/Math.PI/5)*5;
+    const txt=deg+'°';if(R.bt.textContent!==txt)R.bt.textContent=txt;
+    const good=k>.92,col=good?G:CORAL;
+    R.bc.setAttribute('fill',col);R.bt.setAttribute('fill',col);O(R.bx,good?0:1);O(R.bv,good?1:0);
+    const kk=lt-2.95,pop=kk>0?1+.18*Math.exp(-kk*6)*Math.sin(kk*22):1;
+    const pb=P(lt,.55,.35,E.back);T(R.badge,`translate(300 58) scale(${pb*pop})`);O(R.badge,pb>0?1:0);
+    /* врезка: мышца-петля тянет кишку к лобковой кости → отпускает */
     const pi=P(lt,.1,.45,E.back);T(R.inset,`translate(160 236) scale(${pi}) translate(-160 -236)`);
-    const P0=[176,100],P1=[170,232],P2=pt([90,290],[148,384],k);
+    R.ring.setAttribute('stroke',mix(CORAL,G,k));
+    const P0=[164,100],P1=[158,230],P2=pt([246,292],[178,388],k);
     const d=ln(P0,P1,P2);R.ko.setAttribute('d',d);R.kp.setAttribute('d',d);
+    const SA=[[80,292],[120,290],[214,268],[194,222],[184,200],[142,206],[140,232]];
+    const SB=[[80,292],[120,322],[218,350],[200,312],[194,286],[156,284],[152,306]];
+    const tight=!fix?1.5*Math.sin(lt*20):0;
+    const sp=SA.map((a,i)=>pt(a,SB[i],k));sp[3][0]+=tight;sp[4][0]+=tight;
+    const sd=`M${f(sp[0])} C${f(sp[1])} ${f(sp[2])} ${f(sp[3])} C${f(sp[4])} ${f(sp[5])} ${f(sp[6])}`;
+    R.so.setAttribute('d',sd);R.sm.setAttribute('d',sd);R.sl.setAttribute('d',sd);
+    const lab=k>.5?'мышца отпускает кишку':'мышца пережимает кишку';if(R.lab.textContent!==lab)R.lab.textContent=lab;
     /* камешек: упирается в изгиб → проскальзывает дальше */
-    let b=pt(P0,P1,.82);const go=P(lt,3,.8,E.in3);
-    if(go>0)b=pt(P1,P2,go*1.25);
+    let b=pt(P0,P1,.6);const go=P(lt,3,.8,E.in3);
+    if(go>0&&go<.3)b=pt(pt(P0,P1,.6),P1,go/.3);
+    if(go>=.3)b=pt(P1,P2,(go-.3)*1.8);
     T(R.kb,`translate(${b[0].toFixed(1)} ${(b[1]+(strain?1.5*Math.sin(lt*47):0)).toFixed(1)})`);
   }
 },
 
 /* 4. Вода литрами не помогает → клетчатка размягчает и камешек выходит */
 water:{
+  sfx:[[.37,'pop',.5],...Array.from({length:8},(_,i)=>[.5+i*.19,'glug',.45]),[1.15,'steam',.45],
+    ...Array.from({length:4},(_,i)=>[2.36+i*.14,'pop',.4]),[2.9,'boing',.35],[3.02,'pop',.4],[3.98,'plop',.9]],
   svg:()=>`${floor}
     <defs><clipPath id="cl-bot"><rect x="86" y="186" width="98" height="248" rx="26"/></clipPath>
       <clipPath id="cl-gauge"><rect x="740" y="120" width="56" height="320" rx="28"/></clipPath></defs>
@@ -584,6 +634,8 @@ water:{
 
 /* 5. «Кишечник разленится»: отказ от слабительного → врач ищет причину */
 lazy:{
+  sfx:[[.25,'boing',.45],[.72,'swipe',.22],[.95,'buzz',.45],[1.12,'swipe',.22],[1.42,'thud',.45],[1.7,'steam',.45],
+    [2.4,'swipe',.5],[2.45,'boing',.4],[2.8,'pen',.5],[3.02,'pen',.5],[3.24,'pen',.5]],
   svg:()=>`${floor}
     <rect x="150" y="248" width="360" height="120" rx="34" fill="#BFE6D2" stroke="${G}" stroke-width="7"/>
     <rect x="96" y="300" width="64" height="150" rx="28" fill="#9FD8BF" stroke="${G}" stroke-width="7"/>
@@ -646,7 +698,7 @@ const MISTAKES=[
    why:'Если терпеть, позыв слабеет, а&nbsp;стул твердеет. Лучшее время&nbsp;— после завтрака'},
   {art:'pose', quote:'«Сижу на&nbsp;унитазе, как на&nbsp;стуле»',
    rule:'Ноги на&nbsp;подставку, колени выше таза',
-   why:'Корпус чуть вперёд: изгиб прямой кишки выпрямляется, и&nbsp;тужиться приходится меньше'},
+   why:'Корпус чуть вперёд: мышца-петля отпускает кишку, она выпрямляется, и&nbsp;тужиться приходится меньше'},
   {art:'water', quote:'«Пью по&nbsp;3&nbsp;литра воды&nbsp;— должно помочь»',
    rule:'Работает клетчатка, а&nbsp;не&nbsp;литры воды',
    why:'Лишняя вода уйдёт с&nbsp;мочой. Клетчатку добавляйте постепенно, иначе вздует'},
@@ -666,7 +718,7 @@ const SC=[];
   q('.hk-art .mw').innerHTML=gut();
   const H={five:q('.hk-five'),word:split(q('.hk-word')),sub:split(q('.hk-sub')),mw:q('.hk-art .mw'),
     m:mRefs(q('.hk-art')),name:q('.hk-name'),bub:bubbles(q('.bg'),{n:16,seed:3,op:.13})};
-  SC.push({el,dur:D_HOOK,fn(lt){
+  SC.push({el,dur:D_HOOK,sfx:[[.1,'stamp',.9],[.42,'boing',.55],[.75,'steam',.55],[1.6,'steam',.45],[2.5,'steam',.45]],fn(lt){
     H.bub(lt);
     const p5=P(lt,0,.42,E.out4);
     css(H.five,{s:lerp(2.4,1,p5)*(1+.035*Math.sin(Math.max(0,lt-.6)*6)),r:lerp(-14,0,p5),o:lt/.08});
@@ -698,7 +750,8 @@ MISTAKES.forEach((M,idx)=>{
   const S={shake:q('.shake'),quote:q('.quote'),qW:split(q('.quote')),stamp:q('.stamp'),card:q('.card'),
     head:q('.card-head'),chk:q('.chk'),rW:split(q('.rule')),wW:split(q('.why')),artR:art.init(q('.art')),
     bub:bubbles(q('.bg'),{n:10,seed:20+idx,color:MINT,op:.22})};
-  SC.push({el,dur:D_M,mistake:idx,fn(lt){
+  SC.push({el,dur:D_M,mistake:idx,
+    sfx:[[1.45,'stamp',1],[2.3,'pen',.45],[2.36,'ding',.6],...(art.sfx||[])],fn(lt){
     S.bub(lt);
     let sx=0,sy=0,sr=0;
     if(lt>1.45){const k=lt-1.45,a=Math.exp(-k*9);sx=16*a*Math.sin(k*70);sy=10*a*Math.cos(k*55);sr=.6*a*Math.sin(k*60)}
@@ -728,7 +781,7 @@ MISTAKES.forEach((M,idx)=>{
     hg.append(p);hearts.push({p,ph:r(),x:(r()-.5)*260,s:1.2+r()*1.4})}
   const C={mw:q('.cta-art .mw'),m:mRefs(q('.cta-art')),text:split(q('.cta-text')),
     card:q('.cta-card'),note:q('.cta-note'),bub:bubbles(q('.bg'),{n:16,seed:7,op:.13})};
-  SC.push({el,dur:D_CTA,fn(lt){
+  SC.push({el,dur:D_CTA,sfx:[[.12,'boing',.5],[.4,'chime',.55],[1.25,'pop',.45]],fn(lt){
     C.bub(lt);
     const pm=P(lt,.1,.55,E.back);
     T(C.mw,`translate(114 288) scale(${pm}) translate(-114 -288)`);O(C.mw,pm>0?1:0);
@@ -745,6 +798,9 @@ MISTAKES.forEach((M,idx)=>{
 
 let acc=0;for(const s of SC){s.start=acc;acc+=s.dur}
 const TOTAL=acc;
+/* звуки: [время, звук, громкость] — их синтезирует ../sfx.js при рендере */
+const SFX=[];
+for(const s of SC){if(s.start>0)SFX.push([s.start-.3,'whoosh',.5]);for(const [lt,n,g] of s.sfx||[])SFX.push([s.start+lt,n,g])}
 const topbar=document.getElementById('topbar'),segs=[...topbar.querySelectorAll('.segs b')],cnt=topbar.querySelector('.tb-cnt');
 const wipe=document.getElementById('wipe');
 
@@ -770,7 +826,7 @@ const fontsReady=Promise.all([
   document.fonts.load('400 40px "Golos Text"','Ая'),document.fonts.load('500 40px "Golos Text"','Ая'),
   document.fonts.load('600 40px "Golos Text"','Ая'),document.fonts.load('600 40px Piazzolla','Ая'),
   document.fonts.load('500 40px Piazzolla','Ая'),document.fonts.load('italic 400 40px Piazzolla','Ая')]).then(()=>document.fonts.ready);
-window.reel={duration:TOTAL,render,ready:fontsReady,scenes:SC.map(s=>({id:s.el.id,start:s.start,dur:s.dur}))};
+window.reel={duration:TOTAL,render,ready:fontsReady,sfx:SFX,scenes:SC.map(s=>({id:s.el.id,start:s.start,dur:s.dur}))};
 
 const frame=document.getElementById('frame');
 if(capture){document.body.classList.add('capture');render(0)}

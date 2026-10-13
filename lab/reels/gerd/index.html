@@ -170,7 +170,7 @@ svg{overflow:visible}
 /* ═══════════════════════════════════════════════════════════════
    Каждый кадр — чистая функция времени render(t): ни CSS-анимаций,
    ни таймеров. Поэтому предпросмотр в браузере и покадровый рендер
-   в MP4 (render.js) дают одну и ту же картинку.
+   в MP4 (../render.js gerd) дают одну и ту же картинку.
    ═══════════════════════════════════════════════════════════════ */
 const NS='http://www.w3.org/2000/svg';
 const G='#0D5240', CORAL='#FF5A36', AMBER='#FFB020', PINK='#F5A99F', MINT='#7FD1AE';
@@ -303,6 +303,8 @@ const flagIcon=`<svg viewBox="0 0 34 40"><path d="M5 38 V4" stroke="${G}" stroke
 const ART={
 /* 1. Сода: шипит, «бурп», натрий — и изжога возвращается */
 soda:{
+  sfx:[[.08,'pop',.45],[.3,'swipe',.35],[.65,'fizz',.45],[1,'burp',.9],[1.22,'pop',.35],[1.34,'pop',.35],[1.46,'pop',.35],
+    [1.72,'fire',.55],[2.6,'boing',.4]],
   svg:()=>`
     <defs><clipPath id="cl-glass"><path d="M211 116 L389 116 L371 448 Q370 464 354 464 L246 464 Q230 464 229 448 Z"/></clipPath></defs>
     <ellipse cx="300" cy="482" rx="132" ry="13" fill="${G}" opacity=".08"/>
@@ -382,6 +384,7 @@ soda:{
 
 /* 2. ИПП «когда прижмёт»: будильник звенит, таблетка не успевает */
 ppi:{
+  sfx:[[.08,'pop',.45],[.3,'ring',.3],[2.47,'swipe',.5],[2.8,'swipe',.3],[3,'pop',.45]],
   svg:()=>{
     let ticks='';
     for(let i=0;i<12;i++){const a=i*Math.PI/6,big=i%3===0,r1=big?112:122,r2=134;
@@ -459,6 +462,8 @@ ppi:{
 
 /* 3. Диета «ничего нельзя»: крестики на всём → остаётся только ваш триггер */
 diet:{
+  sfx:[...Array.from({length:6},(_,i)=>[.1+i*.06,'pop',.22]),...Array.from({length:6},(_,i)=>[.53+i*.14,'thud',.4]),
+    ...Array.from({length:5},(_,i)=>[2.45+i*.09,'pop',.3]),[2.88,'boing',.45]],
   svg:()=>{
     const icons=[
       /* лимон */ `<path d="M-58 4 C-50 -40 30 -52 58 -8 C50 36 -30 48 -58 4 Z" fill="#FFD447" stroke="${G}" stroke-width="6" stroke-linejoin="round"/><path d="M-62 6 L-70 8 M62 -10 L70 -12" stroke="${G}" stroke-width="6" stroke-linecap="round"/><path d="M-30 -10 Q-18 -26 4 -28" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".7"/><path d="M22 -36 C32 -60 56 -62 66 -56 C56 -40 40 -32 22 -36 Z" fill="${MINT}" stroke="${G}" stroke-width="5" stroke-linejoin="round"/>`,
@@ -495,6 +500,7 @@ diet:{
 
 /* 4. Сразу в кровать: лёжа кислота течёт в пищевод → поднимаем изголовье */
 bed:{
+  sfx:[[.08,'pop',.4],[.75,'fire',.55],[2.3,'swipe',.5],[2.85,'pop',.45]],
   svg:()=>`
     <path d="M118 30 A46 46 0 1 0 172 104 A38 38 0 1 1 118 30 Z" fill="#FFD25A" stroke="${G}" stroke-width="5" stroke-linejoin="round"/>
     <g class="stars" fill="${AMBER}">${[[250,56],[340,118],[470,40],[600,96]].map(([x,y])=>`<path transform="translate(${x} ${y})" d="M0 -14 Q2 -2 14 0 Q2 2 0 14 Q-2 2 -14 0 Q-2 -2 0 -14 Z"/>`).join('')}</g>
@@ -535,6 +541,7 @@ bed:{
 
 /* 5. «Терплю годами»: календарь листается → тревожные признаки */
 flags:{
+  sfx:[[.12,'pop',.4],...Array.from({length:8},(_,i)=>[.3+i*.14,'tick',.4]),...Array.from({length:5},(_,i)=>[2.46+i*.12,'pop',.4])],
   svg:()=>`
     <ellipse cx="250" cy="452" rx="140" ry="13" fill="${G}" opacity=".08"/>
     <g class="cal">
@@ -607,7 +614,7 @@ const SC=[];
   const r=rng(5),embers=[...emb.children].map(c=>({c,ph:r(),dx:(r()-.5)*40,rad:3+r()*5}));
   const H={chip:q('.hk-chip'),five:q('.hk-five'),word:split(q('.hk-word')),sub:split(q('.hk-sub')),mw:q('.hk-art .mw'),
     m:mRefs(q('.hk-art')),name:q('.hk-name'),bub:bubbles(q('.bg'),{n:16,seed:3,op:.13})};
-  SC.push({el,dur:D_HOOK,fn(lt){
+  SC.push({el,dur:D_HOOK,sfx:[[.1,'stamp',.9],[.42,'boing',.55],[.55,'fire',.6]],fn(lt){
     H.bub(lt);
     css(H.chip,{y:lerp(-30,0,P(lt,.05,.4)),o:P(lt,.05,.3)});
     const p5=P(lt,0,.42,E.out4);
@@ -643,7 +650,8 @@ MISTAKES.forEach((M,idx)=>{
   const S={shake:q('.shake'),quote:q('.quote'),qW:split(q('.quote')),stamp:q('.stamp'),card:q('.card'),
     head:q('.card-head'),chk:q('.chk'),rW:split(q('.rule')),wW:split(q('.why')),artR:art.init(q('.art')),
     bub:bubbles(q('.bg'),{n:10,seed:20+idx,color:MINT,op:.22})};
-  SC.push({el,dur:D_M,mistake:idx,fn(lt){
+  SC.push({el,dur:D_M,mistake:idx,
+    sfx:[[1.45,'stamp',1],[2.3,'pen',.45],[2.36,'ding',.6],...(art.sfx||[])],fn(lt){
     S.bub(lt);
     let sx=0,sy=0,sr=0;
     if(lt>1.45){const k=lt-1.45,a=Math.exp(-k*9);sx=16*a*Math.sin(k*70);sy=10*a*Math.cos(k*55);sr=.6*a*Math.sin(k*60)}
@@ -673,7 +681,7 @@ MISTAKES.forEach((M,idx)=>{
     hg.append(p);hearts.push({p,ph:r(),x:(r()-.5)*260,s:1.2+r()*1.4})}
   const C={mw:q('.cta-art .mw'),m:mRefs(q('.cta-art')),
     text:split(q('.cta-text')),card:q('.cta-card'),note:q('.cta-note'),bub:bubbles(q('.bg'),{n:16,seed:7,op:.13})};
-  SC.push({el,dur:D_CTA,fn(lt){
+  SC.push({el,dur:D_CTA,sfx:[[.12,'boing',.5],[.4,'chime',.55],[1.25,'pop',.45]],fn(lt){
     C.bub(lt);
     const pm=P(lt,.1,.55,E.back);
     T(C.mw,`translate(110 200) scale(${pm}) translate(-110 -200)`);O(C.mw,pm>0?1:0);
@@ -690,6 +698,9 @@ MISTAKES.forEach((M,idx)=>{
 
 let acc=0;for(const s of SC){s.start=acc;acc+=s.dur}
 const TOTAL=acc;
+/* звуки: [время, звук, громкость] — их синтезирует ../sfx.js при рендере */
+const SFX=[];
+for(const s of SC){if(s.start>0)SFX.push([s.start-.3,'whoosh',.5]);for(const [lt,n,g] of s.sfx||[])SFX.push([s.start+lt,n,g])}
 const topbar=document.getElementById('topbar'),segs=[...topbar.querySelectorAll('.segs b')],cnt=topbar.querySelector('.tb-cnt');
 const wipe=document.getElementById('wipe');
 
@@ -715,7 +726,7 @@ const fontsReady=Promise.all([
   document.fonts.load('400 40px "Golos Text"','Ая'),document.fonts.load('600 40px "Golos Text"','Ая'),
   document.fonts.load('600 40px Piazzolla','Ая'),document.fonts.load('500 40px Piazzolla','Ая'),
   document.fonts.load('italic 400 40px Piazzolla','Ая')]).then(()=>document.fonts.ready);
-window.reel={duration:TOTAL,render,ready:fontsReady,scenes:SC.map(s=>({id:s.el.id,start:s.start,dur:s.dur}))};
+window.reel={duration:TOTAL,render,ready:fontsReady,sfx:SFX,scenes:SC.map(s=>({id:s.el.id,start:s.start,dur:s.dur}))};
 
 const frame=document.getElementById('frame');
 if(capture){document.body.classList.add('capture');render(0)}

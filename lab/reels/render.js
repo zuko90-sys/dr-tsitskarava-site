@@ -1,8 +1,9 @@
-/* Рендер рилса в MP4 (1080×1920, 30 к/с, H.264 + тихая дорожка AAC).
+/* Рендер рилса в MP4 (1080×1920, 30 к/с, H.264 + звуки AAC из sfx.js).
  * Первый аргумент — папка рилса в lab/reels/ (gerd, zapor, …).
  *
  *   NODE_PATH=$(npm root -g) node lab/reels/render.js zapor
  *   NODE_PATH=$(npm root -g) node lab/reels/render.js zapor --shots 1.2,9.5,40   # только кадры в PNG
+ *   NODE_PATH=$(npm root -g) node lab/reels/render.js zapor --remux             # только пересобрать звук
  *
  * Нужны playwright (Chromium) и ffmpeg. Страница сама считает каждый кадр
  * по времени (window.reel.render), поэтому видео идёт ровно, без рывков. */
@@ -10,7 +11,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const os = require('os');
 const { chromium } = require('playwright');
+const { synth } = require('./sfx');
 
 const ROOT = path.resolve(__dirname, '../..');
 const REEL = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'gerd';
@@ -43,22 +46,35 @@ function serve() {
   await page.evaluate(() => window.reel.ready);
   const duration = await page.evaluate(() => window.reel.duration);
 
+  /* звуки: события со страницы → WAV */
+  const events = await page.evaluate(() => window.reel.sfx || []);
+  const wav = path.join(os.tmpdir(), `${REEL}-sfx.wav`);
+  fs.writeFileSync(wav, synth(events, duration));
+  const out = path.join(OUT_DIR, arg('--out') || `${REEL}-reel.mp4`);
+  const run = (args) => new Promise((ok, fail) => spawn('ffmpeg', args, { stdio: 'inherit' })
+    .on('close', (c) => (c ? fail(new Error('ffmpeg ' + c)) : ok())));
+
   const shots = arg('--shots');
-  if (shots) {
+  if (process.argv.includes('--remux')) {
+    const tmp = out.replace(/\.mp4$/, '.tmp.mp4');
+    await run(['-y', '-loglevel', 'error', '-i', out, '-i', wav, '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+      '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', tmp]);
+    fs.renameSync(tmp, out);
+    console.log(`звук обновлён: ${out} (${events.length} событий)`);
+  } else if (shots) {
     const dir = arg('--dir') || OUT_DIR;
     for (const t of shots.split(',').map(Number)) {
       await page.evaluate((t) => window.reel.render(t), t);
       await page.screenshot({ path: path.join(dir, `shot-${t.toFixed(2)}.png`) });
     }
   } else {
-    const out = path.join(OUT_DIR, arg('--out') || `${REEL}-reel.mp4`);
     const frames = Math.round(duration * FPS);
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error',
       '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
-      '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
+      '-i', wav,
       '-map', '0:v', '-map', '1:a', '-shortest',
       '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
+      '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
     const done = new Promise((ok, fail) => ff.on('close', (c) => (c ? fail(new Error('ffmpeg ' + c)) : ok())));
     for (let i = 0; i < frames; i++) {
       await page.evaluate((t) => window.reel.render(t), i / FPS);
