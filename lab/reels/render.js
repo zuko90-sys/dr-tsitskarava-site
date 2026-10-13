@@ -1,7 +1,8 @@
 /* Рендер рилса в MP4 (1080×1920, 30 к/с, H.264 + тихая дорожка AAC).
+ * Первый аргумент — папка рилса в lab/reels/ (gerd, zapor, …).
  *
- *   NODE_PATH=$(npm root -g) node lab/reels/gerd/render.js
- *   NODE_PATH=$(npm root -g) node lab/reels/gerd/render.js --shots 1.2,9.5,40   # только кадры в PNG
+ *   NODE_PATH=$(npm root -g) node lab/reels/render.js zapor
+ *   NODE_PATH=$(npm root -g) node lab/reels/render.js zapor --shots 1.2,9.5,40   # только кадры в PNG
  *
  * Нужны playwright (Chromium) и ffmpeg. Страница сама считает каждый кадр
  * по времени (window.reel.render), поэтому видео идёт ровно, без рывков. */
@@ -11,8 +12,9 @@ const path = require('path');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 
-const ROOT = path.resolve(__dirname, '../../..');
-const OUT_DIR = __dirname;
+const ROOT = path.resolve(__dirname, '../..');
+const REEL = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'gerd';
+const OUT_DIR = path.join(__dirname, REEL);
 const FPS = 30;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg' };
@@ -37,7 +39,7 @@ function serve() {
   const srv = await serve();
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
-  await page.goto(`http://127.0.0.1:${srv.address().port}/lab/reels/gerd/?capture`);
+  await page.goto(`http://127.0.0.1:${srv.address().port}/lab/reels/${REEL}/?capture`);
   await page.evaluate(() => window.reel.ready);
   const duration = await page.evaluate(() => window.reel.duration);
 
@@ -49,7 +51,7 @@ function serve() {
       await page.screenshot({ path: path.join(dir, `shot-${t.toFixed(2)}.png`) });
     }
   } else {
-    const out = path.join(OUT_DIR, arg('--out') || 'gerd-reel.mp4');
+    const out = path.join(OUT_DIR, arg('--out') || `${REEL}-reel.mp4`);
     const frames = Math.round(duration * FPS);
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error',
       '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
