@@ -67,8 +67,6 @@ svg{overflow:visible}
   background:linear-gradient(var(--coral) 0 120px,var(--amber) 120px 150px,var(--green-d) 150px)}
 
 /* ── хук ── */
-.hk-chip{left:80px;top:250px;padding:12px 26px;border:3px solid rgba(127,209,174,.55);border-radius:999px;
-  font:600 30px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mint)}
 .hk-title{left:66px;top:318px;display:flex;align-items:baseline;gap:30px;white-space:nowrap}
 .hk-five{font:600 330px/.8 var(--serif);color:var(--coral);display:inline-block;transform-origin:50% 70%}
 .hk-word{font:500 172px/1 var(--serif);color:var(--paper)}
@@ -113,7 +111,6 @@ svg{overflow:visible}
     <!-- 0. Хук -->
     <section class="scene dark" id="hook">
       <svg class="bg"></svg>
-      <div class="hk-chip abs">Запор · кишечник</div>
       <div class="hk-title abs"><span class="hk-five">5</span><span class="hk-word">ошибок,</span></div>
       <p class="hk-sub abs">из&#8209;за&nbsp;которых <em>запор</em> никак не&nbsp;проходит</p>
       <svg class="hk-art abs" viewBox="-20 -50 270 350" width="470" height="609">
@@ -667,11 +664,10 @@ const SC=[];
 (()=>{
   const el=document.getElementById('hook'),q=s=>el.querySelector(s);
   q('.hk-art .mw').innerHTML=gut();
-  const H={chip:q('.hk-chip'),five:q('.hk-five'),word:split(q('.hk-word')),sub:split(q('.hk-sub')),mw:q('.hk-art .mw'),
+  const H={five:q('.hk-five'),word:split(q('.hk-word')),sub:split(q('.hk-sub')),mw:q('.hk-art .mw'),
     m:mRefs(q('.hk-art')),name:q('.hk-name'),bub:bubbles(q('.bg'),{n:16,seed:3,op:.13})};
   SC.push({el,dur:D_HOOK,fn(lt){
     H.bub(lt);
-    css(H.chip,{y:lerp(-30,0,P(lt,.05,.4)),o:P(lt,.05,.3)});
     const p5=P(lt,0,.42,E.out4);
     css(H.five,{s:lerp(2.4,1,p5)*(1+.035*Math.sin(Math.max(0,lt-.6)*6)),r:lerp(-14,0,p5),o:lt/.08});
     reveal(H.word,lt,.14,.05,.4,{dx:80,dy:0});
