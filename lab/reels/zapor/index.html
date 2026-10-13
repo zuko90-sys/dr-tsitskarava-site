@@ -466,13 +466,18 @@ pose:{
     <g class="inset">
       <circle class="ring" cx="160" cy="236" r="118" fill="#fff" stroke="${CORAL}" stroke-width="7"/>
       <g clip-path="url(#cl-inset)">
-        <path class="ko" fill="none" stroke="${G}" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="kp" fill="none" stroke="${PINK}" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M262 112 Q270 222 226 298" fill="none" stroke="${G}" stroke-width="34" stroke-linecap="round"/>
+        <path d="M262 112 Q270 222 226 298" fill="none" stroke="#F3E6C8" stroke-width="25" stroke-linecap="round"/>
+        <path d="M252 150 H272 M252 190 H274 M248 230 H270 M238 266 H258" stroke="${G}" stroke-width="3" opacity=".35"/>
+        <ellipse cx="88" cy="214" rx="17" ry="32" transform="rotate(-18 88 214)" fill="#F3E6C8" stroke="${G}" stroke-width="4"/>
+        <path class="ro" fill="none" stroke="${G}" stroke-width="58" stroke-linecap="round"/>
+        <path class="ao2" fill="none" stroke="${G}" stroke-width="34" stroke-linecap="round"/>
+        <path class="rp" fill="none" stroke="${PINK}" stroke-width="47" stroke-linecap="round"/>
+        <path class="ap2" fill="none" stroke="${PINK}" stroke-width="23" stroke-linecap="round"/>
         <g class="kb"><rect x="-17" y="-13" width="34" height="26" rx="9" fill="#86573A" stroke="${G}" stroke-width="3.5"/>
           <circle cx="-6" cy="0" r="2.4" fill="#2B1A10"/><circle cx="6" cy="0" r="2.4" fill="#2B1A10"/></g>
-        <ellipse cx="74" cy="296" rx="24" ry="15" transform="rotate(-24 74 296)" fill="#F3E6C8" stroke="${G}" stroke-width="4"/>
-        <path class="so" fill="none" stroke="${G}" stroke-width="22" stroke-linecap="round"/>
-        <path class="sm" fill="none" stroke="#C0503C" stroke-width="12" stroke-linecap="round"/>
+        <path class="so" fill="none" stroke="${G}" stroke-width="19" stroke-linecap="round"/>
+        <path class="sm" fill="none" stroke="#C0503C" stroke-width="11" stroke-linecap="round"/>
         <path class="sl" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 10"/>
       </g>
       <text class="lab" x="160" y="390" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="26" fill="#4A5C55">мышца пережимает кишку</text>
@@ -505,7 +510,7 @@ pose:{
     </g>`,
   init(root){
     const q=s=>root.querySelector(s);
-    return {ko:q('.ko'),kp:q('.kp'),kb:q('.kb'),so:q('.so'),sm:q('.sm'),sl:q('.sl'),ring:q('.ring'),lab:q('.lab'),
+    return {ro:q('.ro'),rp:q('.rp'),ao2:q('.ao2'),ap2:q('.ap2'),kb:q('.kb'),so:q('.so'),sm:q('.sm'),sl:q('.sl'),ring:q('.ring'),lab:q('.lab'),
       stool:q('.stool'),lo:q('.lo'),lp:q('.lp'),fo:q('.fo'),fp:q('.fp'),
       to:q('.to'),tp:q('.tp'),head:q('.head'),skin:q('.skin'),calm:q('.h-calm'),str:q('.h-strain'),sw:q('.h-sweat'),
       ao:q('.ao'),ap:q('.ap'),hand:q('.hand'),man:q('.man'),inset:q('.inset'),
@@ -549,19 +554,23 @@ pose:{
     /* врезка: мышца-петля тянет кишку к лобковой кости → отпускает */
     const pi=P(lt,.1,.45,E.back);T(R.inset,`translate(160 236) scale(${pi}) translate(-160 -236)`);
     R.ring.setAttribute('stroke',mix(CORAL,G,k));
-    const P0=[164,100],P1=[158,230],P2=pt([246,292],[178,388],k);
-    const d=ln(P0,P1,P2);R.ko.setAttribute('d',d);R.kp.setAttribute('d',d);
-    const SA=[[80,292],[120,290],[214,268],[194,222],[184,200],[142,206],[140,232]];
-    const SB=[[80,292],[120,322],[218,350],[200,312],[194,286],[156,284],[152,306]];
+    /* сагиттальный срез, перед слева: прямая кишка идёт по крестцу, ампула
+       над стыком, короткий анальный канал уходит вниз-назад. Сидя петля тянет
+       стык к лобку — угол ~90°; с подставкой отпускает — угол раскрывается */
+    const R0=[206,112],RC=pt([212,210],[212,220],k),J0=pt([152,256],[178,276],k),AN=pt([196,312],[196,352],k);
+    const rd=`M${f(R0)} Q${f(RC)} ${f(J0)}`,ad=`M${f(J0)} L${f(AN)}`;
+    R.ro.setAttribute('d',rd);R.rp.setAttribute('d',rd);R.ao2.setAttribute('d',ad);R.ap2.setAttribute('d',ad);
+    const SA=[[102,236],[124,252],[142,290],[166,288],[190,286],[198,256],[180,246]];
+    const SB=[[102,236],[130,270],[160,320],[190,316],[216,312],[220,284],[202,272]];
     const tight=!fix?1.5*Math.sin(lt*20):0;
-    const sp=SA.map((a,i)=>pt(a,SB[i],k));sp[3][0]+=tight;sp[4][0]+=tight;
+    const sp=SA.map((a,i)=>pt(a,SB[i],k));sp[4][0]+=tight;sp[5][0]+=tight;
     const sd=`M${f(sp[0])} C${f(sp[1])} ${f(sp[2])} ${f(sp[3])} C${f(sp[4])} ${f(sp[5])} ${f(sp[6])}`;
     R.so.setAttribute('d',sd);R.sm.setAttribute('d',sd);R.sl.setAttribute('d',sd);
     const lab=k>.5?'мышца отпускает кишку':'мышца пережимает кишку';if(R.lab.textContent!==lab)R.lab.textContent=lab;
-    /* камешек: упирается в изгиб → проскальзывает дальше */
-    let b=pt(P0,P1,.6);const go=P(lt,3,.8,E.in3);
-    if(go>0&&go<.3)b=pt(pt(P0,P1,.6),P1,go/.3);
-    if(go>=.3)b=pt(P1,P2,(go-.3)*1.8);
+    /* камешек: сидит в ампуле → по выпрямленному пути уходит вниз */
+    const qb=(t)=>[(1-t)*(1-t)*R0[0]+2*(1-t)*t*RC[0]+t*t*J0[0],(1-t)*(1-t)*R0[1]+2*(1-t)*t*RC[1]+t*t*J0[1]];
+    const go=P(lt,3,.8,E.in3);
+    const b=go<.4?qb(.72+.28*go/.4):pt(J0,AN,(go-.4)/.6*1.4);
     T(R.kb,`translate(${b[0].toFixed(1)} ${(b[1]+(strain?1.5*Math.sin(lt*47):0)).toFixed(1)})`);
   }
 },
