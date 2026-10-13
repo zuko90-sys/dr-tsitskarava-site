@@ -98,17 +98,15 @@ svg{overflow:visible}
 .chip svg{width:34px;height:40px;flex:none}
 
 /* ── финал ── */
-.cta-art{left:390px;top:226px}
-.cta-title{left:80px;top:640px;width:920px;font:500 104px/1.04 var(--serif);color:var(--paper)}
-.cta-title .bm{display:inline-block;width:70px;height:92px;margin-left:18px;vertical-align:-6px}
-.cta-text{left:80px;top:886px;width:860px;font:400 44px/1.3 var(--sans);color:#C4E8D7}
-.cta-text b{font-weight:600;color:var(--paper)}
-.cta-card{left:80px;top:1112px;width:860px;padding:36px 44px 40px;border-radius:40px;background:var(--paper);color:var(--ink)}
+.cta-art{left:360px;top:236px}
+.cta-text{left:80px;top:720px;width:900px;font:500 80px/1.08 var(--serif);color:var(--paper)}
+.cta-text b{font-weight:600;color:var(--amber)}
+.cta-card{left:80px;top:1066px;width:860px;padding:36px 44px 40px;border-radius:40px;background:var(--paper);color:var(--ink)}
 .cta-name{font:600 62px/1.05 var(--serif);color:var(--green)}
 .cta-role{margin-top:10px;font:400 32px/1.3 var(--sans);color:var(--ink-2)}
 .cta-ig{margin-top:22px;display:flex;align-items:center;gap:14px;font:600 40px/1 var(--sans);color:var(--coral)}
 .cta-ig svg{width:44px;height:44px}
-.cta-note{left:80px;top:1414px;width:860px;font:400 26px/1.35 var(--sans);color:rgba(196,232,215,.72)}
+.cta-note{left:80px;top:1368px;width:860px;font:400 26px/1.35 var(--sans);color:rgba(196,232,215,.72)}
 </style>
 </head>
 <body>
@@ -134,12 +132,11 @@ svg{overflow:visible}
     <!-- 6. Финал -->
     <section class="scene dark" id="cta">
       <svg class="bg" data-bub="cta"></svg>
-      <svg class="cta-art abs" viewBox="-30 -140 280 358" width="300" height="384">
+      <svg class="cta-art abs" viewBox="-30 -140 280 358" width="360" height="461">
         <ellipse cx="115" cy="206" rx="98" ry="12" fill="#000" opacity=".2"/>
         <g class="hearts"></g>
         <g class="mw"></g>
       </svg>
-      <h2 class="cta-title abs">Сохраните,<svg class="bm" viewBox="0 0 70 92"><path class="bm-p" d="M8 8 H62 V84 L35 64 L8 84 Z" fill="none" stroke="#F7F4EC" stroke-width="7" stroke-linejoin="round"/></svg><br>чтобы не&nbsp;забыть</h2>
       <p class="cta-text abs">Изжога <b>2&nbsp;раза в&nbsp;неделю и&nbsp;чаще</b>&nbsp;— повод прийти к&nbsp;гастроэнтерологу</p>
       <div class="cta-card abs">
         <div class="cta-name">Софико Цицкарава</div>
@@ -674,7 +671,7 @@ MISTAKES.forEach((M,idx)=>{
   for(let i=0;i<6;i++){const p=document.createElementNS(NS,'path');
     p.setAttribute('d','M0 6 C-14 -6 -10 -18 0 -10 C10 -18 14 -6 0 6 Z');p.setAttribute('fill',i%2?CORAL:'#F5A99F');
     hg.append(p);hearts.push({p,ph:r(),x:(r()-.5)*260,s:1.2+r()*1.4})}
-  const C={mw:q('.cta-art .mw'),m:mRefs(q('.cta-art')),title:split(q('.cta-title')),bm:q('.bm'),bmp:q('.bm-p'),
+  const C={mw:q('.cta-art .mw'),m:mRefs(q('.cta-art')),
     text:split(q('.cta-text')),card:q('.cta-card'),note:q('.cta-note'),bub:bubbles(q('.bg'),{n:16,seed:7,op:.13})};
   SC.push({el,dur:D_CTA,fn(lt){
     C.bub(lt);
@@ -685,13 +682,9 @@ MISTAKES.forEach((M,idx)=>{
     for(const h of hearts){const q=(lt*.45+h.ph)%1;
       T(h.p,`translate(${(115+h.x*q+10*Math.sin(lt*3+h.ph*7)).toFixed(1)} ${(60-q*170).toFixed(1)}) scale(${h.s})`);
       O(h.p,lt>.8?Math.sin(q*Math.PI):0)}
-    reveal(C.title,lt,.3,.08,.45,{dy:50});
-    const pb=P(lt,.6,.4,E.back);css(C.bm,{s:pb,r:(1-pb)*-30,o:pb*2});
-    C.bmp.setAttribute('fill',lt>1.05?CORAL:'none');C.bmp.setAttribute('stroke',lt>1.05?CORAL:'#F7F4EC');
-    if(lt>1.05){const kk=lt-1.05;C.bm.style.transform+=` scale(${1+.18*Math.exp(-kk*6)*Math.sin(kk*20)})`}
-    reveal(C.text,lt,1,.035,.4,{dy:30});
-    const pc=P(lt,1.5,.55,E.back);css(C.card,{y:lerp(120,0,pc),o:(lt-1.5)/.2});
-    css(C.note,{o:P(lt,2.1,.5)});
+    reveal(C.text,lt,.35,.06,.45,{dy:50});
+    const pc=P(lt,1.2,.55,E.back);css(C.card,{y:lerp(120,0,pc),o:(lt-1.2)/.2});
+    css(C.note,{o:P(lt,1.8,.5)});
   }});
 })();
 
