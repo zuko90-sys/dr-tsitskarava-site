@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Рилс: 5 ошибок при запоре</title>
-<meta name="description" content="Анимация для Reels 1080×1920: пять частых ошибок при запоре. Предпросмотр и исходник для рендера в MP4.">
+<title>Рилс: 6 ошибок при запоре</title>
+<meta name="description" content="Анимация для Reels 1080×1920: шесть частых ошибок при запоре. Предпросмотр и исходник для рендера в MP4.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
 /* Шрифты сайта: Piazzolla — заголовки, Golos Text — всё остальное */
@@ -111,7 +111,7 @@ svg{overflow:visible}
     <!-- 0. Хук -->
     <section class="scene dark" id="hook">
       <svg class="bg"></svg>
-      <div class="hk-title abs"><span class="hk-five">5</span><span class="hk-word">ошибок,</span></div>
+      <div class="hk-title abs"><span class="hk-five">6</span><span class="hk-word">ошибок,</span></div>
       <p class="hk-sub abs">из&#8209;за&nbsp;которых <em>запор</em> никак не&nbsp;проходит</p>
       <svg class="hk-art abs" viewBox="-20 -50 270 350" width="470" height="609">
         <ellipse cx="114" cy="292" rx="96" ry="11" fill="#000" opacity=".2"/>
@@ -140,8 +140,8 @@ svg{overflow:visible}
     </section>
 
     <div id="topbar">
-      <div class="segs"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
-      <div class="tb-row"><span class="tb-cnt">Ошибка 1 из 5</span><span class="tb-handle">@dr.tsitskarava</span></div>
+      <div class="segs"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+      <div class="tb-row"><span class="tb-cnt">Ошибка 1 из 6</span><span class="tb-handle">@dr.tsitskarava</span></div>
     </div>
     <div id="wipe"></div>
   </div></div>
@@ -641,7 +641,87 @@ water:{
   }
 },
 
-/* 5. «Кишечник разленится»: отказ от слабительного → врач ищет причину */
+/* 5. Сидячий день и стресс: гроза над головой → прогулка и солнце */
+move:{
+  sfx:[[.08,'pop',.4],[.15,'pop',.35],[.25,'pop',.35],...[.35,.7,1.05,1.4].map(t=>[t,'pop',.3]),
+    [.62,'thunder',.55],[1.22,'thunder',.45],[1.92,'thunder',.5],[.9,'steam',.4],
+    [2.3,'swipe',.55],[2.45,'boing',.45],[2.6,'chime',.3],...Array.from({length:7},(_,i)=>[2.75+i*.29,'step',.4])],
+  svg:()=>`${floor}
+    <g class="sun"><g class="rays" stroke="${AMBER}" stroke-width="8" stroke-linecap="round">${Array.from({length:10},(_,i)=>{const a=i*Math.PI/5;
+      return `<path d="M${(Math.cos(a)*60).toFixed(1)} ${(Math.sin(a)*60).toFixed(1)} L${(Math.cos(a)*80).toFixed(1)} ${(Math.sin(a)*80).toFixed(1)}"/>`}).join('')}</g>
+      <circle r="46" fill="#FFD25A" stroke="${G}" stroke-width="6"/></g>
+    <g class="tree"><rect x="104" y="340" width="20" height="130" rx="6" fill="#B07A4F" stroke="${G}" stroke-width="5"/>
+      <circle cx="114" cy="310" r="62" fill="${MINT}" stroke="${G}" stroke-width="6"/><circle cx="78" cy="340" r="36" fill="${MINT}" stroke="${G}" stroke-width="6"/>
+      <circle cx="152" cy="338" r="34" fill="${MINT}" stroke="${G}" stroke-width="6"/><path d="M96 296 Q110 282 128 290" fill="none" stroke="#fff" stroke-width="6" opacity=".5" stroke-linecap="round"/></g>
+    <g class="office">
+      <rect x="60" y="330" width="250" height="20" rx="7" fill="${G}"/>
+      <rect x="80" y="350" width="14" height="120" rx="4" fill="${G}"/><rect x="276" y="350" width="14" height="120" rx="4" fill="${G}"/>
+      <rect x="168" y="292" width="34" height="40" fill="${G}"/><rect x="134" y="322" width="102" height="10" rx="4" fill="${G}"/>
+      <rect x="80" y="150" width="210" height="146" rx="14" fill="${G}"/><rect x="92" y="162" width="186" height="122" rx="8" fill="#fff"/>
+      <path d="M106 196 L144 214 L178 206 L214 244 L262 266" fill="none" stroke="${CORAL}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M248 262 L264 268 L262 250" fill="none" stroke="${CORAL}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="106" y="172" width="44" height="12" rx="6" fill="#C9D3CE"/>
+    </g>
+    <g class="chair-back"><rect x="548" y="208" width="34" height="164" rx="14" fill="#2C4A5A" stroke="${G}" stroke-width="6"/></g>
+    <ellipse class="msh" cx="470" cy="472" rx="96" ry="10" fill="${G}" opacity=".08"/>
+    <g class="mw">${gut()}</g>
+    <g class="chair">
+      <rect x="392" y="352" width="196" height="28" rx="14" fill="#2C4A5A" stroke="${G}" stroke-width="6"/>
+      <rect x="482" y="380" width="16" height="48" fill="${G}"/><path d="M430 434 H550" stroke="${G}" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="432" cy="452" r="12" fill="#fff" stroke="${G}" stroke-width="5"/><circle cx="490" cy="452" r="12" fill="#fff" stroke="${G}" stroke-width="5"/><circle cx="548" cy="452" r="12" fill="#fff" stroke="${G}" stroke-width="5"/>
+    </g>
+    <g class="storm">
+      <g class="bolt"><path d="M488 96 L460 150 H486 L466 206 L524 132 H496 L516 96 Z" fill="${AMBER}" stroke="${G}" stroke-width="5" stroke-linejoin="round"/></g>
+      <path d="M408 110 C380 110 376 72 404 66 C404 36 446 28 460 50 C476 22 524 28 528 60 C560 58 568 104 536 110 Z" fill="#9AA9B2" stroke="${G}" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M430 92 Q440 84 452 90 M488 84 Q500 76 512 84" fill="none" stroke="${G}" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+    </g>
+    <g class="badges">${[[352,190],[606,168],[340,282],[624,270]].map(([x,y],i)=>`<g data-x="${x}" data-y="${y}"><circle r="24" fill="${CORAL}" stroke="${G}" stroke-width="4"/>
+      <text y="11" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="${i%2?24:32}" fill="#fff">${['!','99+','!','!'][i]}</text></g>`).join('')}</g>
+    <g class="steps">
+      <rect x="-130" y="-56" width="260" height="112" rx="28" fill="#fff" stroke="${G}" stroke-width="6"/>
+      <g transform="translate(-86 0)"><ellipse cx="-8" cy="6" rx="10" ry="17" fill="${G}"/><ellipse cx="10" cy="-8" rx="10" ry="17" fill="${G}"/></g>
+      <text class="sn" x="18" y="8" text-anchor="middle" font-family="Golos Text" font-weight="600" font-size="52" fill="${CORAL}">312</text>
+      <text x="18" y="40" text-anchor="middle" font-family="Golos Text" font-weight="500" font-size="22" fill="#4A5C55">шагов за&nbsp;день</text>
+    </g>`,
+  init(root){
+    const q=s=>root.querySelector(s);
+    return {mw:q('.mw'),msh:q('.msh'),m:mRefs(root),office:q('.office'),chair:q('.chair'),back:q('.chair-back'),
+      storm:q('.storm'),bolt:q('.bolt'),badges:[...q('.badges').children],steps:q('.steps'),sn:q('.sn'),
+      sun:q('.sun'),rays:q('.rays'),tree:q('.tree')};
+  },
+  render(lt,R){
+    const fix=lt>2.3,out=P(lt,2.3,.45,E.inOut);
+    const po=P(lt,.05,.45,E.back);
+    T(R.office,`translate(${-out*420} ${(1-po)*40})`);O(R.office,P(lt,.05,.2)*(1-out));
+    T(R.chair,`translate(${-out*520} 0)`);O(R.chair,P(lt,.05,.2)*(1-out));T(R.back,`translate(${-out*520} 0)`);O(R.back,P(lt,.05,.2)*(1-out));
+    /* гроза: молнии с раскатами */
+    const ps=P(lt,.2,.4,E.back),sk=(lt%.6<.1)?3*Math.sin(lt*90):0;
+    T(R.storm,`translate(470 110) scale(${ps*(1-.6*out)}) translate(${-470+sk} -110)`);O(R.storm,(ps>0?1:0)*(1-out));
+    const flash=[.62,1.22,1.92].some(f=>lt>f&&lt<f+.14);O(R.bolt,flash?1:0);
+    /* уведомления сыплются одно за другим */
+    R.badges.forEach((g,i)=>{const t0=.35+i*.35,p=P(lt,t0,.3,E.back),x=+g.dataset.x,y=+g.dataset.y;
+      T(g,`translate(${x} ${y+3*Math.sin(lt*7+i)}) rotate(${6*Math.sin(lt*9+i*2)}) scale(${p*(1-out)})`);O(g,(p>0?1:0)*(1-out))});
+    /* маскот: в кресле → спрыгивает и шагает */
+    const pm=P(lt,.1,.5,E.back),walk=P(lt,2.55,2.1,E.lin),jump=P(lt,2.35,.35,E.inOut);
+    const x=lerp(470,700,walk),y=lerp(368,470,jump)-(walk>0&&walk<1?Math.abs(Math.sin(lt*10.8))*18:0)-Math.sin(jump*Math.PI)*60;
+    T(R.mw,place(x,y,.8*(.6+.4*pm)));O(R.mw,P(lt,.1,.15));
+    R.msh.setAttribute('cx',x);R.msh.style.opacity=.08*jump;
+    const hurt=lt>.7&&!fix;
+    mSet(R.m,lt,{expr:fix?'happy':hurt?'strain':'meh',strain:hurt?.6:0,sweat:hurt?1:0,look:fix?1:-1,
+      tilt:fix?4*Math.sin(lt*10.8):hurt?1.5*Math.sin(lt*20):0,bscale:1+.2*P(lt,.7,1.4),soft:P(lt,2.6,.4)});
+    O(R.m.brick,1-P(lt,3.3,.5));
+    /* солнце и дерево вместо офиса */
+    const pu=P(lt,2.4,.6,E.back);T(R.sun,`translate(170 ${lerp(230,120,pu)}) scale(${pu})`);O(R.sun,pu>0?1:0);T(R.rays,`rotate(${lt*30})`);
+    const pt2=P(lt,2.65,.5,E.back);T(R.tree,`translate(${114+40} 470) scale(${pt2}) translate(-114 -470)`);O(R.tree,pt2>0?1:0);
+    /* шагомер: 312 → 4 000 */
+    const pc=P(lt,.25,.4,E.back);T(R.steps,`translate(770 100) scale(${pc})`);O(R.steps,pc>0?1:0);
+    const n0=Math.round(lerp(312,4000,P(lt,2.75,2,E.inOut))),n=n0>400?Math.round(n0/10)*10:n0;
+    const txt=n>=1000?`${Math.floor(n/1000)} ${String(n%1000).padStart(3,'0')}`:String(n);
+    if(R.sn.textContent!==txt)R.sn.textContent=txt;R.sn.setAttribute('fill',fix?G:CORAL);
+  }
+},
+
+/* 6. «Кишечник разленится»: отказ от слабительного → врач ищет причину */
 lazy:{
   sfx:[[.25,'boing',.45],[.72,'swipe',.22],[.95,'buzz',.45],[1.12,'swipe',.22],[1.42,'thud',.45],[1.7,'steam',.45],
     [2.4,'swipe',.5],[2.45,'boing',.4],[2.8,'pen',.5],[3.02,'pen',.5],[3.24,'pen',.5]],
@@ -711,6 +791,9 @@ const MISTAKES=[
   {art:'water', quote:'«Пью по&nbsp;3&nbsp;литра воды&nbsp;— должно помочь»',
    rule:'Работает клетчатка, а&nbsp;не&nbsp;литры воды',
    why:'Лишняя вода уйдёт с&nbsp;мочой. Клетчатку добавляйте постепенно, иначе вздует'},
+  {art:'move', quote:'«Весь день сижу и&nbsp;нервничаю»',
+   rule:'30&nbsp;минут ходьбы в&nbsp;день и&nbsp;меньше стресса',
+   why:'Движение подгоняет кишечник, а&nbsp;стресс через связь «мозг&nbsp;— кишечник» его тормозит'},
   {art:'lazy', quote:'«Слабительные? Кишечник разленится»',
    rule:'Слабительные не&nbsp;«отучают» кишечник работать',
    why:'В&nbsp;обычных дозах это миф. Средство подбирает врач&nbsp;— и&nbsp;заодно ищет причину запора'},
@@ -819,7 +902,7 @@ function render(t){
   for(const s of SC){const on=t>=s.start&&t<s.start+s.dur;s.el.style.display=on?'block':'none';if(on){cur=s;s.fn(t-s.start)}}
   if(cur&&cur.mistake!==undefined){
     topbar.style.display='block';
-    const lt=t-cur.start,label=`Ошибка ${cur.mistake+1} из 5`;
+    const lt=t-cur.start,label=`Ошибка ${cur.mistake+1} из ${MISTAKES.length}`;
     if(cnt.textContent!==label)cnt.textContent=label;
     segs.forEach((b,j)=>b.style.transform=`scaleX(${j<cur.mistake?1:j===cur.mistake?clamp(lt/D_M):0})`);
     css(topbar,{o:P(lt,0,.3)});

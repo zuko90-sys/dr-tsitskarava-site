@@ -102,6 +102,13 @@ const SOUNDS = {
   },
   glug: () => tone(.09, (t) => 160 + 140 * t / .09, (t) => Math.sin(Math.PI * t / .09)),
   buzz: () => { const d = .42; const x = tone(d, () => 140, fade(d, .01, .05), 'square'); add(x, tone(d, () => 147, fade(d, .01, .05), 'square')); return lowpass(x, 1300).map((v) => v * .5); },
+  /* гром: треск + низкий раскат */
+  thunder: () => {
+    const d = 1.6, x = env(lowpass(lowpass(noise(d, 41), 260), 260), (t) => Math.min(1, t / .03) * Math.exp(-t * 2.2) * (.8 + .2 * Math.sin(TAU * 3 * t)));
+    return add(x.map((v) => v * 3), env(bandpass(noise(.25, 43), 1800, .9), (t) => Math.exp(-t * 18)), .5);
+  },
+  /* шаг */
+  step: () => add(tone(.09, (t) => 95 + 60 * Math.exp(-t * 40), (t) => Math.min(1, t / .002) * Math.exp(-t * 45)), env(lowpass(noise(.04, 47), 1800), (t) => Math.exp(-t * 120)), .5),
   /* росчерк ручки / зачёркивание */
   pen: () => { const d = .2, r = rng(31); return env(bandpass(noise(d, 37), (t) => 3000 + 1500 * Math.sin(TAU * 9 * t), 2), (t) => fade(d, .01, .05)(t) * (.6 + .4 * Math.abs(Math.sin(TAU * 14 * t + r())))); },
 };
