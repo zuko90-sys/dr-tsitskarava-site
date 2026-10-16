@@ -73,7 +73,7 @@ function serve() {
       '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
       '-i', wav,
       '-map', '0:v', '-map', '1:a', '-shortest',
-      '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+      '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-maxrate', '6M', '-bufsize', '12M', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
       '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], { stdio: ['pipe', 'inherit', 'inherit'] });
     const done = new Promise((ok, fail) => ff.on('close', (c) => (c ? fail(new Error('ffmpeg ' + c)) : ok())));
     for (let i = 0; i < frames; i++) {
