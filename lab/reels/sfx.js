@@ -118,6 +118,12 @@ const SOUNDS = {
     const t = i / SR; if (cnt-- <= 0) { hold = r() * 2 - 1; cnt = 20 + Math.floor(r() * 160); blip = r() < .3 ? 600 + r() * 2400 : 0; }
     const v = hold * .7 + (blip ? .5 * Math.sign(Math.sin(TAU * blip * t)) : 0);
     return v * fade(d, .005, .08)(t); }); },
+  /* перелистывание страницы: шелест + лёгкий хлопок */
+  paper: () => { const d = .45; const x = env(bandpass(noise(d, 61), (t) => 1400 + 2600 * (t / d), .8), (t) => Math.min(1, t / .12) * Math.exp(-Math.max(0, t - .12) * 9));
+    return add(x.map((v) => v * 1.4), tone(.12, (t) => 90 + 40 * Math.exp(-t * 30), (t) => Math.exp(-t * 30)), .5, .1); },
+  /* каракули ручкой: несколько штрихов подряд */
+  scribble: () => { const d = .6, r = rng(67); let a = 0; return env(bandpass(noise(d, 71), (t) => 2600 + 1400 * Math.sin(TAU * 7 * t), 2.2), (t) => {
+    const k = (t * 9) % 1; if (k < .02) a = .5 + r() * .5; return fade(d, .01, .08)(t) * a * (.35 + .65 * Math.sin(Math.PI * k)); }); },
   /* росчерк ручки / зачёркивание */
   pen: () => { const d = .2, r = rng(31); return env(bandpass(noise(d, 37), (t) => 3000 + 1500 * Math.sin(TAU * 9 * t), 2), (t) => fade(d, .01, .05)(t) * (.6 + .4 * Math.abs(Math.sin(TAU * 14 * t + r())))); },
 };

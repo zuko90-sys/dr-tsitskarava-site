@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Рилс: норма или к врачу? Блокнот</title>
+<meta name="description" content="Проба стиля «блокнот врача» для квиза «Норма или к врачу?»: заставка и первый вопрос.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+/* Caveat (SIL OFL) — рукописный текст; Golos Text — как на сайте */
+@font-face{font-family:'Caveat';src:url('../fonts/caveat-cyrillic.woff2') format('woff2');font-weight:400 700;
+  unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Caveat';src:url('../fonts/caveat-latin.woff2') format('woff2');font-weight:400 700;
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Golos Text';src:url('/fonts/golos-var.woff2') format('woff2');font-weight:400 600;font-style:normal}
+
+:root{
+  --paper:#F7F2E6; --grid:rgba(110,145,175,.26); --ink:#1F3B70; --green:#0D5240; --coral:#E2532F;
+  --hand:'Caveat','Golos Text',cursive; --sans:'Golos Text',Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#2A2620;color:#EEE7DA;font-family:var(--sans)}
+
+/* ── оболочка предпросмотра ── */
+.shell{display:flex;flex-direction:column;align-items:center;gap:14px;padding:16px}
+#frame{position:relative;width:calc(var(--k,.4)*1080px);height:calc(var(--k,.4)*1920px);
+  border-radius:calc(var(--k,.4)*48px);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.controls{display:flex;align-items:center;gap:10px;width:min(100%,560px);font-size:14px}
+.controls button{all:unset;cursor:pointer;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:#4A4337;color:#EEE7DA;font-size:15px}
+.controls button:focus-visible{outline:2px solid #FFE36E;outline-offset:2px}
+.controls input{flex:1;accent-color:#FFE36E}
+.controls .time{font-variant-numeric:tabular-nums;min-width:92px;text-align:right;color:#B9AF9C}
+.controls a{color:#FFE36E;white-space:nowrap}
+footer{font-size:13px;color:#A99F8C;text-align:center;line-height:1.6}
+footer a{color:#D9CFBC}
+
+/* ── сцена 1080×1920 ── */
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;
+  transform:scale(var(--k,.4));overflow:hidden;background:#D9D0BE}
+body.capture{background:#D9D0BE}
+body.capture .shell{padding:0;gap:0}
+body.capture .controls,body.capture footer{display:none}
+body.capture #frame{--k:1;border-radius:0;box-shadow:none}
+
+#cam{position:absolute;inset:0}
+.scene{position:absolute;left:-30px;top:-30px;width:1140px;height:1980px;display:none;
+  background:
+    linear-gradient(var(--grid) 2px,transparent 2px) 12px 20px/54px 54px,
+    linear-gradient(90deg,var(--grid) 2px,transparent 2px) 12px 20px/54px 54px,
+    var(--paper);
+  box-shadow:-24px 0 40px rgba(60,45,20,.28)}
+.in{position:absolute;left:30px;top:30px;width:1080px;height:1920px}
+.abs{position:absolute}
+.w{display:inline-block}
+.layer{position:absolute;left:0;top:0;width:1080px;height:1920px;pointer-events:none;overflow:visible}
+svg{overflow:visible}
+#grain{background-size:256px 256px;opacity:.13;mix-blend-mode:multiply}
+#light{background:radial-gradient(120% 90% at 30% 20%,rgba(255,250,235,.25) 0%,transparent 50%),
+  radial-gradient(140% 100% at 50% 50%,transparent 60%,rgba(70,50,20,.22) 100%)}
+.hand{font-family:var(--hand);filter:url(#boilT)}
+
+/* интро */
+.t1{left:0;right:0;top:300px;text-align:center;font:700 230px/1 var(--hand);color:var(--green)}
+.t2{left:0;right:0;top:560px;text-align:center;font:500 90px/1 var(--hand);color:var(--ink)}
+.t3{left:0;right:0;top:640px;text-align:center;font:700 200px/1 var(--hand);color:var(--coral)}
+.sub{left:80px;right:80px;top:900px;text-align:center;font:600 76px/1.1 var(--hand);color:var(--ink)}
+
+/* вопрос */
+.hq{left:90px;top:214px;font:700 62px/1 var(--hand);color:var(--green)}
+.hh{right:90px;top:226px;font:500 44px/1 var(--hand);color:var(--ink)}
+.sit{left:60px;width:960px;top:920px;text-align:center;font:700 118px/1 var(--hand);color:var(--ink)}
+.opt{top:1124px;display:flex;align-items:center;gap:22px;font:700 92px/1 var(--hand)}
+.opt.n{left:130px;color:var(--green)} .opt.d{left:560px;color:var(--coral)}
+.opt .box{width:78px;height:78px;flex:none}
+.exp{left:60px;width:960px;top:1284px;text-align:center;font:600 76px/1.1 var(--hand);color:var(--ink)}
+.exp mark{color:inherit;background:linear-gradient(transparent 38%,rgba(255,222,70,.75) 38%,rgba(255,222,70,.75) 88%,transparent 88%) no-repeat 0 0/0% 100%;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="frame"><div id="stage">
+    <svg width="0" height="0" style="position:absolute">
+      <!-- «дрожание» линий: смена шума раз в 3 кадра, как у рисованной анимации -->
+      <filter id="boil" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence class="tb" type="fractalNoise" baseFrequency=".03" numOctaves="2" seed="1" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="boilT" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence class="tb" type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="1" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+    </svg>
+    <div id="cam">
+
+      <!-- интро -->
+      <section class="scene" id="intro"><div class="in">
+        <div class="t1 abs hand">Норма</div>
+        <div class="t2 abs hand">или</div>
+        <div class="t3 abs hand">к&nbsp;врачу?</div>
+        <p class="sub abs hand">7&nbsp;ситуаций. Проверьте себя!</p>
+        <svg class="layer" viewBox="0 0 1080 1920">
+          <path class="u3" d="" fill="none" stroke="#E2532F" stroke-width="12" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" filter="url(#boil)"/>
+          <g class="note" filter="url(#boil)"></g>
+          <g class="ms" filter="url(#boil)"></g><g class="mg" filter="url(#boil)"></g>
+        </svg>
+      </div></section>
+
+      <!-- вопрос 1 -->
+      <section class="scene" id="q1"><div class="in">
+        <div class="hq abs hand">Вопрос 1 из&nbsp;7</div>
+        <div class="hh abs hand">@dr.tsitskarava</div>
+        <svg class="layer art" viewBox="0 0 1080 1920">
+          <path class="hu" d="" fill="none" stroke="#0D5240" stroke-width="9" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" filter="url(#boil)"/>
+          <path class="circ" d="" fill="none" stroke="#0D5240" stroke-width="8" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" filter="url(#boil)"/>
+          <g class="note" filter="url(#boil)"></g>
+          <g class="doodle" filter="url(#boil)"></g>
+          <g class="mg" filter="url(#boil)"></g>
+          <g class="cd" filter="url(#boil)"><text class="cdn" x="0" y="0" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="150" fill="#E2532F">3</text>
+            <path class="cdc" d="" fill="none" stroke="#E2532F" stroke-width="6" stroke-linecap="round"/></g>
+          <g class="stars" filter="url(#boil)"></g>
+          <path class="ring" d="" fill="none" stroke="#0D5240" stroke-width="9" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1" filter="url(#boil)"/>
+        </svg>
+        <p class="sit abs hand">Стул 3&nbsp;раза в&nbsp;неделю</p>
+        <div class="opt n abs hand"><svg class="box" viewBox="0 0 78 78"><path class="bx" d="" fill="none" stroke="#1F3B70" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="tick" d="M14 40 L32 60 L70 8" fill="none" stroke="#0D5240" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"/></svg><span>норма</span></div>
+        <div class="opt d abs hand"><svg class="box" viewBox="0 0 78 78"><path class="bx" d="" fill="none" stroke="#1F3B70" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>к&nbsp;врачу</span></div>
+        <p class="exp abs hand">Норма: <mark>от&nbsp;3&nbsp;раз в&nbsp;день до&nbsp;3&nbsp;раз в&nbsp;неделю</mark>, если без&nbsp;мучений</p>
+      </div></section>
+
+    </div>
+    <div id="grain" class="layer"></div>
+    <div id="light" class="layer"></div>
+  </div></div>
+
+  <div class="controls">
+    <button id="play" aria-label="Пауза">❚❚</button>
+    <button id="restart" aria-label="С начала">⟲</button>
+    <input id="seek" type="range" min="0" step="0.01" value="0" aria-label="Перемотка">
+    <span class="time" id="time">0.0 с</span>
+    <a href="norma-hand-reel.mp4" download>Скачать MP4</a>
+  </div>
+  <footer>
+    Проба стиля «блокнот врача», 1080×1920 · 30 к/с<br>
+    Telegram <a href="https://t.me/zurabgedenidze">@zurabgedenidze</a> · <a href="mailto:zg@vkusvill.ru">zg@vkusvill.ru</a>
+  </footer>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Проба стиля «блокнот врача». Кадр — функция времени render(t).
+   Чтобы выглядело нарисованным, а не сгенерированным:
+   · движение «на двойках» — 12 смен в секунду, как у аниматоров;
+   · линии «дрожат»: шум фильтра меняется раз в 3 кадра;
+   · текст дописывается слово за словом, камера чуть плывёт.
+   ═══════════════════════════════════════════════════════════════ */
+const NS='http://www.w3.org/2000/svg';
+const G='#0D5240', CORAL='#FF5A36', AMBER='#FFB020', PINK='#F5A99F', MINT='#7FD1AE', INK='#1F3B70', MARK='#E2532F';
+
+const clamp=(x,a=0,b=1)=>x<a?a:x>b?b:x;
+const lerp=(a,b,p)=>a+(b-a)*p;
+const E={
+  lin:t=>t,
+  out:t=>1-Math.pow(1-t,3),
+  out4:t=>1-Math.pow(1-t,4),
+  in3:t=>t*t*t,
+  inOut:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
+  back:t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)},
+};
+const P=(t,s,d,e=E.out)=>{const x=clamp((t-s)/d);return x<=0?0:x>=1?1:e(x)};
+const T=(el,s)=>el.setAttribute('transform',s);
+const O=(el,o)=>{el.style.opacity=clamp(o)};
+function mix(a,b,p){
+  const h=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16)),A=h(a),B=h(b);
+  return '#'+A.map((v,i)=>Math.round(lerp(v,B[i],clamp(p))).toString(16).padStart(2,'0')).join('');
+}
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+/* «на двойках»: время шагами по 1/12 с */
+const step=t=>Math.floor(t*12)/12;
+function split(el){
+  const words=[];
+  (function walk(node){
+    for(const ch of [...node.childNodes]){
+      if(ch.nodeType===3){
+        const frag=document.createDocumentFragment();
+        for(const part of ch.textContent.split(/( +)/)){
+          if(!part) continue;
+          if(/^ +$/.test(part)){frag.append(document.createTextNode(' '));continue}
+          const s=document.createElement('span');s.className='w';s.textContent=part;frag.append(s);words.push(s);
+        }
+        ch.replaceWith(frag);
+      } else if(ch.nodeType===1 && ch.tagName!=='svg') walk(ch);
+    }
+  })(el);
+  return words;
+}
+/* текст дописывается: каждое слово «проявляется» слева направо со скоростью письма */
+function write(words,lt,start,cps=16){
+  let t=start;
+  for(const w of words){const d=Math.max(.12,w.textContent.length/cps),p=clamp((lt-t)/d);
+    w.style.clipPath=`inset(-20% ${((1-p)*115-15).toFixed(1)}% -20% -8%)`;w.style.opacity=p>0?1:0;t+=d+.04}
+  return t;
+}
+/* рисованные фигуры: каждая — со своей случайной «кривизной» руки */
+function scribbleCircle(cx,cy,r,seed){
+  const R=rng(seed),a0=-2+R()*.4,a1=a0+Math.PI*2+.6,k1=R()*6,k2=R()*6;let d='';
+  for(let i=0;i<=72;i++){const a=a0+(a1-a0)*i/72,rr=r*(1+.04*Math.sin(3*a+k1)+.025*Math.sin(5*a+k2))+i/72*14;
+    d+=(i?'L':'M')+(cx+Math.cos(a)*rr).toFixed(1)+' '+(cy+Math.sin(a)*rr*.96).toFixed(1)}
+  return d;
+}
+function wobblyBox(w,seed){const R=rng(seed),j=()=>(R()-.5)*7;
+  return `M${6+j()} ${8+j()} L${w-6+j()} ${6+j()} L${w-8+j()} ${w-6+j()} L${8+j()} ${w-8+j()} Z`}
+function wavy(x1,x2,y,amp,seed){const R=rng(seed);let d=`M${x1} ${y}`;const n=6,w=(x2-x1)/n;
+  for(let i=0;i<n;i++){const x=x1+w*(i+.5),yy=y+(i%2?amp:-amp)+(R()-.5)*4;d+=` Q${x.toFixed(1)} ${yy.toFixed(1)} ${(x1+w*(i+1)).toFixed(1)} ${(y+(R()-.5)*3).toFixed(1)}`}
+  return d}
+const star=(x,y,r)=>`M${x} ${y-r} L${x+r*.25} ${y-r*.25} L${x+r} ${y} L${x+r*.25} ${y+r*.25} L${x} ${y+r} L${x-r*.25} ${y+r*.25} L${x-r} ${y} L${x-r*.25} ${y-r*.25} Z`;
+/* стикер на скотче */
+const postit=(w,h,inner,col='#FFE66E')=>`<g class="pi">
+  <rect x="${-w/2+6}" y="${-h/2+10}" width="${w}" height="${h}" fill="#5A4A20" opacity=".18"/>
+  <path d="M${-w/2} ${-h/2} H${w/2} V${h/2-18} Q${w/2-6} ${h/2} ${w/2-26} ${h/2} H${-w/2} Z" fill="${col}"/>
+  <path d="M${w/2-26} ${h/2} Q${w/2-20} ${h/2-12} ${w/2} ${h/2-18}" fill="#E8C94A"/>
+  <rect x="-58" y="${-h/2-20}" width="116" height="40" fill="#EFE6CF" opacity=".78" transform="rotate(-4)"/>${inner}</g>`;
+
+/* ─────────────── Маскоты (из рилсов про ГЭРБ и запор) ─────────────── */
+const BODY='M78 -10 L78 46 C62 26 28 34 26 84 C24 142 66 200 120 200 C166 200 192 168 186 134 C184 120 190 112 204 110 L204 88 C186 88 172 80 164 66 C152 48 130 40 106 42 L106 -10 Z';
+function stomachSVG(){
+  return `<g class="mascot"><g class="m-root">
+    <path d="${BODY}" fill="${PINK}" stroke="${G}" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M44 90 C46 70 56 58 70 53" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="8" stroke-linecap="round"/>
+    <g class="m-flame">
+      <path d="M92 74 C80 62 83 40 84 22 C84 2 58 -4 58 -40 C58 -58 66 -66 70 -82 C76 -70 78 -62 82 -58 C82 -82 88 -100 94 -122 C102 -98 112 -88 112 -66 C116 -72 120 -78 120 -90 C130 -72 128 -54 126 -40 C122 -6 100 2 100 22 C100 42 104 62 92 74 Z" fill="${CORAL}"/>
+      <path d="M92 70 C85 58 87 40 87 24 C87 6 70 -2 70 -30 C70 -50 82 -60 90 -86 C96 -64 112 -52 110 -28 C108 -2 97 6 97 24 C97 42 99 58 92 70 Z" fill="${AMBER}"/>
+      <path d="M92 66 C88 56 89 44 89 30 C89 14 82 4 84 -16 C85 -30 90 -38 92 -52 C96 -38 101 -28 100 -14 C99 4 95 14 95 30 C95 44 96 56 92 66 Z" fill="#FFE58A"/>
+    </g>
+    <path d="M78 -10 V46 M106 -10 V42" stroke="${G}" stroke-width="7" stroke-linecap="round"/>
+    <ellipse cx="62" cy="134" rx="12" ry="7" fill="#EC6F66" opacity=".55"/>
+    <ellipse cx="154" cy="134" rx="12" ry="7" fill="#EC6F66" opacity=".55"/>
+    <g class="f-happy">
+      <g class="m-eyes">
+        <circle cx="86" cy="110" r="13" fill="#fff" stroke="${G}" stroke-width="5"/>
+        <circle cx="130" cy="110" r="13" fill="#fff" stroke="${G}" stroke-width="5"/>
+        <g class="m-pupils"><circle cx="88" cy="112" r="7" fill="${G}"/><circle cx="132" cy="112" r="7" fill="${G}"/>
+          <circle cx="90.5" cy="109" r="2.4" fill="#fff"/><circle cx="134.5" cy="109" r="2.4" fill="#fff"/></g>
+      </g>
+      <path d="M94 134 Q108 156 122 134 Z" fill="${G}" stroke="${G}" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M100 144 Q108 151 116 144 Q108 139 100 144 Z" fill="#EC6F66"/>
+    </g>
+    <g class="f-pain">
+      <path d="M74 101 L92 110 L74 119 M142 101 L124 110 L142 119" fill="none" stroke="${G}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M92 142 Q96 133 100 142 Q104 151 108 142 Q112 133 116 142 Q120 151 124 142" fill="none" stroke="${G}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="f-sleep">
+      <path d="M75 110 Q86 120 97 110 M119 110 Q130 120 141 110" fill="none" stroke="${G}" stroke-width="5.5" stroke-linecap="round"/>
+      <ellipse cx="108" cy="140" rx="6" ry="7" fill="${G}"/>
+    </g>
+    <g class="f-shock">
+      <circle cx="86" cy="108" r="16" fill="#fff" stroke="${G}" stroke-width="5"/><circle cx="130" cy="108" r="16" fill="#fff" stroke="${G}" stroke-width="5"/>
+      <circle cx="86" cy="109" r="5" fill="${G}"/><circle cx="130" cy="109" r="5" fill="${G}"/>
+      <ellipse cx="108" cy="148" rx="10" ry="13" fill="${G}"/>
+    </g>
+    <g class="m-sweat"><path d="M172 20 C172 20 161 35 161 42 A11 11 0 0 0 183 42 C183 35 172 20 172 20 Z" fill="#A6DDF3" stroke="${G}" stroke-width="4"/></g>
+  </g></g>`;
+}
+function sRefs(root){
+  const m=root.querySelector('.mascot'),q=s=>m.querySelector(s);
+  return {root:q('.m-root'),flame:q('.m-flame'),sweat:q('.m-sweat'),eyes:q('.m-eyes'),pupils:q('.m-pupils'),
+    faces:{happy:q('.f-happy'),pain:q('.f-pain'),sleep:q('.f-sleep'),shock:q('.f-shock')}};
+}
+/* expr: happy | pain | sleep | shock; flame 0…1 — изжога в пищеводе */
+function sSet(m,t,{expr='happy',flame=0,bounce=0,squash=0,sweat=0,tilt=0,look=0}={}){
+  T(m.root,`translate(110 ${200-bounce}) rotate(${tilt}) scale(${1+squash*.55} ${1-squash}) translate(-110 -200)`);
+  if(flame>.01){
+    const f=1+.07*Math.sin(t*29)+.05*Math.sin(t*13.7), sk=5*Math.sin(t*11);
+    T(m.flame,`translate(92 74) skewX(${sk}) scale(${.8+.2*flame} ${flame*f}) translate(-92 -74)`);O(m.flame,1);
+  } else O(m.flame,0);
+  for(const k in m.faces) m.faces[k].style.display=k===expr?'':'none';
+  if(expr==='happy'){
+    const b=(t+.37)%3.1, sc=b<.14?Math.max(.08,Math.abs(b-.07)/.07):1;
+    T(m.eyes,`translate(0 110) scale(1 ${sc}) translate(0 -110)`);
+    T(m.pupils,`translate(${look*4} 0)`);
+  }
+  if(sweat>.01){const q=(t*1.4)%1;T(m.sweat,`translate(0 ${q*24})`);O(m.sweat,sweat*(1-q)*1.3)} else O(m.sweat,0);
+}
+
+const CL='M40 198 L40 96 Q40 50 86 50 L142 50 Q188 50 188 96 L188 166 Q188 200 154 202 Q116 204 114 228 L114 252';
+function gutSVG(){
+  return `<g class="mascot"><g class="m-root">
+    <path class="m-cl" d="${CL}" fill="none" stroke="none"/>
+    <g class="m-bo" fill="${G}"></g><g class="m-body" fill="${PINK}"></g>
+    <path d="M26 188 V100 Q26 64 54 52" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="7" stroke-linecap="round"/>
+    <g class="m-brick"><g class="m-bs">
+      <g class="b-hard">
+        <rect x="-23" y="-18" width="46" height="36" rx="12" fill="#86573A" stroke="${G}" stroke-width="4"/>
+        <circle cx="-14" cy="-10" r="3.2" fill="#6A4229"/><circle cx="15" cy="9" r="2.8" fill="#6A4229"/><circle cx="12" cy="-11" r="2.2" fill="#6A4229"/>
+        <path d="M-12 -6 L-4 -3 M12 -6 L4 -3" stroke="#2B1A10" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="-7" cy="2" r="2.8" fill="#2B1A10"/><circle cx="7" cy="2" r="2.8" fill="#2B1A10"/>
+        <path d="M-5 11 Q0 7 5 11" fill="none" stroke="#2B1A10" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+      <g class="b-soft">
+        <ellipse rx="23" ry="16" fill="#B7845B" stroke="${G}" stroke-width="4"/>
+        <circle cx="-7" cy="-2" r="2.8" fill="#2B1A10"/><circle cx="7" cy="-2" r="2.8" fill="#2B1A10"/>
+        <path d="M-6 5 Q0 10 6 5" fill="none" stroke="#2B1A10" stroke-width="2.8" stroke-linecap="round"/>
+      </g>
+    </g></g>
+    <g transform="translate(1 10)">
+    <ellipse cx="80" cy="54" rx="9" ry="5.5" fill="#EC6F66" opacity=".55"/>
+    <ellipse cx="146" cy="54" rx="9" ry="5.5" fill="#EC6F66" opacity=".55"/>
+    <g class="f-happy">
+      <g class="m-eyes">
+        <circle cx="99" cy="36" r="9.5" fill="#fff" stroke="${G}" stroke-width="4"/><circle cx="127" cy="36" r="9.5" fill="#fff" stroke="${G}" stroke-width="4"/>
+        <g class="m-pup"><circle cx="100" cy="37.5" r="5" fill="${G}"/><circle cx="128" cy="37.5" r="5" fill="${G}"/>
+          <circle cx="102" cy="35" r="1.8" fill="#fff"/><circle cx="130" cy="35" r="1.8" fill="#fff"/></g>
+      </g>
+      <path d="M105 49 Q113 60 121 49 Z" fill="${G}" stroke="${G}" stroke-width="4" stroke-linejoin="round"/>
+    </g>
+    <g class="f-meh">
+      <circle cx="99" cy="36" r="9.5" fill="#fff" stroke="${G}" stroke-width="4"/><circle cx="127" cy="36" r="9.5" fill="#fff" stroke="${G}" stroke-width="4"/>
+      <g class="m-pup"><circle cx="99" cy="40" r="5" fill="${G}"/><circle cx="127" cy="40" r="5" fill="${G}"/></g>
+      <path class="m-lid" d="M89.5 36 A9.5 9.5 0 0 1 108.5 36 Z M117.5 36 A9.5 9.5 0 0 1 136.5 36 Z" fill="${PINK}" stroke="${G}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M106 54 H120" stroke="${G}" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <g class="f-strain">
+      <path d="M90 30 L102 36 L90 42 M136 30 L124 36 L136 42" fill="none" stroke="${G}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="102" y="47" width="22" height="11" rx="3" fill="#fff" stroke="${G}" stroke-width="3.5"/>
+      <path d="M113 47 V58 M102 52.5 H124" stroke="${G}" stroke-width="2.4"/>
+    </g>
+    <g class="f-relief">
+      <path d="M91 39 Q99 29 107 39 M119 39 Q127 29 135 39" fill="none" stroke="${G}" stroke-width="4.5" stroke-linecap="round"/>
+      <path d="M102 47 Q113 64 124 47 Z" fill="${G}" stroke="${G}" stroke-width="4" stroke-linejoin="round"/>
+    </g>
+    <g class="f-shock">
+      <circle cx="99" cy="35" r="11" fill="#fff" stroke="${G}" stroke-width="4"/><circle cx="127" cy="35" r="11" fill="#fff" stroke="${G}" stroke-width="4"/>
+      <circle cx="99" cy="36" r="3.6" fill="${G}"/><circle cx="127" cy="36" r="3.6" fill="${G}"/>
+      <ellipse cx="113" cy="55" rx="6" ry="7.5" fill="${G}"/>
+    </g></g>
+    <g class="m-sweat"><path d="M226 2 C226 2 216 16 216 22 A10 10 0 0 0 236 22 C236 16 226 2 226 2 Z" fill="#A6DDF3" stroke="${G}" stroke-width="4"/></g>
+    <g class="m-steam" fill="#fff">${[[10,8],[218,52],[20,4],[212,46]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="11"/>`).join('')}</g>
+  </g></g>`;
+}
+function gRefs(root){
+  const m=root.querySelector('.mascot'),q=s=>m.querySelector(s),cl=q('.m-cl'),len=cl.getTotalLength();
+  const n=Math.round(len/17);
+  for(let i=0;i<=n;i++){const p=cl.getPointAtLength(len*i/n);
+    for(const [g,r] of [[q('.m-bo'),36],[q('.m-body'),29.5]]){const c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',p.x.toFixed(1));c.setAttribute('cy',p.y.toFixed(1));c.setAttribute('r',r);g.append(c)}}
+  return {root:q('.m-root'),body:q('.m-body'),lid:q('.m-lid'),cl,len,
+    brick:q('.m-brick'),bs:q('.m-bs'),hard:q('.b-hard'),soft:q('.b-soft'),
+    sweat:q('.m-sweat'),eyes:q('.m-eyes'),pup:[...m.querySelectorAll('.m-pup')],steam:[...q('.m-steam').children],
+    faces:{happy:q('.f-happy'),meh:q('.f-meh'),strain:q('.f-strain'),relief:q('.f-relief'),shock:q('.f-shock')}};
+}
+/* expr: happy | meh | strain | relief | shock
+   strain 0…1 — краснеет и трясётся; brick — где «камешек» на пути (0…1, вне — скрыт);
+   soft 0…1 — твёрдый → мягкий */
+const STUCK=.7;
+function gSet(m,t,{expr='happy',strain=0,brick=STUCK,soft=0,bscale=1,bounce=0,squash=0,sweat=0,tilt=0,look=0}={}){
+  const shx=strain>.3?strain*2.2*Math.sin(t*61):0;
+  T(m.root,`translate(${114+shx} ${288-bounce}) rotate(${tilt}) scale(${1+squash*.5} ${1-squash}) translate(-114 -288)`);
+  const col=mix(PINK,'#F2796B',strain);m.body.setAttribute('fill',col);m.lid.setAttribute('fill',col);
+  for(const k in m.faces) m.faces[k].style.display=k===expr?'':'none';
+  if(expr==='happy'){const b=(t+.37)%3.1,sc=b<.14?Math.max(.08,Math.abs(b-.07)/.07):1;
+    T(m.eyes,`translate(0 36) scale(1 ${sc}) translate(0 -36)`)}
+  for(const p of m.pup)T(p,`translate(${look*3.5} 0)`);
+  if(brick>=0&&brick<1){
+    const q=m.cl.getPointAtLength(brick*m.len),wob=strain>.3?2*Math.sin(t*47):0;
+    T(m.brick,`translate(${q.x.toFixed(1)} ${q.y.toFixed(1)}) rotate(${wob})`);O(m.brick,1);
+    T(m.bs,`scale(${bscale})`);O(m.hard,1-soft);O(m.soft,soft);
+  } else O(m.brick,0);
+  if(sweat>.01){const q=(t*1.4)%1;T(m.sweat.firstElementChild,`translate(0 ${q*24})`);O(m.sweat,sweat*(1-q)*1.3)} else O(m.sweat,0);
+  m.steam.forEach((c,i)=>{const q=(t*1.3+i*.25)%1;
+    c.setAttribute('transform',`translate(${(i%2?8:-8)*q} ${-q*40}) scale(${.5+q})`);O(c,strain>.5?(1-q)*.85:0)});
+}
+const place=(x,y,s=1)=>`translate(${x} ${y}) scale(${s}) translate(-114 -288)`;
+
+const placeS=(x,y,s=1)=>`translate(${x} ${y}) scale(${s}) translate(-110 -200)`;
+const placeG=(x,y,s=1)=>`translate(${x} ${y}) scale(${s}) translate(-114 -288)`;
+
+/* ─────────────── Тайминг ─────────────── */
+const D_IN=2.9, D_Q=6.8, REV=3.1, TURN=.42;
+const SC=[];
+
+/* Интро */
+(()=>{
+  const el=document.getElementById('intro'),q=s=>el.querySelector(s);
+  q('.ms').innerHTML=stomachSVG();q('.mg').innerHTML=gutSVG();
+  q('.note').innerHTML=postit(330,210,`<text y="-24" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="50" fill="${INK}">считайте</text>
+    <text y="34" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="50" fill="${INK}">правильные ответы!</text>`);
+  q('.u3').setAttribute('d',wavy(330,760,842,9,3));
+  const I={w1:split(q('.t1')),w2:split(q('.t2')),w3:split(q('.t3')),sub:split(q('.sub')),
+    u3:q('.u3'),note:q('.note'),ms:q('.ms'),mg:q('.mg'),s:sRefs(q('.ms')),g:gRefs(q('.mg'))};
+  SC.push({el,dur:D_IN,sfx:[[.05,'scribble',.6],[.6,'pen',.4],[.75,'scribble',.6],[1.3,'pen',.5],[1.45,'scribble',.5],[1.9,'pop',.3],[2.05,'pop',.3],[2.2,'paper',.35]],
+    fn(t){const lt=step(t);
+      write(I.w1,lt,0,14);write(I.w2,lt,.55,14);write(I.w3,lt,.7,14);
+      I.u3.style.strokeDashoffset=1-P(lt,1.25,.3,E.lin);
+      write(I.sub,lt,1.4,30);
+      const pn=P(lt,2.15,.25,E.back);T(I.note,`translate(800 1180) rotate(${6+2*Math.sin(lt*3)}) scale(${pn})`);O(I.note,pn>0?1:0);
+      const p1=P(lt,1.85,.3,E.back),p2=P(lt,2.0,.3,E.back);
+      T(I.ms,placeS(290,1640,1.45*p1));T(I.mg,placeG(600,1650,1.2*p2));O(I.ms,p1>0?1:0);O(I.mg,p2>0?1:0);
+      sSet(I.s,lt,{expr:'shock',look:.6});gSet(I.g,lt,{expr:'happy',brick:-1,look:-.6});
+    }});
+})();
+
+/* Вопрос 1 */
+(()=>{
+  const el=document.getElementById('q1'),q=s=>el.querySelector(s);
+  q('.mg').innerHTML=gutSVG();
+  q('.hu').setAttribute('d',wavy(92,500,290,5,11));
+  q('.circ').setAttribute('d',scribbleCircle(540,650,222,7));
+  /* маркерный овал вокруг правильного ответа: обводка с нахлёстом */
+  q('.ring').setAttribute('d',(()=>{const a0=-2.3,a1=a0+Math.PI*2+.5;let d='';
+    for(let i=0;i<=60;i++){const a=a0+(a1-a0)*i/60;d+=(i?'L':'M')+(300+Math.cos(a)*(232+i/60*12)).toFixed(1)+' '+(1166+Math.sin(a)*(88+i/60*8)).toFixed(1)}return d})());
+  el.querySelectorAll('.bx').forEach((b,i)=>b.setAttribute('d',wobblyBox(78,30+i)));
+  q('.note').innerHTML=postit(250,262,`<text y="-82" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="48" fill="${INK}">неделя:</text>
+    ${['пн','вт','ср','чт','пт'].map((d,i)=>`<text x="-64" y="${-28+i*40}" font-family="Caveat" font-weight="600" font-size="42" fill="${INK}" opacity="${[0,2,4].includes(i)?1:.45}">${d}</text>`).join('')}
+    ${[0,2,4].map((i,k)=>`<path class="nc" d="M8 ${-38+i*40} l12 13 l26 -28" fill="none" stroke="${G}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1"/>`).join('')}`);
+  q('.doodle').innerHTML=`<text x="880" y="430" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="74" fill="${MARK}" transform="rotate(8 880 430)" class="dq">3 раза?</text>
+    <path class="da" d="M858 470 C 850 540 810 580 770 596 M770 596 L800 572 M770 596 L804 610" fill="none" stroke="${MARK}" stroke-width="7" stroke-linecap="round" pathLength="1" stroke-dasharray="1 1"/>`;
+  q('.stars').innerHTML=[[330,440,26],[770,470,20],[310,800,18],[800,820,24]].map(([x,y,r])=>`<path d="${star(x,y,r)}" fill="#FFD25A" stroke="${G}" stroke-width="4" stroke-linejoin="round"/>`).join('');
+  const Q={sit:split(q('.sit')),exp:split(q('.exp')),mark:q('.exp mark'),hq:split(q('.hq')),hh:q('.hh'),hu:q('.hu'),circ:q('.circ'),
+    note:q('.note'),nc:[...el.querySelectorAll('.nc')],dq:q('.dq'),da:q('.da'),mg:q('.mg'),g:gRefs(q('.mg')),
+    cd:q('.cd'),cdn:q('.cdn'),cdc:q('.cdc'),stars:[...q('.stars').children],ring:q('.ring'),
+    on:q('.opt.n'),od:q('.opt.d'),tick:q('.tick'),bx:[...el.querySelectorAll('.bx')]};
+  const TK=[.95,1.65,2.35];
+  SC.push({el,dur:D_Q,sfx:[[.05,'paper',.55],[.3,'scribble',.5],[.5,'pen',.35],[.75,'scribble',.6],[1.05,'pen',.35],[1.4,'pen',.35],[1.8,'pen',.35],
+      ...TK.map(t=>[t,'pen',.55]),[1.2,'scribble',.4],[REV,'scribble',.7],[REV+.3,'pen',.5],[REV+.45,'pop',.25],[REV+.55,'scribble',.6],[REV+1.2,'pen',.4]],
+    fn(t){const lt=step(t),rev=lt>=REV;
+      write(Q.hq,lt,.1,22);Q.hh.style.opacity=P(lt,.2,.2);
+      Q.hu.style.strokeDashoffset=1-P(lt,.5,.25,E.lin);
+      Q.circ.style.strokeDashoffset=1-P(lt,.2,.45,E.lin);
+      const pm=P(lt,.4,.3,E.back);T(Q.mg,placeG(540,782,.98*pm));O(Q.mg,pm>0?1:0);
+      gSet(Q.g,lt,{expr:rev?'relief':'meh',brick:-1,look:rev?0:(lt%1.2<.6?-1:1),bounce:rev?Math.abs(Math.sin((lt-REV)*8))*14:0});
+      const pn=P(lt,.55,.25,E.back);T(Q.note,`translate(176 560) rotate(${-7+1.5*Math.sin(lt*2)}) scale(${pn})`);O(Q.note,pn>0?1:0);
+      Q.nc.forEach((c,i)=>c.style.strokeDashoffset=1-P(lt,1.05+i*.38,.2,E.lin));
+      const pd=P(lt,.7,.2,E.lin);O(Q.dq,pd);Q.da.style.strokeDashoffset=1-P(lt,.85,.3,E.lin);
+      write(Q.sit,lt,.75,18);
+      /* отсчёт 3-2-1 маркером */
+      const n=lt<TK[1]?3:lt<TK[2]?2:1,kt=lt-TK[3-n],pc=lt>=TK[0]&&!rev?1:0;
+      if(Q.cdn.textContent!==String(n))Q.cdn.textContent=n;
+      T(Q.cd,`translate(880 ${760+(n%2)*6}) rotate(${(n-2)*5}) scale(${kt>=0&&kt<.17?1.25:1})`);O(Q.cd,pc);
+      Q.cdc.setAttribute('d',scribbleCircle(0,-48,74,40+n));
+      /* варианты-«чекбоксы» */
+      const po=P(lt,1.9,.2,E.lin);O(Q.on,po);O(Q.od,rev?1-.55*P(lt,REV+.2,.3):po);
+      Q.tick.style.strokeDashoffset=1-P(lt,REV,.25,E.lin);
+      /* маркерный овал вокруг правильного ответа */
+      const rp=P(lt,REV+.3,.4,E.lin);Q.ring.style.strokeDashoffset=1-rp;O(Q.ring,rp>0?1:0);
+      Q.stars.forEach((s,i)=>O(s,lt>=REV+.15+i*.08?1:0));
+      /* пояснение и маркер-выделитель */
+      write(Q.exp,lt,REV+.55,26);
+      Q.mark.style.backgroundSize=`${(P(lt,REV+1.15,.4,E.lin)*100).toFixed(0)}% 100%`;
+    }});
+})();
+
+let acc=0;for(const s of SC){s.start=acc;acc+=s.dur}
+const TOTAL=acc;
+const SFX=[];for(const s of SC)for(const [lt,n,g] of s.sfx||[])SFX.push([s.start+lt,n,g]);
+
+/* бумага: зерно один раз, камера «с рук» */
+const grain=document.getElementById('grain'),cam=document.getElementById('cam'),tbs=[...document.querySelectorAll('.tb')];
+(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),d=x.createImageData(256,256),r=rng(3);
+  for(let i=0;i<d.data.length;i+=4){const v=200+Math.floor(r()*55);d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255}
+  x.putImageData(d,0,0);grain.style.backgroundImage=`url(${c.toDataURL()})`})();
+
+function render(t){
+  t=clamp(t,0,TOTAL-1e-4);
+  /* дрожание линий: 3 «рисунка» по кругу, смена раз в 3 кадра */
+  const seed=1+Math.floor(t*10)%3;tbs.forEach(tb=>tb.setAttribute('seed',seed));
+  cam.style.transform=`translate(${(4*Math.sin(t*.7)).toFixed(2)}px,${(3*Math.sin(t*.9+1)).toFixed(2)}px) rotate(${(.25*Math.sin(t*.5)).toFixed(3)}deg)`;
+  let cur=-1;
+  SC.forEach((s,i)=>{const on=t>=s.start&&t<s.start+s.dur;if(on)cur=i});
+  SC.forEach((s,i)=>{s.el.style.display='none';s.el.style.zIndex=1});
+  const s=SC[cur],lt=t-s.start;
+  /* перелистывание: новая страница наезжает поверх старой */
+  if(cur>0&&lt<TURN){const prev=SC[cur-1];prev.el.style.display='block';prev.fn(prev.dur-.001);
+    const p=E.out(step(lt)/TURN);s.el.style.transform=`translate(${((1-p)*1150).toFixed(0)}px,0) rotate(${((1-p)*4).toFixed(2)}deg)`;}
+  else s.el.style.transform='';
+  s.el.style.display='block';s.el.style.zIndex=2;s.fn(lt);
+}
+
+/* ─────────────── Предпросмотр / захват ─────────────── */
+const params=new URLSearchParams(location.search),capture=params.has('capture');
+const fontsReady=Promise.all([document.fonts.load('700 40px Caveat','Ая'),document.fonts.load('600 40px Caveat','Ая'),
+  document.fonts.load('500 40px Caveat','Ая'),document.fonts.load('400 40px "Golos Text"','Ая')]).then(()=>document.fonts.ready);
+window.reel={duration:TOTAL,render,ready:fontsReady,sfx:SFX,scenes:SC.map(s=>({id:s.el.id,start:s.start,dur:s.dur}))};
+const frame=document.getElementById('frame');
+if(capture){document.body.classList.add('capture');render(0)}
+else{
+  const fit=()=>frame.style.setProperty('--k',Math.min((innerHeight-130)/1920,(innerWidth-32)/1080,1));
+  fit();addEventListener('resize',fit);
+  const seek=document.getElementById('seek'),timeEl=document.getElementById('time'),play=document.getElementById('play');
+  seek.max=TOTAL.toFixed(2);
+  let playing=!params.has('t'),cur=+params.get('t')||0,t0=performance.now()-cur*1000;
+  const show=()=>{render(cur);seek.value=cur;timeEl.textContent=`${cur.toFixed(1)} / ${TOTAL.toFixed(1)} с`;
+    play.textContent=playing?'❚❚':'▶';play.setAttribute('aria-label',playing?'Пауза':'Играть')};
+  const toggle=()=>{playing=!playing;t0=performance.now()-cur*1000;show()};
+  play.onclick=toggle;
+  document.getElementById('restart').onclick=()=>{cur=0;t0=performance.now();playing=true;show()};
+  seek.oninput=()=>{cur=+seek.value;t0=performance.now()-cur*1000;show()};
+  addEventListener('keydown',e=>{if(e.code==='Space'&&e.target===document.body){e.preventDefault();toggle()}});
+  fontsReady.then(()=>{show();(function loop(now){if(playing){cur=((now-t0)/1000)%TOTAL;show()}requestAnimationFrame(loop)})(performance.now())});
+}
+</script>
+</body>
+</html>
