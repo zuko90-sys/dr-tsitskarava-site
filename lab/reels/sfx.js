@@ -109,6 +109,15 @@ const SOUNDS = {
   },
   /* шаг */
   step: () => add(tone(.09, (t) => 95 + 60 * Math.exp(-t * 40), (t) => Math.min(1, t / .002) * Math.exp(-t * 45)), env(lowpass(noise(.04, 47), 1800), (t) => Math.exp(-t * 120)), .5),
+  /* сирена «уи-у»: плавающий тон с обертоном */
+  siren: () => { const d = 1.5, e = fade(d, .03, .35); let ph = 0; return new Float32Array(len(d)).map((_, i) => {
+    const t = i / SR, f = 720 + 330 * (.5 + .5 * Math.sin(TAU * 1.6 * t - Math.PI / 2)); ph += TAU * f / SR;
+    return (Math.sin(ph) + .35 * Math.sin(2 * ph) + .15 * Math.sin(3 * ph)) * e(t) * .6; }); },
+  /* глитч: «битый» шум + цифровые писки */
+  glitch: () => { const d = .26, r = rng(53); let hold = 0, cnt = 0, blip = 0; return new Float32Array(len(d)).map((_, i) => {
+    const t = i / SR; if (cnt-- <= 0) { hold = r() * 2 - 1; cnt = 20 + Math.floor(r() * 160); blip = r() < .3 ? 600 + r() * 2400 : 0; }
+    const v = hold * .7 + (blip ? .5 * Math.sign(Math.sin(TAU * blip * t)) : 0);
+    return v * fade(d, .005, .08)(t); }); },
   /* росчерк ручки / зачёркивание */
   pen: () => { const d = .2, r = rng(31); return env(bandpass(noise(d, 37), (t) => 3000 + 1500 * Math.sin(TAU * 9 * t), 2), (t) => fade(d, .01, .05)(t) * (.6 + .4 * Math.abs(Math.sin(TAU * 14 * t + r())))); },
 };
