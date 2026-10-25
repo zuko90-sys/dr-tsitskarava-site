@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+/* шрифты подключает render.js из $REELS_KIT/fonts */
+html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+svg{display:block}
+text{font-family:'Golos';font-weight:800}
+</style></head>
+<body>
+<svg id="s" xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <clipPath id="iris"><circle id="irisC" cx="540" cy="900" r="0"/></clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4FAF6"/><stop offset="1" stop-color="#D3ECDF"/>
+    </linearGradient>
+    <radialGradient id="hot"><stop offset="0" stop-color="#E5484D" stop-opacity=".95"/><stop offset=".6" stop-color="#EE6A63" stop-opacity=".55"/><stop offset="1" stop-color="#F08A80" stop-opacity="0"/></radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#16362B" flood-opacity=".18"/></filter>
+  </defs>
+  <g id="root" clip-path="url(#iris)" style="display:none">
+    <rect width="1080" height="1920" fill="url(#bg)"/>
+    <g id="bubbles"></g>
+    <g id="scenes"></g>
+  </g>
+</svg>
+<script src="lib.js"></script>
+<script src="scenes.js"></script>
+</body></html>

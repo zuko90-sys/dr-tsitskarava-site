@@ -1,0 +1,27 @@
+{
+  "src": "in/raw.mov",
+  "cut": 5.75,
+  "end": 46.70,
+  "fps": 30,
+  "captions": "captions.txt",
+  "zoom": {
+    "anchor": [470, 900],
+    "segments": [[0, 1.0], [6.38, 1.12], [16.75, 1.0], [26.15, 1.12], [34.95, 1.0]]
+  },
+  "title": {
+    "from": 0, "to": 6.0, "y": 250, "sub_y": 500,
+    "text": "*Helicobacter pylori* / и анемия",
+    "sub": "Как бактерия в желудке / влияет на уровень железа?"
+  },
+  "plaques": [
+    {"from": 9.17, "to": 14.35, "label": "ПРИЧИНА 1", "text": "Хроническое воспаление / слизистой желудка"},
+    {"from": 14.43, "to": 29.27, "label": "ПРИЧИНА 2", "text": "Скрытые *кровопотери*"},
+    {"from": 29.35, "to": 40.95, "label": "ЧТО ДЕЛАТЬ", "text": "Проверить желудок / и *H. pylori*"}
+  ],
+  "inserts": [[6.03, 14.43], [16.40, 22.80], [25.80, 29.50], [34.60, 38.90]],
+  "anim_frames": "anim/frames/%05d.png",
+  "sfx": "in/sfx.wav",
+  "sfx_gain_db": 6,
+  "style": {"cap_size": 76, "cap_outline": 5, "cap_margin": 500, "soft": true, "head_margin": 370},
+  "out": "out/reel.mp4"
+}
