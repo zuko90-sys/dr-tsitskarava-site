@@ -1177,3 +1177,14 @@
     --sans:'Georgian Sans','Golos Text','Golos Fallback','Sylfaen',system-ui,sans-serif;
   }
 }
+
+/* ── страницы по жалобам (bolezni.py) ── */
+@layer blocks{
+  .prose h2.sub{font-size:22px;margin-block:var(--sp-l) var(--sp-xs)}
+  .prose p{max-inline-size:62ch}
+  .prose p + p{margin-block-start:var(--sp-s)}
+  .prose ul{max-inline-size:62ch;padding-inline-start:1.2em;margin-block:var(--sp-xs) var(--sp-s)}
+  .prose li{margin-block:4px}
+  .prose .flags li::marker{color:var(--accent)}
+  .note-small{font-size:13.5px;color:var(--ink-3);margin-block-start:var(--sp-s)}
+}
